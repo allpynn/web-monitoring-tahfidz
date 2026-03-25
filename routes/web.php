@@ -1,0 +1,47 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/dashboard', function () {
+    $role = auth()->user()->role;
+    return match ($role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'guru' => redirect()->route('guru.dashboard'),
+        'orang_tua' => redirect()->route('parent.dashboard'),
+        default => view('dashboard'),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Admin Routes
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    });
+
+    // Guru Routes
+    Route::middleware(['role:guru'])->prefix('guru')->name('guru.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('hafalan', \App\Http\Controllers\Guru\HafalanController::class);
+    });
+
+    // Parent Routes
+    Route::middleware(['role:orang_tua'])->prefix('parent')->name('parent.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Parent\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/history', [\App\Http\Controllers\Parent\HistoryController::class, 'index'])->name('history.index');
+    });
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
