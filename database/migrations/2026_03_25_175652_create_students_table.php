@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('nis')->unique();
             $table->foreignId('parent_id')->constrained('users')->onDelete('cascade');
+            $table->integer('target_juz')->default(30);
+            $table->date('target_date')->nullable();
             $table->timestamps();
         });
     }

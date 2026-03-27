@@ -38,7 +38,11 @@
                 </div>
 
                 <div x-show="isPresent" x-transition class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1">
+                            <label for="juz" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Juz</label>
+                            <input type="number" name="juz" id="juz" value="{{ old('juz', $hafalan->juz) }}" min="1" max="30" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm" placeholder="1-30">
+                        </div>
                         <x-tahfidz.form-input label="Nama Surah" name="surah" type="text" placeholder="Contoh: An-Naba" :value="$hafalan->surah" />
                         <x-tahfidz.form-input label="Ayat" name="ayat" type="text" placeholder="Contoh: 1 - 10" :value="$hafalan->ayat" />
                     </div>

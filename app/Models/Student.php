@@ -10,6 +10,8 @@ class Student extends Model
         'name',
         'nis',
         'parent_id',
+        'target_juz',
+        'target_date',
     ];
 
     public function parent()
@@ -20,5 +22,17 @@ class Student extends Model
     public function memorizations()
     {
         return $this->hasMany(Memorization::class);
+    }
+
+    public function getCurrentJuzAttribute()
+    {
+        return $this->memorizations->where('is_present', true)->first()?->juz ?? 0;
+    }
+
+    public function getTargetProgressAttribute()
+    {
+        return $this->target_juz > 0 
+            ? round(($this->current_juz / $this->target_juz) * 100) 
+            : 0;
     }
 }

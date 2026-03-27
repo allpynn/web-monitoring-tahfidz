@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::create('memorizations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
+            $table->integer('juz')->nullable();
             $table->string('surah')->nullable();
             $table->string('ayat')->nullable();
             $table->enum('status', ['Lancar', 'Perlu Perbaikan'])->nullable();
             $table->boolean('is_present')->default(true);
             $table->text('notes')->nullable();
+            $table->text('parent_comment')->nullable();
             $table->foreignId('guru_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });

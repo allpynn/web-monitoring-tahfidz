@@ -35,6 +35,7 @@
                         <th class="px-8 py-5">NIS</th>
                         <th class="px-8 py-5">Nama Santri</th>
                         <th class="px-8 py-5">Orang Tua</th>
+                        <th class="px-8 py-5">Target</th>
                         <th class="px-8 py-5 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -50,9 +51,17 @@
                             <div class="text-gray-600 dark:text-gray-300">{{ $student->parent->name }}</div>
                             <div class="text-xs text-gray-400">{{ $student->parent->phone }}</div>
                         </td>
+                        <td class="px-8 py-5">
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 rounded-lg font-bold">
+                                {{ $student->target_juz }} Juz
+                            </span>
+                            @if($student->target_date)
+                                <div class="text-[10px] text-gray-400 mt-1">Target: {{ \Carbon\Carbon::parse($student->target_date)->format('d/m/y') }}</div>
+                            @endif
+                        </td>
                         <td class="px-8 py-5 text-center text-xs">
                             <div class="flex justify-center items-center space-x-3">
-                                <a href="#" class="p-2.5 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all" title="Ubah">
+                                <a href="{{ route('admin.students.edit', $student) }}" class="p-2.5 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all" title="Ubah">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
                                 <form action="{{ route('admin.students.destroy', $student) }}" method="POST" onsubmit="return confirm('Hapus data santri ini?')">

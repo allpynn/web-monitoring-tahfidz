@@ -34,6 +34,7 @@
                     <tr>
                         <th class="px-8 py-5">Tanggal</th>
                         <th class="px-8 py-5">Santri</th>
+                        <th class="px-8 py-5">Juz</th>
                         <th class="px-8 py-5">Status / Hafalan</th>
                         <th class="px-8 py-5">Catatan</th>
                         <th class="px-8 py-5 text-center">Aksi</th>
@@ -44,7 +45,23 @@
                     <tr x-show="!search || '{{ strtolower($item->student->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($item->surah) }}'.includes(search.toLowerCase())"
                         class="hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors">
                         <td class="px-8 py-5 text-gray-400 whitespace-nowrap">{{ $item->created_at->format('d M Y') }}</td>
-                        <td class="px-8 py-5 font-bold text-gray-900 dark:text-white">{{ $item->student->name }}</td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-gray-900 dark:text-white">{{ $item->student->name }}</span>
+                                <a href="{{ route('guru.hafalan.export', $item->student) }}" class="ml-2 p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Download Raport PDF">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            @if($item->juz)
+                                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 rounded-lg font-bold">
+                                    Juz {{ $item->juz }}
+                                </span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </td>
                         <td class="px-8 py-5">
                             @if($item->is_present)
                                 <div class="flex flex-col">
@@ -58,7 +75,18 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-8 py-5 text-gray-600 dark:text-gray-300 italic">"{{ $item->notes ?? '-' }}"</td>
+                        <td class="px-8 py-5 text-gray-600 dark:text-gray-300 italic">
+                            <div>"{{ $item->notes ?? '-' }}"</div>
+                            @if($item->parent_comment)
+                                <div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl not-italic">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"></path></svg>
+                                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Pesan Orang Tua</span>
+                                    </div>
+                                    <p class="text-xs text-blue-800 dark:text-blue-300 font-medium">{{ $item->parent_comment }}</p>
+                                </div>
+                            @endif
+                        </td>
                         <td class="px-8 py-5 text-center text-xs">
                             <div class="flex justify-center items-center space-x-3">
                                 <a href="{{ route('guru.hafalan.edit', $item) }}" class="p-2.5 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all" title="Ubah">

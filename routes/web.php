@@ -29,11 +29,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:guru'])->prefix('guru')->name('guru.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('hafalan', \App\Http\Controllers\Guru\HafalanController::class);
+        Route::get('/hafalan/export/{student}', [\App\Http\Controllers\Guru\HafalanController::class, 'exportPdf'])->name('hafalan.export');
     });
 
     // Parent Routes
     Route::middleware(['role:orang_tua'])->prefix('parent')->name('parent.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Parent\DashboardController::class, 'index'])->name('dashboard');
+        Route::patch('/hafalan/{memorization}/comment', [\App\Http\Controllers\Parent\DashboardController::class, 'updateComment'])->name('hafalan.comment');
         Route::get('/history', [\App\Http\Controllers\Parent\HistoryController::class, 'index'])->name('history.index');
     });
 });

@@ -8,11 +8,13 @@ class Memorization extends Model
 {
     protected $fillable = [
         'student_id',
+        'juz',
         'surah',
         'ayat',
         'status',
         'is_present',
         'notes',
+        'parent_comment',
         'guru_id',
     ];
 

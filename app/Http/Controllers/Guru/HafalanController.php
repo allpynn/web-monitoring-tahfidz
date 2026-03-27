@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Memorization;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class HafalanController extends Controller
 {
@@ -26,6 +27,7 @@ class HafalanController extends Controller
         $request->validate([
             'student_id' => 'required|exists:students,id',
             'is_present' => 'required|boolean',
+            'juz' => 'required_if:is_present,1|nullable|integer|min:1|max:30',
             'surah' => 'required_if:is_present,1|nullable|string',
             'ayat' => 'required_if:is_present,1|nullable|string',
             'status' => 'required_if:is_present,1|nullable|in:Lancar,Perlu Perbaikan',
@@ -36,6 +38,7 @@ class HafalanController extends Controller
         $data['guru_id'] = auth()->id();
 
         if (!$request->is_present) {
+            $data['juz'] = null;
             $data['surah'] = null;
             $data['ayat'] = null;
             $data['status'] = null;
@@ -60,14 +63,17 @@ class HafalanController extends Controller
         $request->validate([
             'student_id' => 'required|exists:students,id',
             'is_present' => 'required|boolean',
+            'juz' => 'required_if:is_present,1|nullable|integer|min:1|max:30',
             'surah' => 'required_if:is_present,1|nullable|string',
             'ayat' => 'required_if:is_present,1|nullable|string',
             'status' => 'required_if:is_present,1|nullable|in:Lancar,Perlu Perbaikan',
             'notes' => 'nullable|string',
+            'parent_comment' => 'nullable|string',
         ]);
 
         $data = $request->all();
         if (!$request->is_present) {
+            $data['juz'] = null;
             $data['surah'] = null;
             $data['ayat'] = null;
             $data['status'] = null;
@@ -83,6 +89,16 @@ class HafalanController extends Controller
         $this->authorizeGuru($hafalan);
         $hafalan->delete();
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil dihapus.');
+    }
+
+    public function exportPdf(Student $student)
+    {
+        $memorizations = $student->memorizations()->with('guru')->latest()->take(20)->get();
+        $current_juz = $student->memorizations()->where('is_present', true)->latest()->first()?->juz ?? 0;
+
+        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'current_juz'));
+        
+        return $pdf->download('Raport_Tahfidz_' . $student->nis . '.pdf');
     }
 
     protected function authorizeGuru(Memorization $hafalan)
