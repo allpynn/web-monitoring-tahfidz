@@ -22,7 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
+        Route::get('/students/{student}/export-pdf', [\App\Http\Controllers\Admin\StudentController::class, 'exportPdf'])->name('students.export');
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+        Route::resource('parents', \App\Http\Controllers\Admin\ParentController::class);
     });
 
     // Guru Routes
@@ -30,6 +32,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('hafalan', \App\Http\Controllers\Guru\HafalanController::class);
         Route::get('/hafalan/export/{student}', [\App\Http\Controllers\Guru\HafalanController::class, 'exportPdf'])->name('hafalan.export');
+        Route::resource('students', \App\Http\Controllers\Guru\StudentController::class);
+        Route::get('/students/{student}/export-pdf', [\App\Http\Controllers\Guru\StudentController::class, 'exportPdf'])->name('students.export');
     });
 
     // Parent Routes
@@ -37,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Parent\DashboardController::class, 'index'])->name('dashboard');
         Route::patch('/hafalan/{memorization}/comment', [\App\Http\Controllers\Parent\DashboardController::class, 'updateComment'])->name('hafalan.comment');
         Route::get('/history', [\App\Http\Controllers\Parent\HistoryController::class, 'index'])->name('history.index');
+        Route::get('/history/{student}/export-pdf', [\App\Http\Controllers\Parent\HistoryController::class, 'exportPdf'])->name('history.export');
     });
 });
 

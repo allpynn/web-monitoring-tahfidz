@@ -28,8 +28,9 @@
     </head>
     <body class="antialiased selection:bg-emerald-500 selection:text-white">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-            <div class="mb-8">
-                <a href="/" class="flex items-center space-x-2">
+            <div class="mb-10">
+                <a href="/" class="flex flex-col items-center space-y-4 group">
+                    <x-application-logo class="h-20 w-auto drop-shadow-2xl group-hover:scale-105 transition-transform duration-500" />
                     <span class="text-3xl font-black text-emerald-700 dark:text-emerald-500 tracking-tighter">Tahfidz<span class="text-gray-900 dark:text-white">AlMujahidin</span></span>
                 </a>
             </div>

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Student;
 use App\Models\Memorization;
+use App\Models\Student;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,71 +13,87 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Admin
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@tahfidz.com',
-            'phone' => '0811111111',
+        $admin = User::firstOrCreate(['email' => 'admin@mujahidin.id'], [
+            'name'     => 'Super Admin',
             'password' => Hash::make('password'),
-            'role' => 'admin',
+            'role'     => 'admin',
+            'phone'    => '08100000000',
         ]);
 
         // Guru
-        $guru = User::create([
-            'name' => 'Ustadz Ahmad',
-            'email' => 'ahmad@tahfidz.com',
-            'phone' => '0822222222',
+        $guru1 = User::firstOrCreate(['email' => 'guru1@mujahidin.id'], [
+            'name'     => 'Ustadz Ahmad',
             'password' => Hash::make('password'),
-            'role' => 'guru',
+            'role'     => 'guru',
+            'phone'    => '08111111111',
         ]);
 
-        // Parent
-        $parent = User::create([
-            'name' => 'Bapak Budi',
-            'email' => 'budi@gmail.com',
-            'phone' => '0833333333',
+        $guru2 = User::firstOrCreate(['email' => 'guru2@mujahidin.id'], [
+            'name'     => 'Ustadz Budi',
             'password' => Hash::make('password'),
-            'role' => 'orang_tua',
+            'role'     => 'guru',
+            'phone'    => '08122222222',
         ]);
 
-        // Students
-        $student1 = Student::create([
-            'name' => 'Zaid',
-            'nis' => '10001',
-            'parent_id' => $parent->id,
+        // Orang Tua
+        $ortu1 = User::firstOrCreate(['email' => 'ortu1@mujahidin.id'], [
+            'name'     => 'Bapak Rahmat',
+            'password' => Hash::make('password'),
+            'role'     => 'orang_tua',
+            'phone'    => '08133333333',
         ]);
 
-        $student2 = Student::create([
-            'name' => 'Fathimah',
-            'nis' => '10002',
-            'parent_id' => $parent->id,
+        $ortu2 = User::firstOrCreate(['email' => 'ortu2@mujahidin.id'], [
+            'name'     => 'Ibu Sari',
+            'password' => Hash::make('password'),
+            'role'     => 'orang_tua',
+            'phone'    => '08144444444',
         ]);
 
-        // Memorizations
-        Memorization::create([
-            'student_id' => $student1->id,
-            'guru_id' => $guru->id,
-            'surah' => 'An-Naba',
-            'ayat' => '1 - 20',
-            'status' => 'Lancar',
-            'is_present' => true,
-            'notes' => 'Sangat bagus, tajwid perlu dipertahankan.',
+        // Santri
+        $santri1 = Student::firstOrCreate(['nis' => '20240001'], [
+            'name'        => 'Muhammad Fulan',
+            'parent_id'   => $ortu1->id,
+            'guru_id'     => $guru1->id,
+            'target_juz'  => 30,
+            'target_date' => now()->addYear(),
         ]);
 
-        Memorization::create([
-            'student_id' => $student1->id,
-            'guru_id' => $guru->id,
-            'is_present' => false,
-            'notes' => 'Sakit.',
+        $santri2 = Student::firstOrCreate(['nis' => '20240002'], [
+            'name'        => 'Aisyah Fitriani',
+            'parent_id'   => $ortu1->id,
+            'guru_id'     => $guru1->id,
+            'target_juz'  => 30,
+            'target_date' => now()->addYear(),
         ]);
 
-        Memorization::create([
-            'student_id' => $student2->id,
-            'guru_id' => $guru->id,
-            'surah' => 'Al-Mulk',
-            'ayat' => '1 - 10',
-            'status' => 'Perlu Perbaikan',
-            'is_present' => true,
-            'notes' => 'Ulangi lagi di bagian makhraj huruf.',
+        $santri3 = Student::firstOrCreate(['nis' => '20240003'], [
+            'name'        => 'Zaid Al-Hakim',
+            'parent_id'   => $ortu2->id,
+            'guru_id'     => $guru2->id,
+            'target_juz'  => 30,
+            'target_date' => now()->addMonths(18),
         ]);
+
+        // Sample Hafalan
+        $surahs = ['Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Maidah'];
+        $statuses = ['Lancar', 'Perlu Perbaikan'];
+
+        foreach ([$santri1, $santri2, $santri3] as $idx => $santri) {
+            $guruId = ($idx < 2) ? $guru1->id : $guru2->id;
+            for ($i = 0; $i < 5; $i++) {
+                Memorization::create([
+                    'student_id'  => $santri->id,
+                    'guru_id'     => $guruId,
+                    'juz'         => rand(1, 5),
+                    'surah'       => $surahs[array_rand($surahs)],
+                    'ayat'        => rand(1, 10) . '-' . rand(11, 20),
+                    'status'      => $statuses[array_rand($statuses)],
+                    'is_present'  => true,
+                    'notes'       => 'Catatan hafalan ke-' . ($i + 1),
+                    'created_at'  => now()->subDays(rand(0, 30)),
+                ]);
+            }
+        }
     }
 }

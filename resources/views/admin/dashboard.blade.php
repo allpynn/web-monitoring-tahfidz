@@ -15,11 +15,70 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <x-tahfidz.card title="Statistik Mingguan">
-            <div class="h-64 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 transition-all">
-                <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2"></path></svg>
-                <span class="text-gray-400 dark:text-gray-500 font-medium">Grafik akan muncul di sini.</span>
+            <div class="relative h-64">
+                <canvas id="weeklyChart"></canvas>
             </div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">Jumlah setoran hafalan 7 hari terakhir</p>
         </x-tahfidz.card>
+
+        @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            (function() {
+                const isDark = document.documentElement.classList.contains('dark');
+                const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+                const textColor = isDark ? '#9ca3af' : '#6b7280';
+
+                const ctx = document.getElementById('weeklyChart');
+                if (!ctx) return;
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: @json($weeklyLabels),
+                        datasets: [{
+                            label: 'Setoran Hafalan',
+                            data: @json($weeklyData),
+                            backgroundColor: 'rgba(5, 150, 105, 0.75)',
+                            borderColor: 'rgba(5, 150, 105, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ` ${ctx.parsed.y} setoran`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { display: false },
+                                border: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: textColor,
+                                    precision: 0,
+                                    stepSize: 1
+                                },
+                                grid: { color: gridColor },
+                                border: { display: false }
+                            }
+                        }
+                    }
+                });
+            })();
+        </script>
+        @endpush
         
         <x-tahfidz.card title="Aktivitas Terkini">
             <ul class="space-y-4">

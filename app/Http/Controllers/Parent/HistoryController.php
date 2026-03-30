@@ -7,23 +7,39 @@ use Illuminate\Http\Request;
 
 class HistoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get students linked to this parent
         $students = auth()->user()->students;
+        $selectedStudentId = $request->get('student_id', $students->first()?->id);
         
-        // For simplicity, we take the first student in this demo
-        $student = $students->first();
+        $student = $students->find($selectedStudentId);
         
         if (!$student) {
-            return view('parent.history.index', ['hafalan' => collect(), 'student' => null]);
+            return view('parent.history.index', [
+                'hafalan' => collect(), 
+                'student' => null, 
+                'students' => $students
+            ]);
         }
 
         $hafalan = \App\Models\Memorization::with('guru')
             ->where('student_id', $student->id)
             ->latest()
-            ->get();
+            ->paginate(15);
 
-        return view('parent.history.index', compact('hafalan', 'student'));
+        return view('parent.history.index', compact('hafalan', 'student', 'students'));
+    }
+
+    public function exportPdf(\App\Models\Student $student)
+    {
+        // Security check
+        if ($student->parent_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $memorizations = $student->memorizations()->with('guru')->latest()->get();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.student_report', compact('student', 'memorizations'));
+        
+        return $pdf->download('Riwayat_Hafalan_' . $student->nis . '.pdf');
     }
 }

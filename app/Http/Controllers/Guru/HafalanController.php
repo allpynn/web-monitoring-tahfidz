@@ -18,7 +18,7 @@ class HafalanController extends Controller
 
     public function create()
     {
-        $students = Student::all();
+        $students = Student::where('guru_id', auth()->id())->get();
         return view('guru.hafalan.create', compact('students'));
     }
 
@@ -52,7 +52,7 @@ class HafalanController extends Controller
     public function edit(Memorization $hafalan)
     {
         $this->authorizeGuru($hafalan);
-        $students = Student::all();
+        $students = Student::where('guru_id', auth()->id())->get();
         return view('guru.hafalan.edit', compact('hafalan', 'students'));
     }
 

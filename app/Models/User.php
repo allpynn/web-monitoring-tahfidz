@@ -69,6 +69,11 @@ class User extends Authenticatable
         return $this->hasMany(Student::class, 'parent_id');
     }
 
+    public function studentsAsGuru()
+    {
+        return $this->hasMany(Student::class, 'guru_id');
+    }
+
     public function givenMemorizations()
     {
         return $this->hasMany(Memorization::class, 'guru_id');

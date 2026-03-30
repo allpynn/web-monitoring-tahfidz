@@ -1,36 +1,27 @@
 <x-tahfidz-layout>
     <x-slot name="header">
-        Tambah Akun Baru
+        Tambah Orang Tua
     </x-slot>
     <x-slot name="subtitle">
-        Buat akun baru untuk Guru atau Orang Tua.
+        Buat akun baru untuk wali murid / orang tua santri.
     </x-slot>
 
     <div class="max-w-2xl">
         <div class="mb-6">
-            <a href="{{ route('admin.users.index') }}" class="text-sm font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-2 hover:gap-3 transition-all">
+            <a href="{{ route('admin.parents.index') }}" class="text-sm font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-2 hover:gap-3 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Kembali ke Daftar Akun
+                Kembali ke Daftar Orang Tua
             </a>
         </div>
 
-        <form action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.parents.store') }}" method="POST" class="space-y-6">
             @csrf
             
             <x-tahfidz.card title="Informasi Dasar">
                 <div class="space-y-4">
-                    <x-tahfidz.form-input name="name" label="Nama Lengkap" placeholder="Masukkan nama lengkap" required />
+                    <x-tahfidz.form-input name="name" label="Nama Lengkap" placeholder="Masukkan nama lengkap orang tua" required />
                     <x-tahfidz.form-input type="email" name="email" label="Alamat Email" placeholder="email@example.com" required />
                     <x-tahfidz.form-input name="phone" label="Nomor Telepon / WhatsApp" placeholder="Contoh: 08123456789" required />
-                    
-                    <div class="w-full">
-                        <label for="role" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Peran (Role)</label>
-                        <select name="role" id="role" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
-                            <option value="guru" {{ old('role') == 'guru' ? 'selected' : '' }}>Guru (Asatidz)</option>
-                            <option value="orang_tua" {{ old('role') == 'orang_tua' ? 'selected' : '' }}>Orang Tua / Wali</option>
-                        </select>
-                        @error('role') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
-                    </div>
                 </div>
             </x-tahfidz.card>
 
@@ -44,7 +35,7 @@
             <div class="flex justify-end pt-4">
                 <button type="submit" class="px-8 py-4 bg-emerald-700 text-white rounded-2xl font-bold text-lg hover:bg-emerald-800 shadow-xl shadow-emerald-200 dark:shadow-none transition-all flex items-center gap-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                    Buat Akun Pengguna
+                    Buat Akun Orang Tua
                 </button>
             </div>
         </form>

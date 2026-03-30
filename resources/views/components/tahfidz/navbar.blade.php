@@ -8,8 +8,9 @@
                <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
             </svg>
          </button>
-        <a href="/" class="flex ms-2 md:me-24">
-          <span class="self-center text-xl font-extrabold sm:text-2xl whitespace-nowrap text-emerald-700 tracking-tighter">Tahfidz<span class="text-gray-900 dark:text-white">AlMujahidin</span></span>
+        <a href="/" class="flex items-center gap-3 ms-2 md:me-24 group">
+          <x-application-logo class="h-9 w-auto" />
+          <span class="self-center text-xl font-extrabold sm:text-2xl whitespace-nowrap text-emerald-700 tracking-tighter group-hover:text-emerald-600 transition-colors">Tahfidz<span class="text-gray-900 dark:text-white truncate">AlMujahidin</span></span>
         </a>
       </div>
       <div class="flex items-center">

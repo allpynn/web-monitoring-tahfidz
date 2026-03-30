@@ -2,108 +2,110 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Perkembangan Tahfidz</title>
+    <title>Laporan Tahfidz - {{ $student->name }}</title>
     <style>
         body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; }
-        .header { text-align: center; border-bottom: 2px solid #10b981; padding-bottom: 10px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #065f46; font-size: 24px; }
-        .header p { margin: 5px 0 0; color: #6b7280; font-size: 14px; }
-        .student-info { margin-bottom: 30px; }
-        .student-info table { width: 100%; }
-        .student-info td { padding: 5px 0; font-size: 14px; }
-        .student-info .label { font-weight: bold; width: 150px; }
-        .section-title { background: #ecfdf5; color: #065f46; padding: 8px 15px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #10b981; }
-        table.history { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        table.history th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; text-align: left; font-size: 12px; color: #4b5563; }
-        table.history td { border: 1px solid #e5e7eb; padding: 10px; font-size: 12px; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #059669; padding-bottom: 20px; }
+        .header h1 { color: #059669; margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0; color: #666; font-size: 14px; }
+        .info-section { margin-bottom: 30px; }
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table td { padding: 5px 0; font-size: 14px; }
+        .info-table td.label { font-weight: bold; width: 30%; color: #666; }
+        .stats-grid { display: block; margin-bottom: 30px; }
+        .stats-box { width: 30.5%; display: inline-block; background: #f0fdf4; border: 1px solid #dcfce7; padding: 15px; border-radius: 10px; text-align: center; margin-right: 2%; }
+        .stats-box:last-child { margin-right: 0; }
+        .stats-box h4 { margin: 0; font-size: 10px; color: #059669; text-transform: uppercase; }
+        .stats-box p { margin: 5px 0 0; font-size: 20px; font-weight: bold; }
+        table.history { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table.history th { background: #059669; color: white; padding: 10px; text-align: left; font-size: 12px; text-transform: uppercase; }
+        table.history td { padding: 10px; border-bottom: 1px solid #eee; font-size: 11px; }
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #999; padding: 20px 0; border-top: 1px solid #eee; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; }
         .status-lancar { background: #dcfce7; color: #166534; }
         .status-perbaikan { background: #ffedd5; color: #9a3412; }
-        .footer { margin-top: 50px; }
-        .footer table { width: 100%; }
-        .footer .signature { text-align: center; width: 200px; }
-        .footer .signature-space { height: 80px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>LAPORAN PERKEMBANGAN TAHFIDZ</h1>
-        <p>TPQ/Rumah Tahfidz Al-Kahfi</p>
+        <p>Pondok Pesantren Al-Mujahidin Balikpapan</p>
     </div>
 
-    <div class="student-info">
-        <table>
+    <div class="info-section">
+        <table class="info-table">
             <tr>
                 <td class="label">Nama Santri</td>
                 <td>: {{ $student->name }}</td>
-                <td class="label">Target Juz</td>
-                <td>: {{ $student->target_juz }} Juz</td>
-            </tr>
-            <tr>
                 <td class="label">NIS</td>
                 <td>: {{ $student->nis }}</td>
-                <td class="label">Pencapaian</td>
-                <td>: {{ $current_juz }} Juz</td>
             </tr>
             <tr>
                 <td class="label">Orang Tua</td>
-                <td>: {{ $student->parent->name }}</td>
-                <td class="label">Tanggal Cetak</td>
-                <td>: {{ now()->format('d F Y') }}</td>
+                <td>: {{ $student->parent->name ?? '-' }}</td>
+                <td class="label">Ustadz Pendamping</td>
+                <td>: {{ $student->guru->name ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Target Hafalan</td>
+                <td>: {{ $student->target_juz }} Juz</td>
+                <td class="label">Target Selesai</td>
+                <td>: {{ $student->target_date ? \Carbon\Carbon::parse($student->target_date)->format('d M Y') : '-' }}</td>
             </tr>
         </table>
     </div>
 
-    <div class="section-title">RIWAYAT SETORAN TERAKHIR</div>
+    <div class="stats-grid">
+        <div class="stats-box">
+            <h4>Hafalan Terakhir</h4>
+            <p>Juz {{ $student->current_juz }}</p>
+        </div>
+        <div class="stats-box">
+            <h4>Progres Target</h4>
+            <p>{{ $student->target_progress }}%</p>
+        </div>
+        <div class="stats-box">
+            <h4>Total Setoran</h4>
+            <p>{{ $memorizations->where('is_present', true)->count() }}</p>
+        </div>
+    </div>
+
+    <h3>Riwayat Setoran Terbaru</h3>
     <table class="history">
         <thead>
             <tr>
                 <th>Tanggal</th>
-                <th>Juz</th>
-                <th>Surah</th>
-                <th>Ayat</th>
+                <th>Materi Hafalan</th>
                 <th>Status</th>
                 <th>Catatan Guru</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($memorizations as $item)
-            <tr>
-                <td>{{ $item->created_at->format('d/m/Y') }}</td>
-                <td>{{ $item->juz ?? '-' }}</td>
-                <td>{{ $item->surah ?? '-' }}</td>
-                <td>{{ $item->ayat ?? '-' }}</td>
-                <td>
-                    @if($item->is_present)
-                        <span class="status-badge {{ $item->status === 'Lancar' ? 'status-lancar' : 'status-perbaikan' }}">
-                            {{ $item->status }}
-                        </span>
-                    @else
-                        <span class="status-badge" style="background: #fee2e2; color: #991b1b;">Absen</span>
-                    @endif
-                </td>
-                <td>{{ $item->notes ?? '-' }}</td>
-            </tr>
+            @foreach($memorizations as $m)
+                <tr>
+                    <td>{{ $m->created_at->format('d/m/Y') }}</td>
+                    <td>
+                        @if($m->is_present)
+                            Juz {{ $m->juz }}: {{ $m->surah }} (Ayat {{ $m->ayat }})
+                        @else
+                            <span style="color: #ef4444;">Absen (Tidak Setor)</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($m->is_present)
+                            <span class="status-badge {{ $m->status === 'Lancar' ? 'status-lancar' : 'status-perbaikan' }}">
+                                {{ strtoupper($m->status) }}
+                            </span>
+                        @endif
+                    </td>
+                    <td>{{ $m->notes ?: '-' }}</td>
+                </tr>
             @endforeach
         </tbody>
     </table>
 
     <div class="footer">
-        <table>
-            <tr>
-                <td class="signature">
-                    <p>Orang Tua/Wali</p>
-                    <div class="signature-space"></div>
-                    <p>( {{ $student->parent->name }} )</p>
-                </td>
-                <td></td>
-                <td class="signature">
-                    <p>Kepala Tahfidz / Guru</p>
-                    <div class="signature-space"></div>
-                    <p>( {{ auth()->user()->name }} )</p>
-                </td>
-            </tr>
-        </table>
+        Dicetak secara otomatis oleh Sistem Monitoring Tahfidz Al-Mujahidin pada {{ now()->format('d/m/Y H:i') }}
     </div>
 </body>
 </html>

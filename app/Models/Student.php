@@ -10,6 +10,7 @@ class Student extends Model
         'name',
         'nis',
         'parent_id',
+        'guru_id',
         'target_juz',
         'target_date',
     ];
@@ -19,6 +20,11 @@ class Student extends Model
         return $this->belongsTo(User::class, 'parent_id');
     }
 
+    public function guru()
+    {
+        return $this->belongsTo(User::class, 'guru_id');
+    }
+
     public function memorizations()
     {
         return $this->hasMany(Memorization::class);
@@ -26,7 +32,7 @@ class Student extends Model
 
     public function getCurrentJuzAttribute()
     {
-        return $this->memorizations->where('is_present', true)->first()?->juz ?? 0;
+        return $this->memorizations()->where('is_present', true)->latest()->first()?->juz ?? 0;
     }
 
     public function getTargetProgressAttribute()

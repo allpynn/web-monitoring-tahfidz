@@ -68,8 +68,8 @@
             </form>
             
             <div class="mt-8 pt-8 border-t border-gray-50 dark:border-gray-700/50 text-center">
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Belum punya akses? <a href="{{ route('register') }}" class="font-black text-emerald-700 dark:text-emerald-500 hover:underline">Hubungi Admin</a>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                    Akses terbatas untuk Pengajar & Orang Tua Ponpes Al Mujahidin.
                 </p>
             </div>
         </div>
