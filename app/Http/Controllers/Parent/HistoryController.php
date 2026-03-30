@@ -38,7 +38,9 @@ class HistoryController extends Controller
         }
 
         $memorizations = $student->memorizations()->with('guru')->latest()->get();
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.student_report', compact('student', 'memorizations'));
+        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
         
         return $pdf->download('Riwayat_Hafalan_' . $student->nis . '.pdf');
     }

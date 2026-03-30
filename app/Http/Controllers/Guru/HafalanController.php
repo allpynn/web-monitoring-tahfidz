@@ -94,9 +94,9 @@ class HafalanController extends Controller
     public function exportPdf(Student $student)
     {
         $memorizations = $student->memorizations()->with('guru')->latest()->take(20)->get();
-        $current_juz = $student->memorizations()->where('is_present', true)->latest()->first()?->juz ?? 0;
+        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
 
-        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'current_juz'));
+        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
         
         return $pdf->download('Raport_Tahfidz_' . $student->nis . '.pdf');
     }

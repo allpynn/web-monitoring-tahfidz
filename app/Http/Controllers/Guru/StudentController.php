@@ -96,7 +96,9 @@ class StudentController extends Controller
         }
 
         $memorizations = $student->memorizations()->with('guru')->latest()->get();
-        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations'));
+        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
+        
+        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
         return $pdf->download('Laporan_' . $student->nis . '.pdf');
     }
 }
