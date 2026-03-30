@@ -20,22 +20,10 @@
         </x-tahfidz.card>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <x-tahfidz.card title="Aksi Cepat">
-            <div class="grid grid-cols-2 gap-4">
-                <a href="{{ route('guru.hafalan.create') }}" class="p-6 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-3xl flex flex-col items-center text-center group hover:bg-emerald-600 transition-all">
-                    <div class="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center mb-4 group-hover:bg-white group-hover:text-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    </div>
-                    <span class="font-bold text-gray-900 dark:text-white group-hover:text-white transition-colors">Input Hafalan</span>
-                </a>
-
-                <a href="{{ route('guru.students.index') }}" class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-3xl flex flex-col items-center text-center group hover:bg-blue-600 transition-all">
-                    <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-4 group-hover:bg-white group-hover:text-blue-600 transition-colors shadow-lg shadow-blue-500/20">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    </div>
-                    <span class="font-bold text-gray-900 dark:text-white group-hover:text-white transition-colors">Daftar Santri</span>
-                </a>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <x-tahfidz.card title="Aktivitas Halaqah Mingguan">
+            <div class="h-64">
+                <canvas id="weeklyChart"></canvas>
             </div>
         </x-tahfidz.card>
 
@@ -51,9 +39,71 @@
                 </li>
                 <li class="flex gap-4">
                     <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Anda dapat mendownload sertifikat/raport PDF di menu <strong>Daftar Santri</strong>.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Anda dapat memonitor detail progres dan mencetak raport di menu <strong>Data Santri</strong>.</p>
                 </li>
             </ul>
         </x-tahfidz.card>
     </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
+        <x-tahfidz.card title="Aksi Cepat">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="{{ route('guru.hafalan.create') }}" class="p-6 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-3xl flex flex-row items-center gap-6 group hover:bg-emerald-600 transition-all">
+                    <div class="w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <div class="text-left">
+                        <span class="block font-bold text-lg text-gray-900 dark:text-white group-hover:text-white transition-colors">Input Hafalan</span>
+                        <span class="text-xs text-gray-500 group-hover:text-emerald-50 dark:group-hover:text-emerald-200 transition-colors">Catat setoran hafalan hari ini</span>
+                    </div>
+                </a>
+
+                <a href="{{ route('guru.students.index') }}" class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-3xl flex flex-row items-center gap-6 group hover:bg-blue-600 transition-all">
+                    <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-blue-600 transition-colors shadow-lg shadow-blue-500/20">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <div class="text-left">
+                        <span class="block font-bold text-lg text-gray-900 dark:text-white group-hover:text-white transition-colors">Data Santri</span>
+                        <span class="text-xs text-gray-500 group-hover:text-blue-50 dark:group-hover:text-blue-200 transition-colors">Kelola & monitor bimbingan</span>
+                    </div>
+                </a>
+            </div>
+        </x-tahfidz.card>
+    </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($weeklyLabels) !!},
+                datasets: [{
+                    label: 'Jumlah Setoran',
+                    data: {!! json_encode($weeklyData) !!},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+    @endpush
+</x-tahfidz-layout>
 </x-tahfidz-layout>

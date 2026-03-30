@@ -102,7 +102,12 @@
                                             <div class="text-sm font-bold text-gray-900 dark:text-white">Juz {{ $m->juz }}: {{ $m->surah }}</div>
                                             <div class="text-[10px] text-gray-500 font-medium">Ayat {{ $m->ayat }}</div>
                                             @if($m->notes)
-                                                <div class="mt-1 text-[10px] text-gray-400 italic bg-gray-50 dark:bg-gray-800 p-1.5 rounded-lg border border-gray-100 dark:border-gray-700 line-clamp-1 log-notes">{{ $m->notes }}</div>
+                                                <div class="mt-1 text-[10px] text-gray-400 italic bg-gray-50 dark:bg-gray-800 p-1.5 rounded-lg border border-gray-100 dark:border-gray-700 line-clamp-1 log-notes" title="Catatan Guru: {{ $m->notes }}">{{ $m->notes }}</div>
+                                            @endif
+                                            @if($m->parent_comment)
+                                                <div class="mt-1 text-[10px] text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg border border-blue-100 dark:border-blue-800 line-clamp-1" title="Komentar Orang Tua: {{ $m->parent_comment }}">
+                                                    <span class="uppercase text-[8px] opacity-70">💬 Wali:</span> {{ $m->parent_comment }}
+                                                </div>
                                             @endif
                                         @else
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">Abstensi / Tanpa Setoran</span>

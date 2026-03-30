@@ -36,9 +36,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-2 ml-1">
                         <label for="password" class="block text-sm font-bold text-gray-700 dark:text-gray-300">Kata Sandi</label>
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-500 transition-colors">Lupa Password?</a>
-                        @endif
                     </div>
                     <div class="relative group">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors">

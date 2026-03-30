@@ -15,6 +15,17 @@ class DashboardController extends Controller
             'today_entries' => \App\Models\Memorization::where('guru_id', auth()->id())->whereDate('created_at', today())->count(),
         ];
         
-        return view('guru.dashboard', compact('stats'));
+        // Weekly chart data for this Guru: last 7 days
+        $weeklyLabels = [];
+        $weeklyData   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subDays($i);
+            $weeklyLabels[] = $date->translatedFormat('D, d M');
+            $weeklyData[]   = \App\Models\Memorization::where('guru_id', auth()->id())
+                ->whereDate('created_at', $date->toDateString())
+                ->count();
+        }
+        
+        return view('guru.dashboard', compact('stats', 'weeklyLabels', 'weeklyData'));
     }
 }
