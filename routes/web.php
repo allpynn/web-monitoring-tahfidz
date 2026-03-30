@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/hafalan/export/{student}', [\App\Http\Controllers\Guru\HafalanController::class, 'exportPdf'])->name('hafalan.export');
         Route::resource('students', \App\Http\Controllers\Guru\StudentController::class);
         Route::get('/students/{student}/export-pdf', [\App\Http\Controllers\Guru\StudentController::class, 'exportPdf'])->name('students.export');
+        Route::get('/students/{student}/export-semester-pdf', [\App\Http\Controllers\Guru\HafalanController::class, 'exportSemesterPdf'])->name('students.export_semester');
     });
 
     // Parent Routes

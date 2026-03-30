@@ -27,15 +27,32 @@
 
             <x-tahfidz.card title="Relasi Orang Tua">
                 <div class="w-full">
-                    <label for="parent_id" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pilih Orang Tua / Wali</label>
-                    <select name="parent_id" id="parent_id" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm" required>
+                    <label for="parent_search" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cari & Pilih Orang Tua / Wali</label>
+                    <input type="text" id="parent_search" list="parent_list" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm" placeholder="Ketik nama orang tua..." value="{{ $student->parent->name ?? '' }}" autocomplete="off" required>
+                    <datalist id="parent_list">
                         @foreach($parents as $parent)
-                            <option value="{{ $parent->id }}" {{ old('parent_id', $student->parent_id) == $parent->id ? 'selected' : '' }}>{{ $parent->name }}</option>
+                            <option value="{{ $parent->name }}" data-id="{{ $parent->id }}"></option>
                         @endforeach
-                    </select>
+                    </datalist>
+                    <input type="hidden" name="parent_id" id="parent_id" value="{{ old('parent_id', $student->parent_id) }}">
                     @error('parent_id') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
                 </div>
             </x-tahfidz.card>
+
+            @push('scripts')
+            <script>
+                document.getElementById('parent_search').addEventListener('input', function(e) {
+                    const val = e.target.value;
+                    const options = document.getElementById('parent_list').options;
+                    for (let i = 0; i < options.length; i++) {
+                        if (options[i].value === val) {
+                            document.getElementById('parent_id').value = options[i].getAttribute('data-id');
+                            break;
+                        }
+                    }
+                });
+            </script>
+            @endpush
 
             <x-tahfidz.card title="Target Hafalan">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

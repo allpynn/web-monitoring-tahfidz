@@ -101,6 +101,25 @@ class HafalanController extends Controller
         return $pdf->download('Raport_Tahfidz_' . $student->nis . '.pdf');
     }
 
+    public function exportSemesterPdf(Student $student)
+    {
+        if ($student->guru_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Ambil data 6 bulan terakhir (atau sesuai logika semester)
+        $memorizations = $student->memorizations()
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->orderBy('created_at', 'asc')
+            ->get();
+            
+        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
+
+        $pdf = Pdf::loadView('pdf.semester_recap', compact('student', 'memorizations', 'logoBase64'));
+        
+        return $pdf->download('Rekap_Semester_' . $student->nis . '.pdf');
+    }
+
     protected function authorizeGuru(Memorization $hafalan)
     {
         if ($hafalan->guru_id !== auth()->id()) {

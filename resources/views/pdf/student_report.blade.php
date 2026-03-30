@@ -1,145 +1,210 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <title>Laporan Tahfidz - {{ $student->name }}</title>
     <style>
-        body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; margin-top: 30px; }
-        .kop-surat { width: 100%; border-bottom: 3px double #059669; margin-bottom: 30px; padding-bottom: 10px; }
-        .kop-logo { width: 80px; text-align: left; }
-        .kop-text { text-align: center; }
-        .kop-text h2 { margin: 0; color: #059669; font-size: 20px; text-transform: uppercase; }
-        .kop-text h1 { margin: 0; color: #064e3b; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; }
-        .kop-text p { margin: 2px 0; font-size: 11px; color: #4b5563; }
-        .report-title { text-align: center; margin-bottom: 25px; }
-        .report-title h3 { margin: 0; text-decoration: underline; font-size: 18px; color: #111827; }
-        .info-section { margin-bottom: 30px; }
-        .info-table { width: 100%; border-collapse: collapse; }
-        .info-table td { padding: 5px 0; font-size: 13px; }
-        .info-table td.label { font-weight: bold; width: 20%; color: #374151; }
-        .stats-grid { display: block; margin-bottom: 30px; clear: both; }
-        .stats-box { width: 31%; display: inline-block; background: #f0fdf4; border: 1px solid #dcfce7; padding: 12px; border-radius: 8px; text-align: center; margin-right: 1.5%; }
-        .stats-box:last-child { margin-right: 0; }
-        .stats-box h4 { margin: 0; font-size: 9px; color: #059669; text-transform: uppercase; font-weight: bold; }
-        .stats-box p { margin: 5px 0 0; font-size: 18px; font-weight: bold; color: #065f46; }
-        table.history { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table.history th { background: #059669; color: white; padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; }
-        table.history td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; }
-        .footer { position: fixed; bottom: -20px; width: 100%; text-align: right; font-size: 9px; color: #6b7280; padding-top: 10px; border-top: 1px solid #e5e7eb; }
-        .logo-emblem {
-            width: 70px;
-            height: 70px;
-            background: #064e3b;
-            border: 4px double #fbbf24;
-            border-radius: 50%;
-            display: inline-block;
+        @page { margin: 1.2cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; color: #000; line-height: 1.4; margin: 0; padding: 0; }
+        
+        /* Utility */
+        .w-100 { width: 100%; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+        
+        /* Header & Title */
+        .page-meta { font-size: 7.5pt; color: #444; margin-bottom: 5px; border-bottom: 0px; }
+        .header-table { border-bottom: 2.5px solid #000; padding-bottom: 8px; margin-bottom: 12px; width: 100%; border-collapse: collapse; }
+        .header-logo { width: 65px; vertical-align: middle; }
+        .header-text { vertical-align: middle; padding-left: 12px; }
+        .header-text h1 { font-size: 18pt; margin: 0; padding: 0; line-height: 1.1; font-weight: bold; }
+        .header-text h2 { font-size: 13pt; margin: 0; padding: 0; margin-top: 3px; font-weight: bold; letter-spacing: 0.5px; }
+        
+        .document-title { margin: 15px 0 12px 0; text-align: center; width: 100%; }
+        .document-title h2 { font-size: 14pt; margin: 0; font-weight: bold; text-decoration: none; }
+        .document-title p { margin: 4px 0 0 0; font-size: 10pt; font-weight: bold; }
+
+        /* Student Info Block */
+        .info-container { margin-bottom: 15px; width: 100%; position: relative; min-height: 110px; }
+        .info-table { border-collapse: collapse; width: 75%; float: left; }
+        .info-table td { padding: 3px 0; vertical-align: top; font-size: 9.5pt; }
+        .info-label { width: 110px; }
+        .info-separator { width: 15px; text-align: center; }
+        
+        .photo-box { 
+            width: 85px; 
+            height: 105px; 
+            border: 1px solid #333; 
+            float: right;
             text-align: center;
-            line-height: 62px;
-            color: #fbbf24;
-            font-size: 28px;
-            font-weight: bold;
-            font-family: 'Georgia', serif;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            line-height: 105px;
+            font-size: 9pt;
+            color: #666;
+            margin-top: 2px;
+            background: #fff;
         }
+
+        /* History Table */
+        .history-table { border-collapse: collapse; margin-top: 10px; font-size: 8.5pt; width: 100%; clear: both; }
+        .history-table th, .history-table td { border: 1px solid #000; padding: 7px 5px; vertical-align: middle; text-align: left; }
+        .history-table th { background-color: #f8f8f8; font-weight: bold; text-align: center; }
+        .history-table td.center { text-align: center; }
+        
+        /* Summary Section */
+        .summary-container { margin-top: 15px; font-size: 9pt; width: 100%; }
+        .summary-table { border-collapse: collapse; width: 100%; }
+        .summary-table td { border: 1px solid #000; padding: 5px 8px; }
+        .summary-label { background-color: #f8f8f8; font-weight: bold; width: 180px; }
+
+        /* Footer */
+        .page-footer { position: fixed; bottom: -10px; width: 100%; font-size: 7.5pt; border-top: 1px solid #ccc; padding-top: 4px; color: #555; }
+        
+        /* Status Badges */
+        .status-lancar { font-weight: bold; color: #15803d; }
+        .status-perbaikan { font-weight: bold; color: #b91c1c; font-style: italic; }
     </style>
 </head>
 <body>
-    <table class="kop-surat">
+    <!-- Top Metadata -->
+    <table class="w-100 page-meta">
         <tr>
-            <td class="kop-logo">
-                @if(extension_loaded('gd') && isset($logoBase64) && $logoBase64)
-                    <img src="{{ $logoBase64 }}" alt="Logo" style="width: 80px; height: 80px;">
+            <td>Dicetak: {{ now()->format('d/m/Y, H:i:s') }}</td>
+            <td class="text-right">Portal Akademik Tahfidz Al-Mujahidin</td>
+        </tr>
+    </table>
+
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td class="header-logo">
+                @if(isset($logoBase64) && $logoBase64)
+                    <img src="{{ $logoBase64 }}" style="width: 62px; height: 62px;">
                 @else
-                    <div class="logo-emblem">AM</div>
+                    <div style="width: 62px; height: 62px; border: 1px solid #000; text-align:center; line-height:62px; font-size:8pt;">LOGO</div>
                 @endif
             </td>
-            <td class="kop-text">
-                <h2 style="font-size: 18px; margin: 0; color: #059669;">PONDOK PESANTREN AL-MUJAHIDIN</h2>
-                <h1 style="font-size: 24px; margin: 2px 0; color: #064e3b;">TAHFIDZ AL-MUJAHIDIN</h1>
-                <p>Jl. Soekarno Hatta KM. 5,7 Balikpapan Utara, Kota Balikpapan, Kalimantan Timur</p>
-                <p>Telp: (0542) 745345 | Web: www.almujahidin.id | Email: info@almujahidin.id</p>
+            <td class="header-text">
+                <h1>Pondok Pesantren Al-Mujahidin</h1>
+                <h2>TAHFIDZ AL-MUJAHIDIN BALIKPAPAN</h2>
             </td>
         </tr>
     </table>
 
-    <div class="report-title">
-        <h3>LAPORAN MONITORING TAHFIDZ SANTRI</h3>
+    <!-- Title Section -->
+    <div class="document-title">
+        <h2 class="uppercase">LAPORAN PERKEMBANGAN TAHFIDZ</h2>
+        <p>Semester: {{ now()->month > 6 ? 'Ganjil' : 'Genap' }} {{ now()->year }}/{{ now()->year + 1 }}</p>
     </div>
 
-    <div class="info-section">
+    <!-- Student Info -->
+    <div class="info-container">
+        <div class="photo-box">PAS PHOTO</div>
         <table class="info-table">
             <tr>
-                <td class="label">Nama Santri</td>
-                <td>: {{ $student->name }}</td>
-                <td class="label">NIS</td>
-                <td>: {{ $student->nis }}</td>
+                <td class="info-label">Nama Santri</td>
+                <td class="info-separator">:</td>
+                <td class="bold">{{ $student->name }}</td>
             </tr>
             <tr>
-                <td class="label">Orang Tua</td>
-                <td>: {{ $student->parent->name ?? '-' }}</td>
-                <td class="label">Ustadz Pendamping</td>
-                <td>: {{ $student->guru->name ?? '-' }}</td>
+                <td class="info-label">NIS (Nomor Induk)</td>
+                <td class="info-separator">:</td>
+                <td>{{ $student->nis }}</td>
             </tr>
             <tr>
-                <td class="label">Target Hafalan</td>
-                <td>: {{ $student->target_juz }} Juz</td>
-                <td class="label">Target Selesai</td>
-                <td>: {{ $student->target_date ? \Carbon\Carbon::parse($student->target_date)->format('d M Y') : '-' }}</td>
+                <td class="info-label">Orang Tua / Wali</td>
+                <td class="info-separator">:</td>
+                <td>{{ $student->parent->name ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Ustadz Pengampu</td>
+                <td class="info-separator">:</td>
+                <td>{{ $student->guru->name ?? '-' }}</td>
             </tr>
         </table>
     </div>
 
-    <div class="stats-grid">
-        <div class="stats-box">
-            <h4>Hafalan Terakhir</h4>
-            <p>Juz {{ $student->current_juz }}</p>
-        </div>
-        <div class="stats-box">
-            <h4>Progres Target</h4>
-            <p>{{ $student->target_progress }}%</p>
-        </div>
-        <div class="stats-box">
-            <h4>Total Setoran</h4>
-            <p>{{ $memorizations->where('is_present', true)->count() }}</p>
-        </div>
-    </div>
-
-    <h3>Riwayat Setoran Terbaru</h3>
-    <table class="history">
+    <!-- Main Data Table -->
+    <table class="history-table">
         <thead>
             <tr>
-                <th>Tanggal</th>
-                <th>Materi Hafalan</th>
-                <th>Status</th>
-                <th>Catatan Guru</th>
+                <th width="30">No.</th>
+                <th width="75">Tanggal</th>
+                <th>Materi Hafalan (Juz, Surah, Ayat)</th>
+                <th width="90">Kualitas</th>
+                <th>Catatan Guru Pendamping</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($memorizations as $m)
+            @forelse($memorizations as $index => $m)
                 <tr>
-                    <td>{{ $m->created_at->format('d/m/Y') }}</td>
+                    <td class="center">{{ $index + 1 }}</td>
+                    <td class="center">{{ $m->created_at->format('d/m/Y') }}</td>
                     <td>
                         @if($m->is_present)
-                            Juz {{ $m->juz }}: {{ $m->surah }} (Ayat {{ $m->ayat }})
+                            <span class="bold">Juz {{ $m->juz }}</span> : {{ $m->surah }} (Ayat {{ $m->ayat }})
                         @else
-                            <span style="color: #ef4444;">Absen (Tidak Setor)</span>
+                            <i style="color: #666;">Absen (Tidak Ada Setoran)</i>
                         @endif
                     </td>
-                    <td>
+                    <td class="center">
                         @if($m->is_present)
-                            <span class="status-badge {{ $m->status === 'Lancar' ? 'status-lancar' : 'status-perbaikan' }}">
+                            <span class="{{ $m->status === 'Lancar' ? 'status-lancar' : 'status-perbaikan' }}">
                                 {{ strtoupper($m->status) }}
                             </span>
                         @endif
                     </td>
                     <td>{{ $m->notes ?: '-' }}</td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="5" class="center" style="padding: 20px;">Belum ada riwayat hafalan untuk periode ini.</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 
-    <div class="footer">
-        Dicetak pada: {{ now()->translatedFormat('d F Y H:i:s') }} | Sistem Monitoring Tahfidz Al-Mujahidin
+    <!-- Statistics Summary -->
+    <div class="summary-container">
+        <table class="summary-table">
+            <tr>
+                <td class="summary-label">Total Setoran Tahfizh</td>
+                <td>{{ $memorizations->where('is_present', true)->count() }} Kali</td>
+                <td class="summary-label">Target Hafalan</td>
+                <td>{{ $student->target_juz }} Juz</td>
+            </tr>
+            <tr>
+                <td class="summary-label">Hafalan Terakhir</td>
+                <td>Juz {{ $student->current_juz }}</td>
+                <td class="summary-label">Persentase Capaian</td>
+                <td class="bold">{{ $student->target_progress }}%</td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-top: 30px; font-size: 8.5pt;">
+        <table class="w-100">
+            <tr>
+                <td width="60%"></td>
+                <td class="text-center">
+                    Balikpapan, {{ now()->translatedFormat('d F Y') }}<br>
+                    Ustadz Pengampu,<br><br><br><br>
+                    <span class="bold">( {{ $student->guru->name ?? '..........................' }} )</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Page Footer -->
+    <div class="page-footer">
+        <table class="w-100">
+            <tr>
+                <td>Laporan ini diunggah secara otomatis melalui Portal Tahfidz Al-Mujahidin</td>
+                <td class="text-right">https://portal.almujahidin.id/cetak/{{ $student->nis }} | Hal. 1</td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
