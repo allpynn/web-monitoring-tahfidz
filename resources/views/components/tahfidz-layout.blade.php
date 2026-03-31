@@ -40,6 +40,9 @@
         
         <x-tahfidz.sidebar :role="$role" />
 
+        <!-- Sidebar Backdrop for Mobile -->
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-900/50 z-30 hidden sm:hidden backdrop-blur-sm transition-opacity"></div>
+
         <div class="p-4 sm:ml-64 pt-20">
             <div class="p-4 rounded-lg dark:border-gray-700">
                 <!-- Page Breadcrumbs/Header -->
@@ -53,6 +56,30 @@
             </div>
         </div>
         <script>
+            // Sidebar Toggle Logic
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const toggleButtons = document.querySelectorAll('[data-drawer-toggle="sidebar"]');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('-translate-x-full');
+                backdrop.classList.toggle('hidden');
+            }
+
+            toggleButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
+                });
+            });
+
+            backdrop.addEventListener('click', () => {
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
+            });
+
+            // Theme Toggle Logic
             var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
             var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
 

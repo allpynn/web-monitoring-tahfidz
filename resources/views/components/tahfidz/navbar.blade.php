@@ -10,7 +10,7 @@
          </button>
         <a href="/" class="flex items-center gap-3 ms-2 md:me-24 group">
           <x-application-logo class="h-9 w-auto" />
-          <span class="self-center text-xl font-extrabold sm:text-2xl whitespace-nowrap text-emerald-700 tracking-tighter group-hover:text-emerald-600 transition-colors">Tahfidz<span class="text-gray-900 dark:text-white truncate">AlMujahidin</span></span>
+          <span class="self-center text-xl font-extrabold sm:text-2xl whitespace-nowrap text-emerald-700 tracking-tighter group-hover:text-emerald-600 transition-colors">Tahfidz<span class="text-gray-900 dark:text-white truncate hidden sm:inline">AlMujahidin</span></span>
         </a>
       </div>
       <div class="flex items-center">
@@ -27,7 +27,7 @@
                 </div>
               </button>
             </div>
-            <div class="ms-3 text-right">
+            <div class="ms-3 text-right hidden md:block">
                 <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300">
                     {{ Auth::user()->name }}
                 </p>
