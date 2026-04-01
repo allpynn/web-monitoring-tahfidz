@@ -78,17 +78,18 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Sample Hafalan
-        $surahs = \App\Models\Surah::pluck('nama_latin')->toArray();
+        $surahs = \App\Models\Surah::all();
         $statuses = ['Lancar', 'Perlu Perbaikan'];
 
         foreach ([$santri1, $santri2, $santri3] as $idx => $santri) {
             $guruId = ($idx < 2) ? $guru1->id : $guru2->id;
             for ($i = 0; $i < 5; $i++) {
+                $randomSurah = $surahs->random();
                 Memorization::create([
                     'student_id'  => $santri->id,
                     'guru_id'     => $guruId,
-                    'juz'         => rand(1, 5),
-                    'surah'       => $surahs[array_rand($surahs)],
+                    'juz'         => $randomSurah->juz_awal,
+                    'surah'       => $randomSurah->nama_latin,
                     'ayat'        => rand(1, 10) . '-' . rand(11, 20),
                     'status'      => $statuses[array_rand($statuses)],
                     'is_present'  => true,
