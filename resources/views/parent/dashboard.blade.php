@@ -86,20 +86,43 @@
                         </x-tahfidz.card>
                     </div>
 
-                    <div class="lg:col-span-1">
-                        <x-tahfidz.card title="Statistik Visual">
-                            <!-- Placeholder Chart using inline styles for mini visual -->
-                            <div class="h-48 flex items-end justify-between gap-1 px-2 pt-4">
-                                @foreach($student->trend_data ?? [] as $data)
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-emerald-100 dark:bg-emerald-900/30 rounded-t-lg group-hover:bg-emerald-500 transition-all relative" style="height: {{ ($data['value'] / 7) * 100 }}%">
-                                            <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">{{ $data['value'] }}</span>
-                                        </div>
-                                        <span class="text-[8px] text-gray-400 font-bold truncate w-full text-center">{{ str_replace('Mgu ', '', $data['label']) }}</span>
-                                    </div>
-                                @endforeach
+                    <div class="lg:col-span-1 space-y-6">
+                        @if($student->latest_notes)
+                            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 rounded-r-xl shadow-sm">
+                                <h4 class="text-xs font-bold text-emerald-800 dark:text-emerald-400 mb-1 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                                    Pesan Ustadz
+                                </h4>
+                                <p class="text-sm text-emerald-700 dark:text-emerald-300 italic">"{{ $student->latest_notes }}"</p>
                             </div>
-                            <p class="text-[10px] text-center text-gray-400 mt-4 font-bold uppercase tracking-widest">Aktivitas 8 Minggu Terakhir</p>
+                        @endif
+
+                        <x-tahfidz.card title="Kualitas Hafalan (30 Hari)">
+                            <div class="relative w-full aspect-square max-h-48 mx-auto flex items-center justify-center">
+                                @php
+                                    $totalQ = $student->quality_chart_data['lancar'] + $student->quality_chart_data['perbaikan'];
+                                    $lancarPct = $totalQ > 0 ? round(($student->quality_chart_data['lancar'] / $totalQ) * 100) : 0;
+                                @endphp
+                                @if($totalQ > 0)
+                                    <canvas id="qualityChart{{ $student->id }}"></canvas>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span class="text-2xl font-black text-gray-900 dark:text-white">{{ $lancarPct }}%</span>
+                                        <span class="text-[10px] text-gray-500 font-bold uppercase">Lancar</span>
+                                    </div>
+                                @else
+                                    <p class="text-xs text-gray-400 italic">Belum ada data bulan ini.</p>
+                                @endif
+                            </div>
+                            <div class="flex justify-center gap-4 mt-4">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                    <span class="text-[10px] text-gray-600 dark:text-gray-400 font-bold">Lancar ({{ $student->quality_chart_data['lancar'] }})</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                                    <span class="text-[10px] text-gray-600 dark:text-gray-400 font-bold">Perbaikan ({{ $student->quality_chart_data['perbaikan'] }})</span>
+                                </div>
+                            </div>
                         </x-tahfidz.card>
                     </div>
                 </div>
@@ -111,4 +134,41 @@
             </div>
         @endforelse
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @foreach($students as $student)
+                @php
+                    $totalQ = $student->quality_chart_data['lancar'] + $student->quality_chart_data['perbaikan'];
+                @endphp
+                @if($totalQ > 0)
+                    const ctx{{ $student->id }} = document.getElementById('qualityChart{{ $student->id }}').getContext('2d');
+                    new Chart(ctx{{ $student->id }}, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Lancar', 'Perlu Perbaikan'],
+                            datasets: [{
+                                data: [{{ $student->quality_chart_data['lancar'] }}, {{ $student->quality_chart_data['perbaikan'] }}],
+                                backgroundColor: ['#10b981', '#fbbf24'],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '75%',
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { enabled: true }
+                            }
+                        }
+                    });
+                @endif
+            @endforeach
+        });
+    </script>
+    @endpush
 </x-tahfidz-layout>

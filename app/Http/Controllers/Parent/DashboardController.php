@@ -72,6 +72,16 @@ class DashboardController extends Controller
             $attendance[$date] = $status ? ($status->is_present ? 'present' : 'absent') : 'none';
         }
         $student->attendance_heatmap = $attendance;
+
+        // Quality Chart (30 Days)
+        $last30Days = $analyticsData->filter(fn($m) => $m->created_at >= now()->subDays(30) && $m->is_present);
+        $student->quality_chart_data = [
+            'lancar' => $last30Days->where('status', 'Lancar')->count(),
+            'perbaikan' => $last30Days->where('status', 'Perlu Perbaikan')->count(),
+        ];
+
+        // Latest pinned message/notes from teacher
+        $student->latest_notes = $student->memorizations()->whereNotNull('notes')->where('notes', '!=', '')->latest()->first()?->notes;
     }
     public function updateComment(Request $request, \App\Models\Memorization $memorization)
     {

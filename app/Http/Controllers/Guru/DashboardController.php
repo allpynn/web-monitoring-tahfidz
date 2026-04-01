@@ -25,7 +25,47 @@ class DashboardController extends Controller
                 ->whereDate('created_at', $date->toDateString())
                 ->count();
         }
+
+        $recent_activities = \App\Models\Memorization::with('student')
+            ->where('guru_id', auth()->id())
+            ->latest()
+            ->take(5)
+            ->get();
+            
+        $parent_feedbacks = \App\Models\Memorization::with('student')
+            ->where('guru_id', auth()->id())
+            ->whereNotNull('parent_comment')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $students = \App\Models\Student::where('guru_id', auth()->id())->with('memorizations')->get();
         
-        return view('guru.dashboard', compact('stats', 'weeklyLabels', 'weeklyData'));
+        $early_warnings = collect();
+        $top_targets = collect();
+
+        foreach ($students as $student) {
+            $latestMem = $student->memorizations->last();
+            
+            // Early warning check
+            if (!$latestMem || $latestMem->created_at->diffInDays(now()) > 3 || $latestMem->status === 'Perlu Perbaikan') {
+                $student->warning_reason = !$latestMem ? 'Belum Ada Setoran' : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor');
+                $student->last_mem_date = $latestMem ? $latestMem->created_at : null;
+                $early_warnings->push($student);
+            }
+            
+            // Target progress calculation
+            $progress = $student->target_juz > 0 ? round(($student->current_juz / $student->target_juz) * 100) : 0;
+            $student->progress_percent = min($progress, 100);
+            $top_targets->push($student);
+        }
+        
+        // Sort early warnings by reason severity (Perlu perbaikan > lama tidak setor) - simplistic just take 5
+        $early_warnings = $early_warnings->take(5);
+        
+        // Sort top targets by progress descending
+        $top_targets = $top_targets->sortByDesc('progress_percent')->take(3);
+
+        return view('guru.dashboard', compact('stats', 'weeklyLabels', 'weeklyData', 'recent_activities', 'parent_feedbacks', 'early_warnings', 'top_targets'));
     }
 }

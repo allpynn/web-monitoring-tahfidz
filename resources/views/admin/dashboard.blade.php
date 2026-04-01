@@ -80,27 +80,37 @@
         </script>
         @endpush
         
-        <x-tahfidz.card title="Aktivitas Terkini">
-            <ul class="space-y-4">
-                <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-transparent hover:border-emerald-100 dark:hover:border-emerald-900/50 transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mr-4 text-emerald-600 dark:text-emerald-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Ustadz Ahmad menginput hafalan Fulan</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Baru saja • An-Naba: 1-10</p>
-                    </div>
-                </li>
-                <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-transparent hover:border-emerald-100 dark:hover:border-emerald-900/50 transition-all">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mr-4 text-blue-600 dark:text-blue-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Santri baru "Aisyah" terdaftar</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">1 jam yang lalu • Kelas Tahfidz A</p>
-                    </div>
-                </li>
-            </ul>
+        <x-tahfidz.card title="Distribusi Kinerja Guru">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
+                        <tr>
+                            <th class="py-2 px-3">Nama Ustadz</th>
+                            <th class="py-2 px-3 text-center">Jml Santri</th>
+                            <th class="py-2 px-3 text-center">Setoran Bulan Ini</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @forelse($teacher_performance as $guru)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                                <td class="py-3 px-3">
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $guru->name }}</p>
+                                </td>
+                                <td class="py-3 px-3 text-center text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                    {{ $guru->students_count }} 
+                                </td>
+                                <td class="py-3 px-3 text-center text-sm font-bold text-gray-700 dark:text-gray-300">
+                                    {{ $guru->total_memorizations }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="py-6 text-center text-gray-400 italic">Belum ada data guru.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </x-tahfidz.card>
     </div>
 </x-tahfidz-layout>

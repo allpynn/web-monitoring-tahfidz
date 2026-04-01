@@ -30,13 +30,24 @@ class DashboardController extends Controller
             $weeklyData[]   = Memorization::whereDate('created_at', $date->toDateString())->count();
         }
 
+        // Teacher performance
+        $teacher_performance = User::where('role', 'guru')
+            ->withCount('students')
+            ->get()
+            ->map(function ($guru) {
+                $guru->total_memorizations = Memorization::where('guru_id', $guru->id)->where('created_at', '>=', now()->startOfMonth())->count();
+                return $guru;
+            })
+            ->sortByDesc('total_memorizations');
+
         return view('admin.dashboard', compact(
             'guruCount',
             'studentCount',
             'hafalanCount',
             'lancarPercent',
             'weeklyLabels',
-            'weeklyData'
+            'weeklyData',
+            'teacher_performance'
         ));
     }
 }

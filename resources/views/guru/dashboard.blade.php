@@ -27,21 +27,95 @@
             </div>
         </x-tahfidz.card>
 
-        <x-tahfidz.card title="Petunjuk Guru">
-            <ul class="space-y-4">
-                <li class="flex gap-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Pilih menu <strong>Input Hafalan</strong> untuk mencatat setoran santri baru.</p>
-                </li>
-                <li class="flex gap-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Pastikan status <strong>Lancar</strong> atau <strong>Perlu Perbaikan</strong> sesuai hasil evaluasi.</p>
-                </li>
-                <li class="flex gap-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Anda dapat memonitor detail progres dan mencetak raport di menu <strong>Data Santri</strong>.</p>
-                </li>
-            </ul>
+        <div class="space-y-8">
+            <x-tahfidz.card title="⚠️ Perhatian Khusus" class="border-amber-200 dark:border-amber-900/50">
+                <div class="space-y-4">
+                    @forelse($early_warnings as $warning)
+                        <div class="flex justify-between items-center bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-100 dark:border-amber-800/50">
+                            <div>
+                                <p class="font-bold text-sm text-gray-900 dark:text-white">{{ $warning->name }}</p>
+                                <p class="text-[11px] text-amber-700 dark:text-amber-500 font-medium">{{ $warning->warning_reason }}</p>
+                            </div>
+                            <span class="text-xs text-gray-500">{{ $warning->last_mem_date ? $warning->last_mem_date->diffForHumans() : '-' }}</span>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-500 italic text-center py-4">Semua santri dalam kondisi baik.</p>
+                    @endforelse
+                </div>
+            </x-tahfidz.card>
+
+            <x-tahfidz.card title="🏆 Top Pencapaian Target">
+                <div class="space-y-3">
+                    @forelse($top_targets as $top)
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">{{ $loop->iteration }}</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-bold dark:text-white">{{ $top->name }}</span>
+                                    <span class="text-xs text-emerald-600 font-bold">{{ $top->progress_percent }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+                                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ $top->progress_percent }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-500 italic text-center py-2">Belum ada data target.</p>
+                    @endforelse
+                </div>
+            </x-tahfidz.card>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <x-tahfidz.card title="Setoran Terakhir Hari Ini">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @forelse($recent_activities as $activity)
+                            <tr>
+                                <td class="py-3 px-2">
+                                    <p class="text-sm font-bold dark:text-white">{{ $activity->student->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $activity->created_at->format('H:i') }} WIB</p>
+                                </td>
+                                <td class="py-3 px-2 text-sm dark:text-gray-300">
+                                    @if($activity->is_present)
+                                        Jz:{{ $activity->juz }} {{ $activity->surah }} ({{ $activity->ayat }})
+                                    @else
+                                        <span class="text-red-500 font-bold text-xs">ABSEN</span>
+                                    @endif
+                                </td>
+                                <td class="py-3 px-2 text-right">
+                                    @if($activity->is_present)
+                                        <span class="px-2 py-1 {{ $activity->status === 'Lancar' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700' }} text-[10px] font-bold rounded uppercase">
+                                            {{ $activity->status }}
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3" class="py-6 text-center text-gray-400 text-sm">Belum ada setoran masuk hari ini.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </x-tahfidz.card>
+
+        <x-tahfidz.card title="Pesan & Komentar Orang Tua">
+            <div class="space-y-4">
+                @forelse($parent_feedbacks as $feedback)
+                    <div class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-xs font-bold text-emerald-700 dark:text-emerald-500">{{ $feedback->student->name }}</span>
+                            <span class="text-xs text-gray-400">{{ $feedback->updated_at->diffForHumans() }}</span>
+                        </div>
+                        <p class="text-sm text-gray-700 dark:text-gray-300 italic">"{{ $feedback->parent_comment }}"</p>
+                        <a href="{{ route('guru.hafalan.edit', $feedback) }}" class="inline-block mt-2 text-[10px] uppercase font-bold text-gray-500 hover:text-emerald-600">Balas / Lihat Detail &rarr;</a>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-500 italic text-center py-6">Tidak ada pesan baru dari orang tua.</p>
+                @endforelse
+            </div>
         </x-tahfidz.card>
     </div>
 
