@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(SurahSeeder::class);
+
         // Admin
         $admin = User::firstOrCreate(['email' => 'admin@mujahidin.id'], [
             'name'     => 'Super Admin',
@@ -76,7 +78,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Sample Hafalan
-        $surahs = ['Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Maidah'];
+        $surahs = \App\Models\Surah::pluck('nama_latin')->toArray();
         $statuses = ['Lancar', 'Perlu Perbaikan'];
 
         foreach ([$santri1, $santri2, $santri3] as $idx => $santri) {

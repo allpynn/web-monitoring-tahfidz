@@ -19,7 +19,8 @@ class HafalanController extends Controller
     public function create()
     {
         $students = Student::where('guru_id', auth()->id())->get();
-        return view('guru.hafalan.create', compact('students'));
+        $surahsList = \App\Models\Surah::orderBy('nomor')->get();
+        return view('guru.hafalan.create', compact('students', 'surahsList'));
     }
 
     public function store(Request $request)
@@ -53,7 +54,8 @@ class HafalanController extends Controller
     {
         $this->authorizeGuru($hafalan);
         $students = Student::where('guru_id', auth()->id())->get();
-        return view('guru.hafalan.edit', compact('hafalan', 'students'));
+        $surahsList = \App\Models\Surah::orderBy('nomor')->get();
+        return view('guru.hafalan.edit', compact('hafalan', 'students', 'surahsList'));
     }
 
     public function update(Request $request, Memorization $hafalan)

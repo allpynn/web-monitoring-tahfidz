@@ -51,7 +51,16 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-6">
                             <x-tahfidz.form-input type="number" name="juz" label="Juz" placeholder="Contoh: 30" :value="old('juz', $hafalan->juz)" min="1" max="30" />
-                            <x-tahfidz.form-input name="surah" label="Nama Surah" placeholder="Contoh: Al-Baqarah" :value="old('surah', $hafalan->surah)" />
+                            <div class="w-full">
+                                <label for="surah" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nama Surah</label>
+                                <select name="surah" id="surah" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
+                                    <option value="">-- Pilih Surah --</option>
+                                    @foreach($surahsList as $surahItem)
+                                        <option value="{{ $surahItem->nama_indonesia }}" {{ old('surah', $hafalan->surah) == $surahItem->nama_indonesia ? 'selected' : '' }}>{{ $surahItem->nomor }}. {{ $surahItem->nama_latin }} ({{ $surahItem->nama_indonesia }})</option>
+                                    @endforeach
+                                </select>
+                                @error('surah') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
+                            </div>
                         </div>
                         <x-tahfidz.form-input name="ayat" label="Ayat" placeholder="Contoh: 1-10" :value="old('ayat', $hafalan->ayat)" />
                         
