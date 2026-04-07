@@ -43,7 +43,7 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $login = $this->input('email');
-        
+
         // Detect if input is email or phone
         // If it's numeric only or doesn't have @, assume it's phone
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';

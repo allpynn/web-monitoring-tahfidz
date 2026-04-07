@@ -12,6 +12,7 @@ class ParentController extends Controller
     public function index()
     {
         $parents = User::where('role', 'orang_tua')->latest()->get();
+
         return view('admin.parents.index', compact('parents'));
     }
 
@@ -45,6 +46,7 @@ class ParentController extends Controller
         if ($parent->role !== 'orang_tua') {
             abort(403);
         }
+
         return view('admin.parents.edit', compact('parent'));
     }
 
@@ -56,7 +58,7 @@ class ParentController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $parent->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$parent->id,
             'phone' => 'required|string|max:20',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
@@ -82,6 +84,7 @@ class ParentController extends Controller
             abort(403);
         }
         $parent->delete();
+
         return redirect()->route('admin.parents.index')->with('success', 'Akun orang tua berhasil dihapus.');
     }
 }

@@ -7,8 +7,6 @@ use App\Models\Memorization;
 use App\Models\Student;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -23,11 +21,11 @@ class DashboardController extends Controller
 
         // Weekly chart data: last 7 days
         $weeklyLabels = [];
-        $weeklyData   = [];
+        $weeklyData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $weeklyLabels[] = $date->translatedFormat('D, d M');
-            $weeklyData[]   = Memorization::whereDate('created_at', $date->toDateString())->count();
+            $weeklyData[] = Memorization::whereDate('created_at', $date->toDateString())->count();
         }
 
         // Teacher performance
@@ -36,6 +34,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($guru) {
                 $guru->total_memorizations = Memorization::where('guru_id', $guru->id)->where('created_at', '>=', now()->startOfMonth())->count();
+
                 return $guru;
             })
             ->sortByDesc('total_memorizations');

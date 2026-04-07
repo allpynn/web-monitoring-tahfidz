@@ -2,43 +2,44 @@
 
 namespace App\Http\Controllers\Guru;
 
+use App\Helpers\PdfHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreHafalanRequest;
+use App\Http\Requests\UpdateHafalanRequest;
 use App\Models\Memorization;
 use App\Models\Student;
-use Illuminate\Http\Request;
+use App\Models\Surah;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class HafalanController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index()
     {
-        $hafalan = Memorization::with('student')->where('guru_id', auth()->id())->latest()->get();
+        $hafalan = Memorization::with('student')
+            ->where('guru_id', auth()->id())
+            ->latest()
+            ->get();
+
         return view('guru.hafalan.index', compact('hafalan'));
     }
 
     public function create()
     {
         $students = Student::where('guru_id', auth()->id())->get();
-        $surahsList = \App\Models\Surah::orderBy('nomor')->get();
+        $surahsList = Surah::orderBy('nomor')->get();
+
         return view('guru.hafalan.create', compact('students', 'surahsList'));
     }
 
-    public function store(Request $request)
+    public function store(StoreHafalanRequest $request)
     {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'is_present' => 'required|boolean',
-            'juz' => 'required_if:is_present,1|nullable|integer|min:1|max:30',
-            'surah' => 'required_if:is_present,1|nullable|string',
-            'ayat' => 'required_if:is_present,1|nullable|string',
-            'status' => 'required_if:is_present,1|nullable|in:Lancar,Perlu Perbaikan',
-            'notes' => 'nullable|string',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
         $data['guru_id'] = auth()->id();
 
-        if (!$request->is_present) {
+        if (! $request->is_present) {
             $data['juz'] = null;
             $data['surah'] = null;
             $data['ayat'] = null;
@@ -52,29 +53,19 @@ class HafalanController extends Controller
 
     public function edit(Memorization $hafalan)
     {
-        $this->authorizeGuru($hafalan);
+        $this->authorize('update', $hafalan);
+
         $students = Student::where('guru_id', auth()->id())->get();
-        $surahsList = \App\Models\Surah::orderBy('nomor')->get();
+        $surahsList = Surah::orderBy('nomor')->get();
+
         return view('guru.hafalan.edit', compact('hafalan', 'students', 'surahsList'));
     }
 
-    public function update(Request $request, Memorization $hafalan)
+    public function update(UpdateHafalanRequest $request, Memorization $hafalan)
     {
-        $this->authorizeGuru($hafalan);
+        $data = $request->validated();
 
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'is_present' => 'required|boolean',
-            'juz' => 'required_if:is_present,1|nullable|integer|min:1|max:30',
-            'surah' => 'required_if:is_present,1|nullable|string',
-            'ayat' => 'required_if:is_present,1|nullable|string',
-            'status' => 'required_if:is_present,1|nullable|in:Lancar,Perlu Perbaikan',
-            'notes' => 'nullable|string',
-            'parent_comment' => 'nullable|string',
-        ]);
-
-        $data = $request->all();
-        if (!$request->is_present) {
+        if (! $request->is_present) {
             $data['juz'] = null;
             $data['surah'] = null;
             $data['ayat'] = null;
@@ -88,44 +79,38 @@ class HafalanController extends Controller
 
     public function destroy(Memorization $hafalan)
     {
-        $this->authorizeGuru($hafalan);
+        $this->authorize('delete', $hafalan);
+
         $hafalan->delete();
+
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil dihapus.');
     }
 
     public function exportPdf(Student $student)
     {
+        $this->authorize('view', $student);
+
         $memorizations = $student->memorizations()->with('guru')->latest()->take(20)->get();
-        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
+        $logoBase64 = PdfHelper::getLogoBase64();
 
         $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
-        
-        return $pdf->download('Raport_Tahfidz_' . $student->nis . '.pdf');
+
+        return $pdf->download('Raport_Tahfidz_'.$student->nis.'.pdf');
     }
 
     public function exportSemesterPdf(Student $student)
     {
-        if ($student->guru_id !== auth()->id()) {
-            abort(403);
-        }
+        $this->authorize('view', $student);
 
-        // Ambil data 6 bulan terakhir (atau sesuai logika semester)
         $memorizations = $student->memorizations()
             ->where('created_at', '>=', now()->subMonths(6))
             ->orderBy('created_at', 'asc')
             ->get();
-            
-        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
+
+        $logoBase64 = PdfHelper::getLogoBase64();
 
         $pdf = Pdf::loadView('pdf.semester_recap', compact('student', 'memorizations', 'logoBase64'));
-        
-        return $pdf->download('Rekap_Semester_' . $student->nis . '.pdf');
-    }
 
-    protected function authorizeGuru(Memorization $hafalan)
-    {
-        if ($hafalan->guru_id !== auth()->id()) {
-            abort(403);
-        }
+        return $pdf->download('Rekap_Semester_'.$student->nis.'.pdf');
     }
 }

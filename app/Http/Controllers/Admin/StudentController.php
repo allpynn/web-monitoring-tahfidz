@@ -2,21 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\PdfHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Student;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
     public function index()
     {
-        $students = \App\Models\Student::with(['parent', 'guru'])->latest()->get();
+        $students = Student::with(['parent', 'guru'])->latest()->get();
+
         return view('admin.students.index', compact('students'));
     }
 
     public function create()
     {
-        $parents = \App\Models\User::where('role', 'orang_tua')->get();
-        $gurus = \App\Models\User::where('role', 'guru')->get();
+        $parents = User::where('role', 'orang_tua')->get();
+        $gurus = User::where('role', 'guru')->get();
+
         return view('admin.students.create', compact('parents', 'gurus'));
     }
 
@@ -31,22 +37,24 @@ class StudentController extends Controller
             'target_date' => 'nullable|date',
         ]);
 
-        \App\Models\Student::create($request->all());
+        Student::create($request->all());
 
         return redirect()->route('admin.students.index')->with('success', 'Santri berhasil ditambahkan.');
     }
-    public function edit(\App\Models\Student $student)
+
+    public function edit(Student $student)
     {
-        $parents = \App\Models\User::where('role', 'orang_tua')->get();
-        $gurus = \App\Models\User::where('role', 'guru')->get();
+        $parents = User::where('role', 'orang_tua')->get();
+        $gurus = User::where('role', 'guru')->get();
+
         return view('admin.students.edit', compact('student', 'parents', 'gurus'));
     }
 
-    public function update(Request $request, \App\Models\Student $student)
+    public function update(Request $request, Student $student)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'nis' => 'required|string|unique:students,nis,' . $student->id,
+            'nis' => 'required|string|unique:students,nis,'.$student->id,
             'parent_id' => 'required|exists:users,id',
             'guru_id' => 'required|exists:users,id',
             'target_juz' => 'required|integer|min:1|max:30',
@@ -58,18 +66,20 @@ class StudentController extends Controller
         return redirect()->route('admin.students.index')->with('success', 'Data santri berhasil diperbarui.');
     }
 
-    public function destroy(\App\Models\Student $student)
+    public function destroy(Student $student)
     {
         $student->delete();
+
         return redirect()->route('admin.students.index')->with('success', 'Santri berhasil dihapus.');
     }
 
-    public function exportPdf(\App\Models\Student $student)
+    public function exportPdf(Student $student)
     {
         $memorizations = $student->memorizations()->with('guru')->latest()->get();
-        $logoBase64 = \App\Helpers\PdfHelper::getLogoBase64();
-        
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
-        return $pdf->download('Laporan_' . $student->nis . '.pdf');
+        $logoBase64 = PdfHelper::getLogoBase64();
+
+        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
+
+        return $pdf->download('Laporan_'.$student->nis.'.pdf');
     }
 }

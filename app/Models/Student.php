@@ -37,8 +37,8 @@ class Student extends Model
 
     public function getTargetProgressAttribute()
     {
-        return $this->target_juz > 0 
-            ? round(($this->current_juz / $this->target_juz) * 100) 
+        return $this->target_juz > 0
+            ? round(($this->current_juz / $this->target_juz) * 100)
             : 0;
     }
 }
