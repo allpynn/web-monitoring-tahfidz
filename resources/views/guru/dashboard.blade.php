@@ -1,4 +1,16 @@
 <x-tahfidz-layout>
+    @php
+    /**
+     * @var array $stats
+     * @var array $weeklyLabels
+     * @var array $weeklyData
+     * @var \Illuminate\Database\Eloquent\Collection|\App\Models\Memorization[] $recent_activities
+     * @var \Illuminate\Database\Eloquent\Collection|\App\Models\Memorization[] $parent_feedbacks
+     * @var \Illuminate\Support\Collection|\App\Models\Student[] $early_warnings
+     * @var \Illuminate\Support\Collection|\App\Models\Student[] $top_targets
+     */
+    @endphp
+
     <x-slot name="header">
         Dashboard Guru
     </x-slot>
@@ -23,7 +35,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <x-tahfidz.card title="Aktivitas Halaqah Mingguan">
             <div class="h-64">
-                <canvas id="weeklyChart"></canvas>
+                <canvas id="weeklyChart" data-labels="{{ json_encode($weeklyLabels) }}" data-values="{{ json_encode($weeklyData) }}"></canvas>
             </div>
         </x-tahfidz.card>
 
@@ -54,8 +66,9 @@
                                     <span class="text-sm font-bold dark:text-white">{{ $top->name }}</span>
                                     <span class="text-xs text-emerald-600 font-bold">{{ $top->progress_percent }}%</span>
                                 </div>
+                                @php $progressWidth = ($top->progress_percent ?? 0) . '%'; @endphp
                                 <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
-                                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ $top->progress_percent }}%"></div>
+                                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: <?php echo $progressWidth; ?>;"></div>
                                 </div>
                             </div>
                         </div>
@@ -148,14 +161,18 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        const canvas = document.getElementById('weeklyChart');
+        const ctx = canvas.getContext('2d');
+        const labels = JSON.parse(canvas.getAttribute('data-labels'));
+        const dataValues = JSON.parse(canvas.getAttribute('data-values'));
+
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: {!! json_encode($weeklyLabels) !!},
+                labels: labels,
                 datasets: [{
                     label: 'Jumlah Setoran',
-                    data: {!! json_encode($weeklyData) !!},
+                    data: dataValues,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     borderWidth: 3,

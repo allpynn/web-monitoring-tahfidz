@@ -6,15 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Memorization;
 use App\Models\Student;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $stats = [
-            'total_hafalan' => Memorization::where('guru_id', auth()->id())->where('is_present', true)->count(),
-            'total_absensi' => Memorization::where('guru_id', auth()->id())->count(),
-            'today_entries' => Memorization::where('guru_id', auth()->id())->whereDate('created_at', today())->count(),
+            'total_hafalan' => Memorization::where('guru_id', Auth::id())->where('is_present', true)->count(),
+            'total_absensi' => Memorization::where('guru_id', Auth::id())->count(),
+            'today_entries' => Memorization::where('guru_id', Auth::id())->whereDate('created_at', today())->count(),
         ];
 
         // Weekly chart data for this Guru: last 7 days
@@ -23,25 +24,25 @@ class DashboardController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $weeklyLabels[] = $date->translatedFormat('D, d M');
-            $weeklyData[] = Memorization::where('guru_id', auth()->id())
+            $weeklyData[] = Memorization::where('guru_id', Auth::id())
                 ->whereDate('created_at', $date->toDateString())
                 ->count();
         }
 
         $recent_activities = Memorization::with('student')
-            ->where('guru_id', auth()->id())
+            ->where('guru_id', Auth::id())
             ->latest()
             ->take(5)
             ->get();
 
         $parent_feedbacks = Memorization::with('student')
-            ->where('guru_id', auth()->id())
+            ->where('guru_id', Auth::id())
             ->whereNotNull('parent_comment')
             ->latest()
             ->take(5)
             ->get();
 
-        $students = Student::where('guru_id', auth()->id())->with('memorizations')->get();
+        $students = Student::where('guru_id', Auth::id())->with('memorizations')->get();
 
         $early_warnings = collect();
         $top_targets = collect();

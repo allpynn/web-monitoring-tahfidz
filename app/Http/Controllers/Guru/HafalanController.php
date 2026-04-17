@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\Surah;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 
 class HafalanController extends Controller
 {
@@ -19,7 +20,7 @@ class HafalanController extends Controller
     public function index()
     {
         $hafalan = Memorization::with('student')
-            ->where('guru_id', auth()->id())
+            ->where('guru_id', Auth::id())
             ->latest()
             ->get();
 
@@ -28,8 +29,8 @@ class HafalanController extends Controller
 
     public function create()
     {
-        $students = Student::where('guru_id', auth()->id())->get();
-        $surahsList = Surah::orderBy('nomor')->get();
+        $students = Student::where('guru_id', Auth::id())->get();
+        $surahsList = Surah::orderBy('nomor');
 
         return view('guru.hafalan.create', compact('students', 'surahsList'));
     }
@@ -37,7 +38,7 @@ class HafalanController extends Controller
     public function store(StoreHafalanRequest $request)
     {
         $data = $request->validated();
-        $data['guru_id'] = auth()->id();
+        $data['guru_id'] = Auth::id();
 
         if (! $request->is_present) {
             $data['juz'] = null;
@@ -55,8 +56,8 @@ class HafalanController extends Controller
     {
         $this->authorize('update', $hafalan);
 
-        $students = Student::where('guru_id', auth()->id())->get();
-        $surahsList = Surah::orderBy('nomor')->get();
+        $students = Student::where('guru_id', Auth::id())->get();
+        $surahsList = Surah::orderBy('nomor');
 
         return view('guru.hafalan.edit', compact('hafalan', 'students', 'surahsList'));
     }
