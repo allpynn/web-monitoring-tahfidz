@@ -1,11 +1,4 @@
 <x-tahfidz-layout>
-    <x-slot name="header">
-        Daftar Santri Saya
-    </x-slot>
-    <x-slot name="subtitle">
-        Santri yang berada di bawah bimbingan Anda.
-    </x-slot>
-
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h2 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Santri Bimbingan</h2>
@@ -64,7 +57,7 @@
                                 <div class="flex flex-col gap-1 items-center">
                                     <div class="text-xs font-bold text-emerald-600 mb-1">{{ $student->target_progress }}%</div>
                                     <div class="w-24 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-                                        <div class="bg-emerald-500 h-full rounded-full" style="width: {{ $student->target_progress }}%"></div>
+                                        <div class="bg-emerald-500 h-full rounded-full" style="width: <?php echo $student->target_progress; ?>%;"></div>
                                     </div>
                                 </div>
                             </td>

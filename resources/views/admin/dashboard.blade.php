@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <x-tahfidz.card title="Statistik Mingguan">
             <div class="relative h-64">
-                <canvas id="weeklyChart"></canvas>
+                <canvas id="weeklyChart" data-labels='@json($weeklyLabels)' data-values='@json($weeklyData)'></canvas>
             </div>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">Jumlah setoran hafalan 7 hari terakhir</p>
         </x-tahfidz.card>
@@ -35,10 +35,10 @@
                 new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: @json($weeklyLabels),
+                        labels: JSON.parse(ctx.dataset.labels),
                         datasets: [{
                             label: 'Setoran Hafalan',
-                            data: @json($weeklyData),
+                            data: JSON.parse(ctx.dataset.values),
                             backgroundColor: 'rgba(5, 150, 105, 0.75)',
                             borderColor: 'rgba(5, 150, 105, 1)',
                             borderWidth: 2,

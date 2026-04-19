@@ -27,7 +27,7 @@
                     </div>
                     <a href="{{ route('parent.history.export', $student) }}" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-50 flex items-center gap-2 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Export PDF
+                        Rekap Setoran
                     </a>
                 </div>
 
@@ -104,7 +104,7 @@
                                     $lancarPct = $totalQ > 0 ? round(($student->quality_chart_data['lancar'] / $totalQ) * 100) : 0;
                                 @endphp
                                 @if($totalQ > 0)
-                                    <canvas id="qualityChart{{ $student->id }}"></canvas>
+                                    <canvas id="qualityChart{{ $student->id }}" class="quality-chart" data-lancar="{{ $student->quality_chart_data['lancar'] }}" data-perbaikan="{{ $student->quality_chart_data['perbaikan'] }}"></canvas>
                                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                         <span class="text-2xl font-black text-gray-900 dark:text-white">{{ $lancarPct }}%</span>
                                         <span class="text-[10px] text-gray-500 font-bold uppercase">Lancar</span>
@@ -139,35 +139,33 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            @foreach($students as $student)
-                @php
-                    $totalQ = $student->quality_chart_data['lancar'] + $student->quality_chart_data['perbaikan'];
-                @endphp
-                @if($totalQ > 0)
-                    const ctx{{ $student->id }} = document.getElementById('qualityChart{{ $student->id }}').getContext('2d');
-                    new Chart(ctx{{ $student->id }}, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Lancar', 'Perlu Perbaikan'],
-                            datasets: [{
-                                data: [{{ $student->quality_chart_data['lancar'] }}, {{ $student->quality_chart_data['perbaikan'] }}],
-                                backgroundColor: ['#10b981', '#fbbf24'],
-                                borderWidth: 0,
-                                hoverOffset: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '75%',
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: { enabled: true }
-                            }
+            document.querySelectorAll('.quality-chart').forEach(canvas => {
+                const ctx = canvas.getContext('2d');
+                const lancar = parseInt(canvas.dataset.lancar);
+                const perbaikan = parseInt(canvas.dataset.perbaikan);
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Lancar', 'Perlu Perbaikan'],
+                        datasets: [{
+                            data: [lancar, perbaikan],
+                            backgroundColor: ['#10b981', '#fbbf24'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: true }
                         }
-                    });
-                @endif
-            @endforeach
+                    }
+                });
+            });
         });
     </script>
     @endpush

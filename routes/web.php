@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CredentialController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ParentController;
 use App\Http\Controllers\Admin\StudentController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Guru\HafalanController;
 use App\Http\Controllers\Parent\HistoryController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,7 +16,9 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    $role = auth()->user()->role;
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+    $role = $user?->role;
 
     return match ($role) {
         'admin' => redirect()->route('admin.dashboard'),
@@ -30,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('students', StudentController::class);
         Route::get('/students/{student}/export-pdf', [StudentController::class, 'exportPdf'])->name('students.export');
+        Route::get('/export-credentials', [CredentialController::class, 'export'])->name('export.credentials');
         Route::resource('users', UserController::class);
         Route::resource('parents', ParentController::class);
     });
