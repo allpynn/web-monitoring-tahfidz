@@ -11,8 +11,14 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+use App\Http\Controllers\LandingController;
+
+Route::get('/', [LandingController::class, 'index'])->name('home');
+
+Route::prefix('fitur')->name('fitur.')->group(function () {
+    Route::get('/manajemen-santri', [LandingController::class, 'manajemenSantri'])->name('manajemen');
+    Route::get('/input-realtime', [LandingController::class, 'inputRealtime'])->name('realtime');
+    Route::get('/laporan-visual', [LandingController::class, 'laporanVisual'])->name('laporan');
 });
 
 Route::get('/dashboard', function () {
