@@ -7,10 +7,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\MemorizationService;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
+    protected $memorizationService;
+
+    public function __construct(MemorizationService $memorizationService)
+    {
+        $this->memorizationService = $memorizationService;
+    }
     public function index()
     {
         $students = Student::with(['parent', 'guru'])->latest()->get();
@@ -75,10 +82,7 @@ class StudentController extends Controller
 
     public function exportPdf(Student $student)
     {
-        $memorizations = $student->memorizations()->with('guru')->latest()->get();
-        $logoBase64 = PdfHelper::getLogoBase64();
-
-        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
+        $pdf = $this->memorizationService->generateStudentReport($student);
 
         return $pdf->download('Laporan_'.$student->nis.'.pdf');
     }

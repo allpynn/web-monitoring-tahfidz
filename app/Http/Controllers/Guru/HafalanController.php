@@ -10,12 +10,20 @@ use App\Models\Memorization;
 use App\Models\Student;
 use App\Models\Surah;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\MemorizationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 
 class HafalanController extends Controller
 {
     use AuthorizesRequests;
+
+    protected $memorizationService;
+
+    public function __construct(MemorizationService $memorizationService)
+    {
+        $this->memorizationService = $memorizationService;
+    }
 
     public function index()
     {
@@ -91,10 +99,7 @@ class HafalanController extends Controller
     {
         $this->authorize('view', $student);
 
-        $memorizations = $student->memorizations()->with('guru')->latest()->take(20)->get();
-        $logoBase64 = PdfHelper::getLogoBase64();
-
-        $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
+        $pdf = $this->memorizationService->generateStudentReport($student, 20);
 
         return $pdf->download('Raport_Tahfidz_'.$student->nis.'.pdf');
     }
@@ -103,14 +108,7 @@ class HafalanController extends Controller
     {
         $this->authorize('view', $student);
 
-        $memorizations = $student->memorizations()
-            ->where('created_at', '>=', now()->subMonths(6))
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        $logoBase64 = PdfHelper::getLogoBase64();
-
-        $pdf = Pdf::loadView('pdf.semester_recap', compact('student', 'memorizations', 'logoBase64'));
+        $pdf = $this->memorizationService->generateSemesterRecap($student);
 
         return $pdf->download('Rekap_Semester_'.$student->nis.'.pdf');
     }
