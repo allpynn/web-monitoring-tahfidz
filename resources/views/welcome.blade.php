@@ -254,6 +254,17 @@
             eyeIcon.classList.toggle('hidden');
             eyeOffIcon.classList.toggle('hidden');
         });
+
+        // Reverb Real-time Listener
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Echo !== 'undefined') {
+                 window.Echo.channel('hafalan-updates')
+                    .listen('HafalanUpdated', (e) => {
+                        console.log('Update Hafalan:', e.message);
+                        // Implementasi notifikasi Toast bisa dilakukan di sini
+                    });
+            }
+        });
     </script>
 </body>
 </html>

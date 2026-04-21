@@ -18,6 +18,7 @@ Route::get('/', function () {
 
 
 
+
 Route::get('/dashboard', function () {
     /** @var \App\Models\User $user */
     $user = Auth::user();
