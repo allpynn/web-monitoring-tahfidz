@@ -65,6 +65,7 @@
       </ul>
       
       <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-100 dark:border-gray-700">
+         @if($role === 'admin')
          <li>
             <a href="{{ route('profile.edit') }}" class="flex items-center p-3 text-gray-900 rounded-2xl dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/30 group {{ request()->routeIs('profile.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 font-bold' : '' }}">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
@@ -73,6 +74,7 @@
                <span class="ms-3">Profil Saya</span>
             </a>
          </li>
+         @endif
          <li>
             <form method="POST" action="{{ route('logout') }}">
                @csrf

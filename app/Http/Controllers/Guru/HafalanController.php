@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Guru;
 
-use App\Helpers\PdfHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreHafalanRequest;
 use App\Http\Requests\UpdateHafalanRequest;
 use App\Models\Memorization;
 use App\Models\Student;
 use App\Models\Surah;
-use Barryvdh\DomPDF\Facade\Pdf;
+
 use App\Services\MemorizationService;
+use App\Events\HafalanUpdated;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 
@@ -57,6 +57,8 @@ class HafalanController extends Controller
 
         Memorization::create($data);
 
+        broadcast(new HafalanUpdated("Siswa " . Auth::user()->name . " telah melakukan setoran baru!"))->toOthers();
+
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil disimpan.');
     }
 
@@ -82,6 +84,8 @@ class HafalanController extends Controller
         }
 
         $hafalan->update($data);
+
+        broadcast(new HafalanUpdated("Update hafalan oleh " . Auth::user()->name))->toOthers();
 
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil diperbarui.');
     }

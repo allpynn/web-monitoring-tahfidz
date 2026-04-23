@@ -8,16 +8,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
-    public function create(): View
-    {
-        return view('auth.login');
-    }
 
     /**
      * Handle an incoming authentication request.
@@ -27,6 +21,13 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Handle Remember Email cookie
+        if ($request->boolean('remember')) {
+            Cookie::queue('remember_email', $request->email, 60 * 24 * 30); // 30 days
+        } else {
+            Cookie::queue(Cookie::forget('remember_email'));
+        }
 
         $role = $request->user()->role;
 

@@ -12,6 +12,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $month = (int) request('month', now()->month);
+        $year = (int) request('year', now()->year);
+
         $guruCount = User::where('role', 'guru')->count();
         $studentCount = Student::count();
         $hafalanCount = Memorization::count();
@@ -19,21 +22,35 @@ class DashboardController extends Controller
             ? round((Memorization::where('status', 'Lancar')->count() / $hafalanCount) * 100)
             : 0;
 
-        // Weekly chart data: last 7 days
-        $weeklyLabels = [];
+        // Date range for the selected month and year
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+        // Monthly chart data: Dividing month into 4 weeks
+        $weeklyLabels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
         $weeklyData = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $weeklyLabels[] = $date->translatedFormat('D, d M');
-            $weeklyData[] = Memorization::whereDate('created_at', $date->toDateString())->count();
+        
+        $ranges = [
+            [1, 7],
+            [8, 14],
+            [15, 21],
+            [22, $endDate->day]
+        ];
+
+        foreach ($ranges as $range) {
+            $weekStart = Carbon::createFromDate($year, $month, $range[0])->startOfDay();
+            $weekEnd = Carbon::createFromDate($year, $month, $range[1])->endOfDay();
+            $weeklyData[] = Memorization::whereBetween('created_at', [$weekStart, $weekEnd])->count();
         }
 
-        // Teacher performance
+        // Teacher performance filtered by selected month and year
         $teacher_performance = User::where('role', 'guru')
-            ->withCount('students')
+            ->withCount('studentsAsGuru')
             ->get()
-            ->map(function ($guru) {
-                $guru->total_memorizations = Memorization::where('guru_id', $guru->id)->where('created_at', '>=', now()->startOfMonth())->count();
+            ->map(function ($guru) use ($year, $month) {
+                $guru->total_memorizations = Memorization::where('guru_id', $guru->id)
+                    ->whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->count();
 
                 return $guru;
             })
@@ -46,7 +63,9 @@ class DashboardController extends Controller
             'lancarPercent',
             'weeklyLabels',
             'weeklyData',
-            'teacher_performance'
+            'teacher_performance',
+            'month',
+            'year'
         ));
     }
 }
