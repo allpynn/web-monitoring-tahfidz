@@ -81,6 +81,6 @@ class DashboardController extends Controller
         // Sort top targets by progress descending
         $top_targets = $top_targets->sortByDesc('progress_percent')->take(3);
 
-        return view('guru.dashboard', compact('stats', 'weeklyLabels', 'weeklyData', 'recent_activities', 'parent_feedbacks', 'early_warnings', 'top_targets'));
+        return view('guru.dashboard', compact('stats', 'weeklyLabels', 'weeklyData', 'recent_activities', 'parent_feedbacks', 'early_warnings', 'top_targets', 'month', 'year'));
     }
 }

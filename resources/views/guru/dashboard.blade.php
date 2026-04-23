@@ -33,10 +33,31 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <x-tahfidz.card title="Aktivitas Halaqah Mingguan">
+        <x-tahfidz.card title="Aktivitas Mingguan">
+            <x-slot name="header_action">
+                <form action="{{ route('guru.dashboard') }}" method="GET" class="flex items-center gap-2">
+                    <select name="month" class="text-[10px] font-bold py-1 px-2 rounded-lg border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 transition-all" onchange="this.form.submit()">
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create($year, $m, 1)->translatedFormat('M') }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <select name="year" class="text-[10px] font-bold py-1 px-2 rounded-lg border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 transition-all" onchange="this.form.submit()">
+                        @foreach(range(now()->year - 2, now()->year + 1) as $y)
+                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </x-slot>
             <div class="h-64">
                 <canvas id="weeklyChart" data-labels="{{ json_encode($weeklyLabels) }}" data-values="{{ json_encode($weeklyData) }}"></canvas>
             </div>
+            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-4 text-center font-medium uppercase tracking-wider">
+                Distribusi setoran periode {{ \Carbon\Carbon::create($year, $month, 1)->translatedFormat('F Y') }}
+            </p>
         </x-tahfidz.card>
 
         <div class="space-y-8">
@@ -189,7 +210,14 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100,
+                        grid: { display: false },
+                        ticks: {
+                            precision: 0
+                        }
+                    },
                     x: { grid: { display: false } }
                 }
             }

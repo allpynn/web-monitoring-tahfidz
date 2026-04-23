@@ -5,9 +5,16 @@
     <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full blur-3xl group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/30 transition-colors"></div>
     
     <div class="relative flex items-center justify-between mb-4">
-        @if($title)
-            <h5 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ $title }}</h5>
-        @endif
+        <div class="flex flex-col">
+            @if($title)
+                <h5 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ $title }}</h5>
+            @endif
+            @if(isset($header_action))
+                <div class="mt-2">
+                    {{ $header_action }}
+                </div>
+            @endif
+        </div>
         @if($icon)
             <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl group-hover:scale-110 transition-transform text-emerald-600 dark:text-emerald-400">
                 {!! $icon !!}
