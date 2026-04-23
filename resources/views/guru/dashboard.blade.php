@@ -32,34 +32,7 @@
         </x-tahfidz.card>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <x-tahfidz.card title="Aktivitas Mingguan">
-            <x-slot name="header_action">
-                <form action="{{ route('guru.dashboard') }}" method="GET" class="flex items-center gap-2">
-                    <select name="month" class="text-[10px] font-bold py-1 px-2 rounded-lg border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 transition-all" onchange="this.form.submit()">
-                        @foreach(range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create($year, $m, 1)->translatedFormat('M') }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <select name="year" class="text-[10px] font-bold py-1 px-2 rounded-lg border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 transition-all" onchange="this.form.submit()">
-                        @foreach(range(now()->year - 2, now()->year + 1) as $y)
-                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
-                                {{ $y }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </x-slot>
-            <div class="h-64">
-                <canvas id="weeklyChart" data-labels="{{ json_encode($weeklyLabels) }}" data-values="{{ json_encode($weeklyData) }}"></canvas>
-            </div>
-            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-4 text-center font-medium uppercase tracking-wider">
-                Distribusi setoran periode {{ \Carbon\Carbon::create($year, $month, 1)->translatedFormat('F Y') }}
-            </p>
-        </x-tahfidz.card>
-
+    <div class="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
         <div class="space-y-8">
             <x-tahfidz.card title="⚠️ Perhatian Khusus" class="border-amber-200 dark:border-amber-900/50">
                 <div class="space-y-4">
@@ -77,7 +50,7 @@
                 </div>
             </x-tahfidz.card>
 
-            <x-tahfidz.card title="🏆 Top Pencapaian Target">
+            <x-tahfidz.card title="🏆 Pencapaian Target">
                 <div class="space-y-3">
                     @forelse($top_targets as $top)
                         <div class="flex items-center gap-3">
@@ -179,49 +152,4 @@
         </x-tahfidz.card>
     </div>
 
-    @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const canvas = document.getElementById('weeklyChart');
-        const ctx = canvas.getContext('2d');
-        const labels = JSON.parse(canvas.getAttribute('data-labels'));
-        const dataValues = JSON.parse(canvas.getAttribute('data-values'));
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Jumlah Setoran',
-                    data: dataValues,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#10b981',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        max: 100,
-                        grid: { display: false },
-                        ticks: {
-                            precision: 0
-                        }
-                    },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    </script>
-    @endpush
 </x-tahfidz-layout>
