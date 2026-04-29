@@ -4,8 +4,8 @@
      * @var array $stats
      * @var array $weeklyLabels
      * @var array $weeklyData
-     * @var \Illuminate\Database\Eloquent\Collection|\App\Models\Memorization[] $recent_activities
-     * @var \Illuminate\Database\Eloquent\Collection|\App\Models\Memorization[] $parent_feedbacks
+     * @var \Illuminate\Database\Eloquent\Collection|\App\Models\RiwayatHafalan[] $recent_activities
+     * @var \Illuminate\Database\Eloquent\Collection|\App\Models\RiwayatHafalan[] $parent_feedbacks
      * @var \Illuminate\Support\Collection|\App\Models\Student[] $early_warnings
      * @var \Illuminate\Support\Collection|\App\Models\Student[] $top_targets
      */

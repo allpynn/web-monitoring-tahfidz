@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Parent;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCommentRequest;
-use App\Models\Memorization;
-use App\Services\MemorizationService;
+use App\Models\RiwayatHafalan;
+use App\Services\RiwayatHafalanService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,7 +15,7 @@ class DashboardController extends Controller
 
     protected $memorizationService;
 
-    public function __construct(MemorizationService $memorizationService)
+    public function __construct(RiwayatHafalanService $memorizationService)
     {
         $this->memorizationService = $memorizationService;
     }
@@ -42,7 +42,7 @@ class DashboardController extends Controller
         return view('parent.dashboard', compact('students'));
     }
 
-    public function updateComment(UpdateCommentRequest $request, Memorization $memorization)
+    public function updateComment(UpdateCommentRequest $request, RiwayatHafalan $memorization)
     {
         $this->authorize('update', $memorization);
 

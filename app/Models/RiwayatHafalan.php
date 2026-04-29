@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Memorization extends Model
+class RiwayatHafalan extends Model
 {
+    protected $table = 'riwayat_hafalan';
+
     protected $fillable = [
         'student_id',
         'juz',

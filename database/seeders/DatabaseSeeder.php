@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Memorization;
+use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use App\Models\Surah;
 use App\Models\User;
@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
             $guruId = ($idx < 2) ? $guru1->id : $guru2->id;
             for ($i = 0; $i < 5; $i++) {
                 $randomSurah = $surahs->random();
-                Memorization::create([
+                RiwayatHafalan::create([
                     'student_id' => $santri->id,
                     'guru_id' => $guruId,
                     'juz' => $randomSurah->juz_awal,

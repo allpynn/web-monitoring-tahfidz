@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
-use App\Models\Memorization;
+use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -13,18 +13,18 @@ class DashboardController extends Controller
     public function index()
     {
         $stats = [
-            'total_hafalan' => Memorization::where('guru_id', Auth::id())->where('is_present', true)->count(),
-            'total_absensi' => Memorization::where('guru_id', Auth::id())->count(),
-            'today_entries' => Memorization::where('guru_id', Auth::id())->whereDate('created_at', today())->count(),
+            'total_hafalan' => RiwayatHafalan::where('guru_id', Auth::id())->where('is_present', true)->count(),
+            'total_absensi' => RiwayatHafalan::where('guru_id', Auth::id())->count(),
+            'today_entries' => RiwayatHafalan::where('guru_id', Auth::id())->whereDate('created_at', today())->count(),
         ];
 
-        $recent_activities = Memorization::with('student')
+        $recent_activities = RiwayatHafalan::with('student')
             ->where('guru_id', Auth::id())
             ->latest()
             ->take(5)
             ->get();
 
-        $parent_feedbacks = Memorization::with('student')
+        $parent_feedbacks = RiwayatHafalan::with('student')
             ->where('guru_id', Auth::id())
             ->whereNotNull('parent_comment')
             ->latest()

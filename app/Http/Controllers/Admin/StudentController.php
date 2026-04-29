@@ -7,14 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Services\MemorizationService;
+use App\Services\RiwayatHafalanService;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
     protected $memorizationService;
 
-    public function __construct(MemorizationService $memorizationService)
+    public function __construct(RiwayatHafalanService $memorizationService)
     {
         $this->memorizationService = $memorizationService;
     }

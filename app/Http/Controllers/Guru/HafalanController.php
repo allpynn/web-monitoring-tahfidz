@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreHafalanRequest;
 use App\Http\Requests\UpdateHafalanRequest;
-use App\Models\Memorization;
+use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use App\Models\Surah;
 
-use App\Services\MemorizationService;
+use App\Services\RiwayatHafalanService;
 use App\Events\HafalanUpdated;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
@@ -20,14 +20,14 @@ class HafalanController extends Controller
 
     protected $memorizationService;
 
-    public function __construct(MemorizationService $memorizationService)
+    public function __construct(RiwayatHafalanService $memorizationService)
     {
         $this->memorizationService = $memorizationService;
     }
 
     public function index()
     {
-        $hafalan = Memorization::with('student')
+        $hafalan = RiwayatHafalan::with('student')
             ->where('guru_id', Auth::id())
             ->latest()
             ->get();
@@ -55,14 +55,14 @@ class HafalanController extends Controller
             $data['status'] = null;
         }
 
-        Memorization::create($data);
+        RiwayatHafalan::create($data);
 
         broadcast(new HafalanUpdated("Siswa " . Auth::user()->name . " telah melakukan setoran baru!"))->toOthers();
 
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil disimpan.');
     }
 
-    public function edit(Memorization $hafalan)
+    public function edit(RiwayatHafalan $hafalan)
     {
         $this->authorize('update', $hafalan);
 
@@ -72,7 +72,7 @@ class HafalanController extends Controller
         return view('guru.hafalan.edit', compact('hafalan', 'students', 'surahsList'));
     }
 
-    public function update(UpdateHafalanRequest $request, Memorization $hafalan)
+    public function update(UpdateHafalanRequest $request, RiwayatHafalan $hafalan)
     {
         $data = $request->validated();
 
@@ -90,7 +90,7 @@ class HafalanController extends Controller
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil diperbarui.');
     }
 
-    public function destroy(Memorization $hafalan)
+    public function destroy(RiwayatHafalan $hafalan)
     {
         $this->authorize('delete', $hafalan);
 

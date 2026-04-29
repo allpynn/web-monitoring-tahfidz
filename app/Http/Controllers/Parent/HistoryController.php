@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Parent;
 
 use App\Helpers\PdfHelper;
 use App\Http\Controllers\Controller;
-use App\Models\Memorization;
+use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class HistoryController extends Controller
             ]);
         }
 
-        $hafalan = Memorization::with('guru')
+        $hafalan = RiwayatHafalan::with('guru')
             ->where('student_id', $student->id)
             ->latest()
             ->paginate(15);

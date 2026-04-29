@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Models\Student;
-use App\Models\Memorization;
+use App\Models\RiwayatHafalan;
 use App\Helpers\PdfHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 
-class MemorizationService
+class RiwayatHafalanService
 {
     /**
      * Generate student report PDF.

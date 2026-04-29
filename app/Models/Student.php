@@ -27,7 +27,7 @@ class Student extends Model
 
     public function memorizations()
     {
-        return $this->hasMany(Memorization::class);
+        return $this->hasMany(RiwayatHafalan::class);
     }
 
     public function getCurrentJuzAttribute()

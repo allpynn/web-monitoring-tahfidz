@@ -75,6 +75,6 @@ class User extends Authenticatable
 
     public function givenMemorizations()
     {
-        return $this->hasMany(Memorization::class, 'guru_id');
+        return $this->hasMany(RiwayatHafalan::class, 'guru_id');
     }
 }
