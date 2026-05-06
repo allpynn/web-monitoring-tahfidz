@@ -28,7 +28,7 @@
                 <div class="space-y-4">
                     <div>
                         <span class="text-xs font-bold text-gray-400 uppercase">Orang Tua</span>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $student->parent->name ?? '-' }}</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $student->parents->pluck('name')->join(', ') ?: '-' }}</p>
                     </div>
                     <div>
                         <span class="text-xs font-bold text-gray-400 uppercase">Target Hafalan</span>

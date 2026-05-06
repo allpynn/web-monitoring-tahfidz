@@ -27,32 +27,17 @@
 
             <x-tahfidz.card title="Relasi Orang Tua">
                 <div class="w-full">
-                    <label for="parent_search" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cari & Pilih Orang Tua / Wali</label>
-                    <input type="text" id="parent_search" list="parent_list" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm" placeholder="Ketik nama orang tua..." value="{{ $student->parent->name ?? '' }}" autocomplete="off" required>
-                    <datalist id="parent_list">
+                    <label for="parent_ids" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Orang Tua / Wali</label>
+                    @php $selectedParents = old('parent_ids', $student->parents->pluck('id')->toArray()); @endphp
+                    <select name="parent_ids[]" id="parent_ids" multiple required class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
                         @foreach($parents as $parent)
-                            <option value="{{ $parent->name }}" data-id="{{ $parent->id }}"></option>
+                            <option value="{{ $parent->id }}" {{ in_array($parent->id, $selectedParents) ? 'selected' : '' }}>{{ $parent->name }} ({{ $parent->email }})</option>
                         @endforeach
-                    </datalist>
-                    <input type="hidden" name="parent_id" id="parent_id" value="{{ old('parent_id', $student->parent_id) }}">
-                    @error('parent_id') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Tekan Ctrl/Cmd + Klik untuk memilih lebih dari satu.</p>
+                    @error('parent_ids') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
                 </div>
             </x-tahfidz.card>
-
-            @push('scripts')
-            <script>
-                document.getElementById('parent_search').addEventListener('input', function(e) {
-                    const val = e.target.value;
-                    const options = document.getElementById('parent_list').options;
-                    for (let i = 0; i < options.length; i++) {
-                        if (options[i].value === val) {
-                            document.getElementById('parent_id').value = options[i].getAttribute('data-id');
-                            break;
-                        }
-                    }
-                });
-            </script>
-            @endpush
 
             <x-tahfidz.card title="Target Hafalan">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -64,16 +64,8 @@
                                                     @endif
                                                 </td>
                                                 <td class="py-4 text-right pr-3 rounded-r-xl">
-                                                    @if($m->parent_comment)
-                                                        <span class="text-blue-500 text-[10px] font-bold uppercase">Feedback Terkirim</span>
-                                                    @else
-                                                        <!-- Modal Trigger or simple form -->
-                                                        <form action="{{ route('parent.hafalan.comment', $m) }}" method="POST" class="inline-flex items-center gap-2">
-                                                            @csrf
-                                                            @method('PATCH')
-                                                            <input type="text" name="parent_comment" placeholder="Beri feedback..." class="text-[10px] px-2 py-1 rounded border-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-emerald-500">
-                                                            <button type="submit" class="p-1 bg-emerald-600 text-white rounded hover:bg-emerald-700"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>
-                                                        </form>
+                                                    @if($m->is_present)
+                                                        <span class="text-xs text-gray-400 italic">Disimak oleh: {{ $m->guru->name ?? 'Guru' }}</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -123,6 +115,27 @@
                                     <span class="text-[10px] text-gray-600 dark:text-gray-400 font-bold">Perbaikan ({{ $student->quality_chart_data['perbaikan'] }})</span>
                                 </div>
                             </div>
+                        </x-tahfidz.card>
+
+                        <x-tahfidz.card title="Ruang Komunikasi dengan Ustadz">
+                            <div class="h-48 overflow-y-auto mb-4 border border-gray-100 dark:border-gray-700 rounded-xl p-3 bg-gray-50/50 dark:bg-gray-900/50 space-y-3">
+                                @forelse($student->messages ?? [] as $msg)
+                                    <div class="{{ $msg->sender_id === auth()->id() ? 'text-right' : 'text-left' }}">
+                                        <div class="inline-block {{ $msg->sender_id === auth()->id() ? 'bg-emerald-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-r-xl rounded-tl-xl' }} px-3 py-2 text-sm max-w-[85%]">
+                                            {{ $msg->message }}
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 mt-1">{{ $msg->created_at->format('d/m/Y H:i') }}</div>
+                                    </div>
+                                @empty
+                                    <p class="text-xs text-gray-400 text-center italic py-4">Belum ada percakapan. Mulai kirim pesan ke Ustadz.</p>
+                                @endforelse
+                            </div>
+                            
+                            <form action="{{ route('parent.messages.send', $student) }}" method="POST" class="flex gap-2">
+                                @csrf
+                                <input type="text" name="message" required placeholder="Tulis pesan..." class="flex-1 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-md transition-colors"><svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></button>
+                            </form>
                         </x-tahfidz.card>
                     </div>
                 </div>

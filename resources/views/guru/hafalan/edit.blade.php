@@ -21,6 +21,11 @@
             <x-tahfidz.card title="Informasi Santri">
                 <div class="space-y-4">
                     <div class="w-full">
+                        <label for="tanggal" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Tanggal Setor</label>
+                        <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal', \Carbon\Carbon::parse($hafalan->tanggal ?? $hafalan->created_at)->format('Y-m-d')) }}" required class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
+                        @error('tanggal') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="w-full">
                         <label for="student_id" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pilih Santri</label>
                         <select name="student_id" id="student_id" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm" required>
                             @foreach($students as $student)

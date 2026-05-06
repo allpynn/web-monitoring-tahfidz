@@ -25,10 +25,19 @@ class UpdateStudentRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255',
-            'nis' => 'required|string|unique:students,nis,'.$studentId,
-            'parent_id' => 'required|exists:users,id',
+            'nis' => 'required|string|digits:10|unique:students,nis,'.$studentId,
+            'parent_ids' => 'required|array',
+            'parent_ids.*' => 'exists:users,id',
             'target_juz' => 'required|integer|min:1|max:30',
             'target_date' => 'nullable|date',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'nis.unique' => 'Gagal: Data ini sudah ada! NISN tersebut sudah terdaftar di dalam sistem.',
+            'nis.digits' => 'Gagal: NISN harus berjumlah persis 10 angka.',
         ];
     }
 }

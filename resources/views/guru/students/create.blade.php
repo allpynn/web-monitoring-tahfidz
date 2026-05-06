@@ -14,44 +14,42 @@
             </a>
         </div>
 
+        @if($errors->any())
+            <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl flex items-start gap-3 animate-fadeIn">
+                <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <h3 class="text-sm font-bold text-red-800 dark:text-red-300">Gagal Menyimpan Data!</h3>
+                    <ul class="mt-1 list-disc list-inside text-xs text-red-700 dark:text-red-400 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
         <form action="{{ route('guru.students.store') }}" method="POST" class="space-y-6">
             @csrf
             
             <x-tahfidz.card title="Data Identitas">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <x-tahfidz.form-input name="name" label="Nama Lengkap" placeholder="Masukkan nama lengkap santri" required />
-                    <x-tahfidz.form-input name="nis" label="Nomor Induk Santri (NIS)" placeholder="Contoh: 20240001" required />
+                    <x-tahfidz.form-input type="number" name="nis" label="NISN (10 Angka)" placeholder="Contoh: 0041234567" required />
                 </div>
             </x-tahfidz.card>
 
             <x-tahfidz.card title="Relasi Orang Tua">
                 <div class="w-full">
-                    <label for="parent_search" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cari & Pilih Orang Tua / Wali</label>
-                    <input type="text" id="parent_search" list="parent_list" class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm" placeholder="Ketik nama orang tua..." autocomplete="off" required>
-                    <datalist id="parent_list">
+                    <label for="parent_ids" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Orang Tua / Wali</label>
+                    <select name="parent_ids[]" id="parent_ids" multiple required class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
                         @foreach($parents as $parent)
-                            <option value="{{ $parent->name }}" data-id="{{ $parent->id }}"></option>
+                            <option value="{{ $parent->id }}" {{ in_array($parent->id, old('parent_ids', [])) ? 'selected' : '' }}>{{ $parent->name }} ({{ $parent->email }})</option>
                         @endforeach
-                    </datalist>
-                    <input type="hidden" name="parent_id" id="parent_id" value="{{ old('parent_id') }}">
-                    @error('parent_id') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Tekan Ctrl/Cmd + Klik untuk memilih lebih dari satu.</p>
+                    @error('parent_ids') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
                 </div>
             </x-tahfidz.card>
-
-            @push('scripts')
-            <script>
-                document.getElementById('parent_search').addEventListener('input', function(e) {
-                    const val = e.target.value;
-                    const options = document.getElementById('parent_list').options;
-                    for (let i = 0; i < options.length; i++) {
-                        if (options[i].value === val) {
-                            document.getElementById('parent_id').value = options[i].getAttribute('data-id');
-                            break;
-                        }
-                    }
-                });
-            </script>
-            @endpush
 
             <x-tahfidz.card title="Target Hafalan">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -28,6 +28,7 @@ class UpdateHafalanRequest extends FormRequest
             'surah' => 'required_if:is_present,1|nullable|string',
             'ayat' => 'required_if:is_present,1|nullable|string',
             'status' => 'required_if:is_present,1|nullable|in:Lancar,Perlu Perbaikan',
+            'tanggal' => 'required|date',
             'notes' => 'nullable|string',
             'parent_comment' => 'nullable|string',
         ];

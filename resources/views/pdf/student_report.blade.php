@@ -116,7 +116,7 @@
             <tr>
                 <td class="info-label">Orang Tua / Wali</td>
                 <td class="info-separator">:</td>
-                <td>{{ $student->parent->name ?? '-' }}</td>
+                <td>{{ $student->parents->pluck('name')->join(', ') ?: '-' }}</td>
             </tr>
             <tr>
                 <td class="info-label">Ustadz Pengampu</td>

@@ -11,7 +11,7 @@ class StoreHafalanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->role === 'guru' || $this->user()->role === 'admin';
+        return $this->user()->role === 'guru';
     }
 
     /**
@@ -26,6 +26,7 @@ class StoreHafalanRequest extends FormRequest
             'surah' => 'required_if:is_present,1|nullable|string',
             'ayat' => 'required_if:is_present,1|nullable|string',
             'status' => 'required_if:is_present,1|nullable|in:Lancar,Perlu Perbaikan',
+            'tanggal' => 'required|date',
             'notes' => 'nullable|string',
         ];
     }

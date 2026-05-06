@@ -17,7 +17,7 @@ class StudentController extends Controller
 
     public function index()
     {
-        $students = Student::with(['parent', 'memorizations'])
+        $students = Student::with(['parents', 'memorizations'])
             ->where('guru_id', auth()->id())
             ->latest()
             ->get();
@@ -29,6 +29,7 @@ class StudentController extends Controller
     {
         $this->authorize('view', $student);
 
+        $student->load('parents');
         $memorizations = $student->memorizations()->with('guru')->latest()->get();
 
         return view('guru.students.show', compact('student', 'memorizations'));
@@ -46,7 +47,11 @@ class StudentController extends Controller
         $data = $request->validated();
         $data['guru_id'] = auth()->id();
 
-        Student::create($data);
+        $parentIds = $data['parent_ids'] ?? [];
+        unset($data['parent_ids']);
+
+        $student = Student::create($data);
+        $student->parents()->sync($parentIds);
 
         return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan.');
     }
@@ -55,6 +60,7 @@ class StudentController extends Controller
     {
         $this->authorize('update', $student);
 
+        $student->load('parents');
         $parents = User::where('role', 'orang_tua')->get();
 
         return view('guru.students.edit', compact('student', 'parents'));
@@ -62,7 +68,12 @@ class StudentController extends Controller
 
     public function update(UpdateStudentRequest $request, Student $student)
     {
-        $student->update($request->validated());
+        $data = $request->validated();
+        $parentIds = $data['parent_ids'] ?? [];
+        unset($data['parent_ids']);
+
+        $student->update($data);
+        $student->parents()->sync($parentIds);
 
         return redirect()->route('guru.students.index')->with('success', 'Data santri berhasil diperbarui.');
     }

@@ -9,15 +9,14 @@ class Student extends Model
     protected $fillable = [
         'name',
         'nis',
-        'parent_id',
         'guru_id',
         'target_juz',
         'target_date',
     ];
 
-    public function parent()
+    public function parents()
     {
-        return $this->belongsTo(User::class, 'parent_id');
+        return $this->belongsToMany(User::class, 'parent_student', 'student_id', 'parent_id');
     }
 
     public function guru()

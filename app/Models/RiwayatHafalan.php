@@ -18,6 +18,7 @@ class RiwayatHafalan extends Model
         'notes',
         'parent_comment',
         'guru_id',
+        'tanggal',
     ];
 
     public function student()

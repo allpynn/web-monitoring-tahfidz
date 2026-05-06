@@ -6,66 +6,119 @@ use App\Http\Controllers\Controller;
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use App\Models\User;
-use Carbon\Carbon;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 class DashboardController extends Controller
 {
     public function index()
     {
-        $month = (int) request('month', now()->month);
-        $year = (int) request('year', now()->year);
-
         $guruCount = User::where('role', 'guru')->count();
         $studentCount = Student::count();
-        $hafalanCount = RiwayatHafalan::count();
-        $lancarPercent = $hafalanCount > 0
-            ? round((RiwayatHafalan::where('status', 'Lancar')->count() / $hafalanCount) * 100)
-            : 0;
-
-        // Date range for the selected month and year
-        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
-
-        // Monthly chart data: Dividing month into 4 weeks
-        $weeklyLabels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
-        $weeklyData = [];
-        
-        $ranges = [
-            [1, 7],
-            [8, 14],
-            [15, 21],
-            [22, $endDate->day]
-        ];
-
-        foreach ($ranges as $range) {
-            $weekStart = Carbon::createFromDate($year, $month, $range[0])->startOfDay();
-            $weekEnd = Carbon::createFromDate($year, $month, $range[1])->endOfDay();
-            $weeklyData[] = RiwayatHafalan::whereBetween('created_at', [$weekStart, $weekEnd])->count();
-        }
-
-        // Teacher performance filtered by selected month and year
-        $teacher_performance = User::where('role', 'guru')
-            ->withCount('studentsAsGuru')
-            ->get()
-            ->map(function ($guru) use ($year, $month) {
-                $guru->total_memorizations = RiwayatHafalan::where('guru_id', $guru->id)
-                    ->whereYear('created_at', $year)
-                    ->whereMonth('created_at', $month)
-                    ->count();
-
-                return $guru;
-            })
-            ->sortByDesc('total_memorizations');
+        $parentCount = User::where('role', 'orang_tua')->count();
 
         return view('admin.dashboard', compact(
             'guruCount',
             'studentCount',
-            'hafalanCount',
-            'lancarPercent',
-            'weeklyLabels',
-            'weeklyData',
-            'teacher_performance',
-            'month',
-            'year'
+            'parentCount'
         ));
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt'
+        ]);
+
+        $file = $request->file('file');
+        
+        if (($handle = fopen($file->getRealPath(), 'r')) !== false) {
+            // Deteksi delimiter (koma atau titik koma) dengan membaca baris pertama
+            $firstLine = fgets($handle);
+            $delimiter = strpos($firstLine, ';') !== false ? ';' : ',';
+            rewind($handle); // Kembali ke awal file
+            
+            $header = fgetcsv($handle, 1000, $delimiter);
+            
+            $successCount = 0;
+            $errorMessages = [];
+            $rowNum = 1; // baris 1 adalah header
+            
+            DB::beginTransaction();
+            try {
+                // Assuming header: Nama Santri, NIS, Nama Orang Tua, Email Orang Tua
+                while (($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
+                    $rowNum++;
+                    
+                    // Lewati baris kosong
+                    if(empty(array_filter($data))) continue;
+
+                    if (count($data) < 4) {
+                        $errorMessages[] = "Baris $rowNum: Format kolom tidak lengkap (membutuhkan 4 kolom).";
+                        continue;
+                    }
+                    
+                    $namaSantri = trim($data[0] ?? '');
+                    $nis = trim($data[1] ?? '');
+                    $namaOrangTua = trim($data[2] ?? '');
+                    $emailOrangTua = trim($data[3] ?? '');
+                    
+                    // Validasi NISN (10 angka)
+                    if (strlen($nis) !== 10 || !is_numeric($nis)) {
+                        $errorMessages[] = "Baris $rowNum ($namaSantri): NISN '$nis' gagal ditambahkan (harus persis 10 angka).";
+                        continue;
+                    }
+
+                    // Pengecekan Duplikasi NISN
+                    if (Student::where('nis', $nis)->exists()) {
+                        $errorMessages[] = "Baris $rowNum ($namaSantri): NISN '$nis' gagal ditambahkan karena sudah terdaftar di sistem.";
+                        continue;
+                    }
+                    
+                    // Create or find Parent
+                    $parent = User::firstOrCreate(
+                        ['email' => $emailOrangTua],
+                        [
+                            'name' => $namaOrangTua,
+                            'phone' => '08' . rand(10000000, 99999999), // Placeholder sementara krn upload massal gak ada field phone
+                            'password' => Hash::make($emailOrangTua),
+                            'role' => 'orang_tua',
+                            'email_verified_at' => now(),
+                        ]
+                    );
+
+                    // Create Student (karena sdh dicek duplicated di atas, kita pakai create langsung)
+                    $student = Student::create([
+                        'nis' => $nis,
+                        'name' => $namaSantri,
+                        'target_juz' => 30 // default fallback
+                    ]);
+
+                    // Sync pivot table without detaching others
+                    $student->parents()->syncWithoutDetaching([$parent->id]);
+                    $successCount++;
+                }
+                
+                DB::commit();
+
+                // Kembalikan feedback import
+                if (count($errorMessages) > 0) {
+                    return redirect()->back()->with('import_warning', [
+                        'success' => $successCount,
+                        'errors' => $errorMessages
+                    ]);
+                }
+
+                return redirect()->back()->with('success', "$successCount data santri berhasil diimport secara massal.");
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat memproses import: ' . $e->getMessage());
+            } finally {
+                fclose($handle);
+            }
+        }
+        
+        return redirect()->back()->with('error', 'Gagal membaca file.');
     }
 }

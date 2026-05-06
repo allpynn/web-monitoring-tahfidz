@@ -6,12 +6,18 @@
         Kelola akun orang tua yang terhubung dengan santri.
     </x-slot>
 
-    <div class="mb-6 flex justify-between items-center">
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Daftar Wali Murid</h2>
-        <a href="{{ route('admin.parents.create') }}" class="px-5 py-2.5 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center gap-2 text-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Tambah Orang Tua
-        </a>
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <input type="text" id="searchParent" placeholder="Cari orang tua..." class="pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 w-64" oninput="filterParentTable(this.value)">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <a href="{{ route('admin.parents.create') }}" class="px-5 py-2.5 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Tambah Orang Tua
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -23,7 +29,7 @@
 
     <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table id="parentTable" class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
                         <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Orang Tua</th>
@@ -78,4 +84,17 @@
             </table>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function filterParentTable(query) {
+            const rows = document.querySelectorAll('#parentTable tbody tr');
+            query = query.toLowerCase();
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+    </script>
+    @endpush
 </x-tahfidz-layout>

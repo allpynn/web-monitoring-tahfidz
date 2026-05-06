@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Parent;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateCommentRequest;
 use App\Models\RiwayatHafalan;
+use App\Models\Student;
+use App\Models\Pesan;
+use Illuminate\Http\Request;
 use App\Services\RiwayatHafalanService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
@@ -37,17 +39,28 @@ class DashboardController extends Controller
             $student->attendance_heatmap = $analytics['attendance'];
             $student->quality_chart_data = $analytics['quality'];
             $student->latest_notes = $analytics['latest_notes'];
+            
+            // Get messages for this student
+            $student->messages = Pesan::with(['sender', 'receiver'])
+                ->where('student_id', $student->id)
+                ->orderBy('created_at', 'asc')
+                ->get();
         }
 
         return view('parent.dashboard', compact('students'));
     }
 
-    public function updateComment(UpdateCommentRequest $request, RiwayatHafalan $memorization)
+    public function sendMessage(Request $request, Student $student)
     {
-        $this->authorize('update', $memorization);
+        $request->validate(['message' => 'required|string']);
 
-        $memorization->update($request->validated());
+        Pesan::create([
+            'sender_id' => Auth::id(),
+            'receiver_id' => $student->guru_id,
+            'student_id' => $student->id,
+            'message' => $request->message,
+        ]);
 
-        return back()->with('success', 'Feedback berhasil dikirim.');
+        return back()->with('success', 'Pesan berhasil dikirim ke Ustadz.');
     }
 }
