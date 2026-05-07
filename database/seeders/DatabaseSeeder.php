@@ -54,29 +54,29 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Santri
-        $santri1 = Student::firstOrCreate(['nis' => '20240001'], [
+        $santri1 = Student::firstOrCreate(['nis' => '2024000100'], [
             'name' => 'Muhammad Fulan',
-            'parent_id' => $ortu1->id,
             'guru_id' => $guru1->id,
             'target_juz' => 30,
             'target_date' => now()->addYear(),
         ]);
+        $santri1->parents()->syncWithoutDetaching([$ortu1->id]);
 
-        $santri2 = Student::firstOrCreate(['nis' => '20240002'], [
+        $santri2 = Student::firstOrCreate(['nis' => '2024000200'], [
             'name' => 'Aisyah Fitriani',
-            'parent_id' => $ortu1->id,
             'guru_id' => $guru1->id,
             'target_juz' => 30,
             'target_date' => now()->addYear(),
         ]);
+        $santri2->parents()->syncWithoutDetaching([$ortu1->id]);
 
-        $santri3 = Student::firstOrCreate(['nis' => '20240003'], [
+        $santri3 = Student::firstOrCreate(['nis' => '2024000300'], [
             'name' => 'Zaid Al-Hakim',
-            'parent_id' => $ortu2->id,
             'guru_id' => $guru2->id,
             'target_juz' => 30,
             'target_date' => now()->addMonths(18),
         ]);
+        $santri3->parents()->syncWithoutDetaching([$ortu2->id]);
 
         // Sample Hafalan
         $surahs = Surah::all();
