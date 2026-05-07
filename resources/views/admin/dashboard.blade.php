@@ -39,7 +39,7 @@
             <svg class="w-6 h-6 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             <div>
                 <h3 class="text-sm font-bold text-orange-800 dark:text-orange-300">
-                    Import Selesai dengan Catatan: {{ session('import_warning')['success'] }} data santri baru berhasil ditambahkan.
+                    Import Selesai dengan Catatan: {{ session('import_warning')['success'] }} data {{ session('import_warning')['tipe'] ?? 'santri' }} baru berhasil ditambahkan.
                 </h3>
                 <p class="text-xs text-orange-700 dark:text-orange-400 font-semibold mt-1">Ditemukan {{ count(session('import_warning')['errors']) }} baris yang dilewati karena format tidak sesuai atau data duplikat/sudah ada:</p>
                 <ul class="mt-2 list-disc list-inside text-xs text-orange-700 dark:text-orange-400 space-y-1 bg-white/50 dark:bg-black/20 p-3 rounded-lg max-h-48 overflow-y-auto">
@@ -81,12 +81,18 @@
                     @endif
 
                     <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg space-y-2">
-                        <p class="text-xs text-blue-700 dark:text-blue-300 font-bold">Instruksi Import:</p>
-                        <ol class="list-decimal pl-4 text-xs text-blue-700 dark:text-blue-300 space-y-1 font-medium">
-                            <li>Buat data di Excel dengan urutan kolom: <br><strong>Nama Santri | NIS | Nama Orang Tua | Email Orang Tua</strong></li>
-                            <li>Gunakan <strong>Save As</strong> atau <strong>Export</strong> di Excel, pilih format <strong>CSV (Comma delimited) (*.csv)</strong></li>
-                            <li>Upload file CSV tersebut ke sini.</li>
-                        </ol>
+                        <p class="text-xs text-blue-700 dark:text-blue-300 font-bold">Instruksi Import Cerdas (Guru/Santri):</p>
+                        <p class="text-[11px] text-blue-600 dark:text-blue-400">Sistem akan membedakan data secara otomatis berdasarkan nama kolom Anda di Excel (Baris ke-1).</p>
+                        <div class="space-y-3 mt-2">
+                            <div class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
+                                <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Guru:</p>
+                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Wajib memiliki kolom NIP. Urutan: <strong>Nama | NIP | No telp | Email</strong></p>
+                            </div>
+                            <div class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
+                                <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Santri:</p>
+                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama Santri | NIS | Nama Orang Tua | Email Orang Tua</strong></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">

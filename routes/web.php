@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CredentialController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\ParentController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\UserController;
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/students/{student}/export-pdf', [StudentController::class, 'exportPdf'])->name('students.export');
         Route::get('/export-credentials', [CredentialController::class, 'export'])->name('export.credentials');
         Route::resource('users', UserController::class);
+        Route::resource('guru', GuruController::class);
         Route::resource('parents', ParentController::class);
         Route::post('/import', [DashboardController::class, 'import'])->name('import');
     });
