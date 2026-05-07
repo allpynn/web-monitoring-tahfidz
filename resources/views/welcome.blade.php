@@ -148,12 +148,12 @@
 
                             <!-- Identifier -->
                             <div class="space-y-2">
-                                <label for="email" class="block text-xs lg:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1 tracking-wide">Email / Username</label>
+                                <label for="email" class="block text-xs lg:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1 tracking-wide">Email / Nomor HP</label>
                                 <div class="relative group">
                                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
                                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"/></svg>
                                     </div>
-                                    <input id="email" type="text" name="email" value="{{ old('email', Cookie::get('remember_email')) }}" required autofocus placeholder="Masukkan Email atau Username"
+                                    <input id="email" type="text" name="email" value="{{ old('email', Cookie::get('remember_email')) }}" required autofocus placeholder="Masukkan Email atau Nomor HP"
                                         class="block w-full pl-14 pr-6 py-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 dark:text-white rounded-3xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-300 font-medium text-base placeholder:text-slate-300 dark:placeholder:text-slate-600">
                                 </div>
                                 <x-input-error :messages="$errors->get('email')" class="mt-1 ml-1" />

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\CredentialController;
+
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\ParentController;
@@ -39,7 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('students', StudentController::class);
         Route::get('/students/{student}/export-pdf', [StudentController::class, 'exportPdf'])->name('students.export');
-        Route::get('/export-credentials', [CredentialController::class, 'export'])->name('export.credentials');
+
         Route::resource('users', UserController::class);
         Route::resource('guru', GuruController::class);
         Route::resource('parents', ParentController::class);

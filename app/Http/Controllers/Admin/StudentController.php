@@ -20,9 +20,19 @@ class StudentController extends Controller
     {
         $this->memorizationService = $memorizationService;
     }
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::with(['parents', 'guru'])->latest()->get();
+        $query = Student::with(['parents', 'guru']);
+
+        if ($request->sort === 'abjad') {
+            $query->orderBy('name', 'asc');
+        } elseif ($request->sort === 'nis') {
+            $query->orderBy('nis', 'asc');
+        } else {
+            $query->latest();
+        }
+
+        $students = $query->get();
 
         return view('admin.students.index', compact('students'));
     }

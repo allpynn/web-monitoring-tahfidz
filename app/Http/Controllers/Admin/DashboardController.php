@@ -65,8 +65,8 @@ class DashboardController extends Controller
                         }
 
                         $nama = trim($data[0] ?? '');
-                        $nip = trim($data[1] ?? ''); // Akan dijadikan password default
-                        $phone = trim($data[2] ?? '');
+                        $nip = trim($data[1] ?? ''); 
+                        $phone = ltrim(trim($data[2] ?? ''), '0');
                         $email = trim($data[3] ?? '');
 
                         if (!$email) {
@@ -82,9 +82,9 @@ class DashboardController extends Controller
                         User::create([
                             'name' => $nama,
                             'email' => $email,
-                            'phone' => ltrim($phone, '0'),
+                            'phone' => $phone,
                             'role' => 'guru',
-                            'password' => Hash::make($nip ?: 'password123'),
+                            'password' => Hash::make($phone), // Password = Nomor HP
                             'email_verified_at' => now(),
                         ]);
                         $successCount++;
@@ -99,7 +99,7 @@ class DashboardController extends Controller
                         $nis = trim($data[1] ?? '');
                         $namaOrangTua = trim($data[2] ?? '');
                         $emailOrangTua = trim($data[3] ?? '');
-                        $phoneOrangTua = trim($data[4] ?? '08' . rand(1000,9999));
+                        $phoneOrangTua = ltrim(trim($data[4] ?? '08' . rand(1000,9999)), '0');
 
                         // Validasi NISN (10 angka)
                         if (strlen($nis) !== 10 || !is_numeric($nis)) {
@@ -118,8 +118,8 @@ class DashboardController extends Controller
                             ['email' => $emailOrangTua],
                             [
                                 'name' => $namaOrangTua,
-                                'phone' => ltrim($phoneOrangTua, '0'), // Placeholder phone
-                                'password' => Hash::make($emailOrangTua),
+                                'phone' => $phoneOrangTua,
+                                'password' => Hash::make($phoneOrangTua), // Password = Nomor HP
                                 'role' => 'orang_tua',
                                 'email_verified_at' => now(),
                             ]

@@ -10,9 +10,20 @@ use Illuminate\Validation\Rule;
 
 class GuruController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $gurus = User::where('role', 'guru')->latest()->get();
+        $query = User::where('role', 'guru');
+
+        if ($request->sort === 'abjad') {
+            $query->orderBy('name', 'asc');
+        } elseif ($request->sort === 'nip') {
+            // Kita gunakan kolom phone sebagai representasi NIP
+            $query->orderBy('phone', 'asc');
+        } else {
+            $query->latest();
+        }
+
+        $gurus = $query->get();
 
         return view('admin.guru.index', compact('gurus'));
     }

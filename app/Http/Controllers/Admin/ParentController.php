@@ -9,9 +9,19 @@ use Illuminate\Support\Facades\Hash;
 
 class ParentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $parents = User::where('role', 'orang_tua')->latest()->get();
+        $query = User::where('role', 'orang_tua');
+
+        if ($request->sort === 'abjad') {
+            $query->orderBy('name', 'asc');
+        } elseif ($request->sort === 'anak_terbanyak') {
+            $query->withCount('students')->orderBy('students_count', 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $parents = $query->get();
 
         return view('admin.parents.index', compact('parents'));
     }
@@ -27,15 +37,18 @@ class ParentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
+
+        $password = $request->password ? Hash::make($request->password) : Hash::make($request->phone);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+            'phone' => ltrim($request->phone, '0'),
+            'password' => $password,
             'role' => 'orang_tua',
+            'email_verified_at' => now(),
         ]);
 
         return redirect()->route('admin.parents.index')->with('success', 'Akun orang tua berhasil dibuat.');
