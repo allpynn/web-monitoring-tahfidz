@@ -17,8 +17,7 @@ class GuruController extends Controller
         if ($request->sort === 'abjad') {
             $query->orderBy('name', 'asc');
         } elseif ($request->sort === 'nip') {
-            // Kita gunakan kolom phone sebagai representasi NIP
-            $query->orderBy('phone', 'asc');
+            $query->orderBy('nip', 'asc');
         } else {
             $query->latest();
         }
@@ -37,23 +36,29 @@ class GuruController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'nip' => 'required|digits:18|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
             'password' => 'nullable|string|min:8|confirmed',
         ], [
             'email.unique' => 'Gagal: Email ini sudah terdaftar!',
             'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar!',
+            'nip.required' => 'Gagal: NIP wajib diisi!',
+            'nip.unique'   => 'Gagal: NIP ini sudah terdaftar untuk pengguna lain!',
+            'nip.digits'   => 'Gagal: NIP harus bersisi persis 18 angka!',
         ]);
 
-        $password = $request->password ? Hash::make($request->password) : Hash::make($request->phone);
+        $phone = $request->phone;
+        $password = $request->password ? Hash::make($request->password) : Hash::make($phone);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => ltrim($request->phone, '0'),
-            'password' => $password,
-            'role' => 'guru',
-            'email_verified_at' => now(),
+            'name'               => $request->name,
+            'nip'                => $request->nip,
+            'email'              => $request->email,
+            'phone'              => $phone,
+            'password'           => $password,
+            'role'               => 'guru',
+            'email_verified_at'  => now(),
         ]);
 
         return redirect()->route('admin.guru.index')->with('success', 'Data Guru berhasil ditambahkan.');
@@ -76,18 +81,23 @@ class GuruController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'nip' => ['required', 'digits:18', Rule::unique('users')->ignore($guru->id)],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($guru->id)],
             'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($guru->id)],
             'password' => 'nullable|string|min:8|confirmed',
         ], [
-            'email.unique' => 'Gagal: Email ini sudah terdaftar untuk pengguna lain!',
-            'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar untuk pengguna lain!',
+            'email.unique' => 'Gagal: Email ini sudah terdaftar!',
+            'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar!',
+            'nip.required' => 'Gagal: NIP wajib diisi!',
+            'nip.unique'   => 'Gagal: NIP ini sudah terdaftar untuk pengguna lain!',
+            'nip.digits'   => 'Gagal: NIP harus bersisi persis 18 angka!',
         ]);
 
         $data = [
-            'name' => $request->name,
+            'name'  => $request->name,
+            'nip'   => $request->nip,
             'email' => $request->email,
-            'phone' => ltrim($request->phone, '0'),
+            'phone' => $request->phone,
         ];
 
         if ($request->password) {

@@ -10,6 +10,8 @@ use App\Models\Student;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -37,23 +39,43 @@ class StudentController extends Controller
 
     public function create()
     {
-        $parents = User::where('role', 'orang_tua')->get();
-
-        return view('guru.students.create', compact('parents'));
+        return view('guru.students.create');
     }
 
     public function store(StoreStudentRequest $request)
     {
-        $data = $request->validated();
-        $data['guru_id'] = auth()->id();
+        $validated = $request->validated();
+        $validated['guru_id'] = auth()->id();
 
-        $parentIds = $data['parent_ids'] ?? [];
-        unset($data['parent_ids']);
+        // Remove parent_names / parent_phones from student data
+        unset($validated['parent_names'], $validated['parent_phones'], $validated['parent_ids']);
 
-        $student = Student::create($data);
+        $student = Student::create($validated);
+
+        // Create or find parent accounts based on phone number
+        $parentIds = [];
+        foreach ($request->parent_names as $index => $parentName) {
+            $phone = ltrim($request->parent_phones[$index] ?? '', '0');
+
+            $parent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
+
+            if (!$parent) {
+                $parent = User::create([
+                    'name' => $parentName,
+                    'email' => 'parent_' . Str::slug($parentName) . '_' . Str::random(4) . '@tahfidz.local',
+                    'phone' => $phone,
+                    'password' => Hash::make($phone),
+                    'role' => 'orang_tua',
+                    'email_verified_at' => now(),
+                ]);
+            }
+
+            $parentIds[] = $parent->id;
+        }
+
         $student->parents()->sync($parentIds);
 
-        return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan.');
+        return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan. Akun orang tua otomatis dibuat.');
     }
 
     public function edit(Student $student)

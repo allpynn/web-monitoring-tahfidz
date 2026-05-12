@@ -22,8 +22,10 @@ class StoreStudentRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'nis' => 'required|string|digits:10|unique:students,nis',
-            'parent_ids' => 'required|array',
-            'parent_ids.*' => 'exists:users,id',
+            'parent_names' => 'required|array|min:1',
+            'parent_names.*' => 'required|string|max:255',
+            'parent_phones' => 'required|array|min:1',
+            'parent_phones.*' => 'required|string|max:20',
             'target_juz' => 'required|integer|min:1|max:30',
             'target_date' => 'nullable|date',
         ];

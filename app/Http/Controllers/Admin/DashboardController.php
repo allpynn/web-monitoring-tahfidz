@@ -32,15 +32,15 @@ class DashboardController extends Controller
         ]);
 
         $file = $request->file('file');
-        
+
         if (($handle = fopen($file->getRealPath(), 'r')) !== false) {
             // Deteksi delimiter (koma atau titik koma) dengan membaca baris pertama
             $firstLine = fgets($handle);
             $delimiter = strpos($firstLine, ';') !== false ? ';' : ',';
             rewind($handle); // Kembali ke awal file
-            
+
             $header = fgetcsv($handle, 1000, $delimiter);
-            
+
             // Auto detect CSV type based on headers
             $headerLower = array_map('strtolower', array_map('trim', $header ?? []));
             $isGuruCsv = in_array('nip', $headerLower);
@@ -48,14 +48,15 @@ class DashboardController extends Controller
             $successCount = 0;
             $errorMessages = [];
             $rowNum = 1; // baris 1 adalah header
-            
+
             DB::beginTransaction();
             try {
                 while (($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
                     $rowNum++;
-                    
+
                     // Lewati baris kosong
-                    if(empty(array_filter($data))) continue;
+                    if (empty(array_filter($data)))
+                        continue;
 
                     if ($isGuruCsv) {
                         // Skema Guru: Nama | NIP | No telp | Email
@@ -65,12 +66,32 @@ class DashboardController extends Controller
                         }
 
                         $nama = trim($data[0] ?? '');
-                        $nip = trim($data[1] ?? ''); 
-                        $phone = ltrim(trim($data[2] ?? ''), '0');
+                        $nip = trim($data[1] ?? '');
+                        $phoneRaw = trim($data[2] ?? '');
+                        
+                        // Bersihkan karakter aneh pada no HP (+, spasi, titik, strip, kurung)
+                        $phone = preg_replace('/[\+\-\.\(\)\s]/', '', $phoneRaw);
+                        
+                        if (str_starts_with($phone, '8')) {
+                            $phone = '0' . $phone;
+                        } elseif (str_starts_with($phone, '628')) {
+                            $phone = '0' . substr($phone, 2);
+                        }
+
                         $email = trim($data[3] ?? '');
 
                         if (!$email) {
                             $errorMessages[] = "Baris $rowNum ($nama): Gagal. Email wajib diisi untuk Guru.";
+                            continue;
+                        }
+
+                        if (!$nip) {
+                            $errorMessages[] = "Baris $rowNum ($nama): Gagal. NIP wajib diisi untuk Guru.";
+                            continue;
+                        }
+
+                        if (strlen($nip) !== 18 || !is_numeric($nip)) {
+                            $errorMessages[] = "Baris $rowNum ($nama): Gagal. NIP '$nip' harus berisi persis 18 digit angka.";
                             continue;
                         }
 
@@ -79,8 +100,19 @@ class DashboardController extends Controller
                             continue;
                         }
 
+                        if ($nip && User::where('nip', $nip)->exists()) {
+                            $errorMessages[] = "Baris $rowNum ($nama): Gagal. NIP '$nip' sudah digunakan oleh akun lain.";
+                            continue;
+                        }
+
+                        if (User::where('phone', $phone)->exists()) {
+                            $errorMessages[] = "Baris $rowNum ($nama): Gagal. Nomor HP '$phone' sudah digunakan oleh akun lain.";
+                            continue;
+                        }
+
                         User::create([
                             'name' => $nama,
+                            'nip' => $nip,
                             'email' => $email,
                             'phone' => $phone,
                             'role' => 'guru',
@@ -99,7 +131,16 @@ class DashboardController extends Controller
                         $nis = trim($data[1] ?? '');
                         $namaOrangTua = trim($data[2] ?? '');
                         $emailOrangTua = trim($data[3] ?? '');
-                        $phoneOrangTua = ltrim(trim($data[4] ?? '08' . rand(1000,9999)), '0');
+                        $phoneOrangTuaRaw = trim($data[4] ?? '08' . rand(1000, 9999));
+                        
+                        // Bersihkan karakter aneh pada no HP (+, spasi, titik, strip, kurung)
+                        $phoneOrangTua = preg_replace('/[\+\-\.\(\)\s]/', '', $phoneOrangTuaRaw);
+                        
+                        if (str_starts_with($phoneOrangTua, '8')) {
+                            $phoneOrangTua = '0' . $phoneOrangTua;
+                        } elseif (str_starts_with($phoneOrangTua, '628')) {
+                            $phoneOrangTua = '0' . substr($phoneOrangTua, 2);
+                        }
 
                         // Validasi NISN (10 angka)
                         if (strlen($nis) !== 10 || !is_numeric($nis)) {
@@ -112,18 +153,25 @@ class DashboardController extends Controller
                             $errorMessages[] = "Baris $rowNum ($namaSantri): NISN '$nis' gagal ditambahkan karena sudah terdaftar di sistem.";
                             continue;
                         }
-                        
+
                         // Create or find Parent
-                        $parent = User::firstOrCreate(
-                            ['email' => $emailOrangTua],
-                            [
+                        $parent = User::where('email', $emailOrangTua)->first();
+                        
+                        if (!$parent) {
+                            if (User::where('phone', $phoneOrangTua)->exists()) {
+                                $errorMessages[] = "Baris $rowNum ($namaSantri): Gagal menambah Orang Tua. Nomor HP '$phoneOrangTua' sudah digunakan oleh akun lain.";
+                                continue;
+                            }
+                            
+                            $parent = User::create([
+                                'email' => $emailOrangTua,
                                 'name' => $namaOrangTua,
                                 'phone' => $phoneOrangTua,
                                 'password' => Hash::make($phoneOrangTua), // Password = Nomor HP
                                 'role' => 'orang_tua',
                                 'email_verified_at' => now(),
-                            ]
-                        );
+                            ]);
+                        }
 
                         // Create Student
                         $student = Student::create([
@@ -137,7 +185,7 @@ class DashboardController extends Controller
                         $successCount++;
                     }
                 }
-                
+
                 DB::commit();
 
                 $targetName = $isGuruCsv ? 'guru' : 'santri';
@@ -159,7 +207,7 @@ class DashboardController extends Controller
                 fclose($handle);
             }
         }
-        
+
         return redirect()->back()->with('error', 'Gagal membaca file.');
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class ParentController extends Controller
 {
@@ -36,16 +37,20 @@ class ParentController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|max:20|unique:users',
             'password' => 'nullable|string|min:8|confirmed',
+        ], [
+            'email.unique' => 'Gagal: Email ini sudah terdaftar di sistem!',
+            'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar di sistem (digunakan oleh akun lain)!',
         ]);
 
-        $password = $request->password ? Hash::make($request->password) : Hash::make($request->phone);
+        $phone = $request->phone;
+        $password = $request->password ? Hash::make($request->password) : Hash::make($phone);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => ltrim($request->phone, '0'),
+            'phone' => $phone,
             'password' => $password,
             'role' => 'orang_tua',
             'email_verified_at' => now(),
@@ -71,9 +76,12 @@ class ParentController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$parent->id,
-            'phone' => 'required|string|max:20',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($parent->id)],
+            'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($parent->id)],
             'password' => 'nullable|string|min:8|confirmed',
+        ], [
+            'email.unique' => 'Gagal: Email ini sudah terdaftar untuk pengguna lain!',
+            'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar untuk pengguna lain!',
         ]);
 
         $data = [

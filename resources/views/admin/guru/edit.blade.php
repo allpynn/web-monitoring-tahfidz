@@ -35,8 +35,9 @@
             <x-tahfidz.card title="Informasi Dasar Guru">
                 <div class="space-y-4">
                     <x-tahfidz.form-input name="name" label="Nama Lengkap" placeholder="Masukkan nama lengkap ustadz/ustadzah" :value="$guru->name" required />
+                    <x-tahfidz.form-input name="nip" label="NIP" placeholder="Nomor Induk Pegawai" :value="$guru->nip" required />
                     <x-tahfidz.form-input type="email" name="email" label="Alamat Email (Digunakan untuk Login)" placeholder="guru@example.com" :value="$guru->email" required />
-                    <x-tahfidz.form-input type="number" name="phone" label="Nomor Handphone / WhatsApp" placeholder="Contoh: 08123456789" :value="$guru->phone" required />
+                    <x-tahfidz.form-input type="text" name="phone" label="Nomor Handphone / WhatsApp" placeholder="Contoh: 08123456789" :value="$guru->phone" required />
                 </div>
             </x-tahfidz.card>
 
