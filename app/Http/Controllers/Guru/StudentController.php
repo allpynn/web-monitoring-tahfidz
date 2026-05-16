@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -39,43 +40,96 @@ class StudentController extends Controller
 
     public function create()
     {
-        return view('guru.students.create');
+        $parents = User::where('role', 'orang_tua')->orderBy('name')->get();
+        return view('guru.students.create', compact('parents'));
     }
 
-    public function store(StoreStudentRequest $request)
+    public function store(Request $request)
     {
-        $validated = $request->validated();
-        $validated['guru_id'] = auth()->id();
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
+            'nis' => 'required|string|digits:10|unique:students,nis',
+            'target_juz' => 'required|integer|min:1|max:30',
+            'target_date' => 'nullable|date',
+            'parent_names.*' => 'nullable|string|max:255',
+            'parent_phones.*' => 'nullable|string|max:14',
+            'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
+            'parent_emails.*' => 'nullable|email|max:255',
+            'existing_parent_ids.*' => 'nullable|exists:users,id',
+        ], [
+            'name.required' => 'Nama santri wajib diisi.',
+            'gender.required' => 'Jenis kelamin santri wajib dipilih.',
+            'gender.in' => 'Pilihan jenis kelamin tidak valid.',
+            'nis.required' => 'NISN wajib diisi.',
+            'nis.digits' => 'NISN harus berjumlah persis 10 angka.',
+            'nis.unique' => 'NISN sudah terdaftar di sistem.',
+            'target_juz.required' => 'Target juz wajib diisi.',
+            'target_juz.min' => 'Target juz minimal 1.',
+            'target_juz.max' => 'Target juz maksimal 30.',
+            'parent_emails.*.email' => 'Format email orang tua tidak valid.',
+            'existing_parent_ids.*.exists' => 'Data orang tua yang dipilih tidak ditemukan.',
+        ]);
 
-        // Remove parent_names / parent_phones from student data
-        unset($validated['parent_names'], $validated['parent_phones'], $validated['parent_ids']);
+        $studentData = $request->only(['name', 'gender', 'nis', 'target_juz', 'target_date']);
+        $studentData['guru_id'] = auth()->id(); // Otomatis ke guru yang login
 
-        $student = Student::create($validated);
+        $student = Student::create($studentData);
 
-        // Create or find parent accounts based on phone number
         $parentIds = [];
-        foreach ($request->parent_names as $index => $parentName) {
-            $phone = ltrim($request->parent_phones[$index] ?? '', '0');
 
-            $parent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
-
-            if (!$parent) {
-                $parent = User::create([
-                    'name' => $parentName,
-                    'email' => 'parent_' . Str::slug($parentName) . '_' . Str::random(4) . '@tahfidz.local',
-                    'phone' => $phone,
-                    'password' => Hash::make($phone),
-                    'role' => 'orang_tua',
-                    'email_verified_at' => now(),
-                ]);
+        // 1. Proses orang tua yang dipilih dari data yang sudah ada
+        if ($request->filled('existing_parent_ids')) {
+            foreach ($request->existing_parent_ids as $pid) {
+                if ($pid)
+                    $parentIds[] = (int) $pid;
             }
+        }
+
+        // 2. Validasi & Proses form orang tua baru
+        foreach (($request->parent_names ?? []) as $index => $parentName) {
+            if (empty($parentName))
+                continue;
+
+            $phoneRaw = $request->parent_phones[$index] ?? '';
+
+            if ($phoneRaw) {
+                // Normalisasi nomor HP ke format 08...
+                $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
+                if (str_starts_with($phone, '8'))
+                    $phone = '0' . $phone;
+                elseif (str_starts_with($phone, '628'))
+                    $phone = '0' . substr($phone, 2);
+
+                // Cek apakah nomor HP sudah ada di database
+                $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
+                if ($existingParent) {
+                    return redirect()->back()->withInput()->withErrors([
+                        "parent_phones.$index" => "Nomor HP '$phone' sudah digunakan oleh '{$existingParent->name}'. Silakan pilih data tersebut di bagian 'Cari Orang Tua'."
+                    ]);
+                }
+            }
+
+            $email = $request->parent_emails[$index] ?? null;
+            $gender = $request->parent_genders[$index] ?? null;
+
+            // Buat parent baru dengan nomor yang sudah dibersihkan
+            $parent = User::create([
+                'name' => $parentName,
+                'gender' => $gender,
+                'email' => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                'phone' => $phone,
+                'password' => Hash::make($phone ?: Str::random(10)),
+                'role' => 'orang_tua',
+                'email_verified_at' => now(),
+            ]);
 
             $parentIds[] = $parent->id;
         }
 
         $student->parents()->sync($parentIds);
 
-        return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan. Akun orang tua otomatis dibuat.');
+        return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan. Akun orang tua otomatis dibuat atau dihubungkan.');
     }
 
     public function edit(Student $student)
@@ -118,6 +172,6 @@ class StudentController extends Controller
 
         $pdf = Pdf::loadView('pdf.student_report', compact('student', 'memorizations', 'logoBase64'));
 
-        return $pdf->download('Laporan_'.$student->nis.'.pdf');
+        return $pdf->download('Laporan_' . $student->nis . '.pdf');
     }
 }

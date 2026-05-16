@@ -14,6 +14,10 @@ class ParentController extends Controller
     {
         $query = User::where('role', 'orang_tua');
 
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
         if ($request->sort === 'abjad') {
             $query->orderBy('name', 'asc');
         } elseif ($request->sort === 'anak_terbanyak') {
@@ -36,6 +40,7 @@ class ParentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
             'password' => 'nullable|string|min:8|confirmed',
@@ -49,6 +54,7 @@ class ParentController extends Controller
 
         User::create([
             'name' => $request->name,
+            'gender' => $request->gender,
             'email' => $request->email,
             'phone' => $phone,
             'password' => $password,
@@ -76,6 +82,7 @@ class ParentController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($parent->id)],
             'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($parent->id)],
             'password' => 'nullable|string|min:8|confirmed',
@@ -86,6 +93,7 @@ class ParentController extends Controller
 
         $data = [
             'name' => $request->name,
+            'gender' => $request->gender,
             'email' => $request->email,
             'phone' => $request->phone,
         ];

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         // 1. Admin
         $admin = User::updateOrCreate(['email' => 'admin@mujahidin.id'], [
             'name' => 'Super Admin',
+            'gender' => 'Laki-laki',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'phone' => '08100000000',
@@ -25,7 +26,8 @@ class DatabaseSeeder extends Seeder
         // 2. Dua (2) Data Guru
         $guru1 = User::updateOrCreate(['email' => 'guru1@mujahidin.id'], [
             'name' => 'Ustadz Ahmad',
-            'password' => Hash::make('password'),
+            'gender' => 'Laki-laki',
+            'password' => Hash::make('08111111111'),
             'role' => 'guru',
             'phone' => '08111111111',
             'nip' => '123456789012345678', // Wajib persis 18 digit angka
@@ -33,7 +35,8 @@ class DatabaseSeeder extends Seeder
 
         $guru2 = User::updateOrCreate(['email' => 'guru2@mujahidin.id'], [
             'name' => 'Ustadza Siti',
-            'password' => Hash::make('password'),
+            'gender' => 'Perempuan',
+            'password' => Hash::make('08122222222'),
             'role' => 'guru',
             'phone' => '08122222222',
             'nip' => '876543210987654321', // Wajib persis 18 digit angka
@@ -42,21 +45,24 @@ class DatabaseSeeder extends Seeder
         // 3. Tiga (3) Orang Tua
         $ortu1 = User::updateOrCreate(['email' => 'ortu1@mujahidin.id'], [
             'name' => 'Bapak Rahmat',
-            'password' => Hash::make('password'),
+            'gender' => 'Laki-laki',
+            'password' => Hash::make('08133333333'),
             'role' => 'orang_tua',
             'phone' => '08133333333',
         ]);
 
         $ortu2 = User::updateOrCreate(['email' => 'ortu2@mujahidin.id'], [
             'name' => 'Ibu Sari',
-            'password' => Hash::make('password'),
+            'gender' => 'Perempuan',
+            'password' => Hash::make('08144444444'),
             'role' => 'orang_tua',
             'phone' => '08144444444',
         ]);
 
         $ortu3 = User::updateOrCreate(['email' => 'ortu3@mujahidin.id'], [
             'name' => 'Bapak Arif',
-            'password' => Hash::make('password'),
+            'gender' => 'Laki-laki',
+            'password' => Hash::make('08155555555'),
             'role' => 'orang_tua',
             'phone' => '08155555555',
         ]);
@@ -64,6 +70,7 @@ class DatabaseSeeder extends Seeder
         // 4. Lima (5) Santri (NIS wajib 10 angka)
         $santri1 = Student::updateOrCreate(['nis' => '2024000001'], [
             'name' => 'Muhammad Fulan',
+            'gender' => 'Laki-laki',
             'guru_id' => $guru1->id,
             'target_juz' => 30,
             'target_date' => now()->addYear(),
@@ -72,6 +79,7 @@ class DatabaseSeeder extends Seeder
 
         $santri2 = Student::updateOrCreate(['nis' => '2024000002'], [
             'name' => 'Aisyah Fitriani',
+            'gender' => 'Perempuan',
             'guru_id' => $guru1->id,
             'target_juz' => 30,
             'target_date' => now()->addYear(),
@@ -80,6 +88,7 @@ class DatabaseSeeder extends Seeder
 
         $santri3 = Student::updateOrCreate(['nis' => '2024000003'], [
             'name' => 'Zaid Al-Hakim',
+            'gender' => 'Laki-laki',
             'guru_id' => $guru2->id,
             'target_juz' => 30,
             'target_date' => now()->addMonths(18),
@@ -88,6 +97,7 @@ class DatabaseSeeder extends Seeder
 
         $santri4 = Student::updateOrCreate(['nis' => '2024000004'], [
             'name' => 'Fatimah Az-Zahra',
+            'gender' => 'Perempuan',
             'guru_id' => $guru2->id,
             'target_juz' => 30,
             'target_date' => now()->addMonths(12),
@@ -96,6 +106,7 @@ class DatabaseSeeder extends Seeder
 
         $santri5 = Student::updateOrCreate(['nis' => '2024000005'], [
             'name' => 'Umar Patah',
+            'gender' => 'Laki-laki',
             'guru_id' => $guru2->id,
             'target_juz' => 30,
             'target_date' => now()->addMonths(20),

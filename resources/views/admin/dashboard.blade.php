@@ -24,27 +24,36 @@
         </div>
     @endif
 
+    @if(session('import_warning'))
+        <div class="mb-6 p-5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl animate-fadeIn">
+            <div class="flex items-start gap-4">
+                <div class="p-2 bg-yellow-100 dark:bg-yellow-900/40 rounded-xl text-yellow-700 dark:text-yellow-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-bold text-yellow-800 dark:text-yellow-300">Import Berhasil Sebagian</h3>
+                    <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                        Berhasil menambahkan <span class="font-black underline">{{ session('import_warning')['success'] }}</span> data {{ session('import_warning')['tipe'] }}, namun ada <span class="font-black text-red-600 dark:text-red-400">{{ count(session('import_warning')['errors']) }}</span> baris yang dilewati karena sudah ada atau bermasalah:
+                    </p>
+                    <div class="mt-3 bg-white/50 dark:bg-black/20 rounded-xl p-3 border border-yellow-200/50 dark:border-yellow-800/50">
+                        <ul class="text-[10px] space-y-1.5 text-yellow-800 dark:text-yellow-400 max-h-40 overflow-y-auto custom-scrollbar">
+                            @foreach(session('import_warning')['errors'] as $error)
+                                <li class="flex gap-2">
+                                    <span class="font-bold shrink-0 text-yellow-600">•</span>
+                                    <span>{{ $error }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if(session('error'))
         <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-2xl border border-red-100 dark:border-red-800 font-bold flex items-center gap-3 animate-fadeIn">
             <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
             {{ session('error') }}
-        </div>
-    @endif
-
-    @if(session('import_warning'))
-        <div class="mb-6 p-4 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-2xl flex items-start gap-3 animate-fadeIn">
-            <svg class="w-6 h-6 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            <div>
-                <h3 class="text-sm font-bold text-orange-800 dark:text-orange-300">
-                    Import Selesai dengan Catatan: {{ session('import_warning')['success'] }} data {{ session('import_warning')['tipe'] ?? 'santri' }} baru berhasil ditambahkan.
-                </h3>
-                <p class="text-xs text-orange-700 dark:text-orange-400 font-semibold mt-1">Ditemukan {{ count(session('import_warning')['errors']) }} baris yang dilewati karena format tidak sesuai atau data duplikat/sudah ada:</p>
-                <ul class="mt-2 list-disc list-inside text-xs text-orange-700 dark:text-orange-400 space-y-1 bg-white/50 dark:bg-black/20 p-3 rounded-lg max-h-48 overflow-y-auto">
-                    @foreach(session('import_warning')['errors'] as $errorMsg)
-                        <li>{{ $errorMsg }}</li>
-                    @endforeach
-                </ul>
-            </div>
         </div>
     @endif
 
@@ -83,11 +92,11 @@
                         <div class="space-y-3 mt-2">
                             <div class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
                                 <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Guru:</p>
-                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Wajib memiliki kolom NIP. Urutan: <strong>Nama | NIP | No telp | Email</strong></p>
+                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama | NIP | No telp | Email | Jenis Kelamin</strong></p>
                             </div>
                             <div class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
                                 <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Santri:</p>
-                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama Santri | NIS | Nama Orang Tua | Email Orang Tua</strong></p>
+                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama Santri | NISN | JenKel Santri | Nama Ortu | Email Ortu | No HP Ortu | JenKel Ortu</strong></p>
                             </div>
                         </div>
                     </div>

@@ -44,6 +44,20 @@
                 <div class="space-y-4">
                     <x-tahfidz.form-input name="name" label="Nama Lengkap"
                         placeholder="Masukkan nama lengkap ustadz/ustadzah" required />
+                    
+                    <div class="w-full">
+                        <label for="gender" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Jenis Kelamin</label>
+                        <select id="gender" name="gender" required
+                            class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
+                            <option value="">Pilih Jenis Kelamin</option>
+                            <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                        </select>
+                        @error('gender')
+                            <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <x-tahfidz.form-input name="nip" label="NIP" placeholder="Nomor Induk Pegawai" required />
                     <x-tahfidz.form-input type="email" name="email" label="Email" placeholder="guru@example.com"
                         required />

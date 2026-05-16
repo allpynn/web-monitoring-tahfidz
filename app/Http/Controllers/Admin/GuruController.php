@@ -14,6 +14,10 @@ class GuruController extends Controller
     {
         $query = User::where('role', 'guru');
 
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
         if ($request->sort === 'abjad') {
             $query->orderBy('name', 'asc');
         } elseif ($request->sort === 'nip') {
@@ -36,6 +40,7 @@ class GuruController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
             'nip' => 'required|digits:18|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
@@ -53,6 +58,7 @@ class GuruController extends Controller
 
         User::create([
             'name'               => $request->name,
+            'gender'             => $request->gender,
             'nip'                => $request->nip,
             'email'              => $request->email,
             'phone'              => $phone,
@@ -81,6 +87,7 @@ class GuruController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
             'nip' => ['required', 'digits:18', Rule::unique('users')->ignore($guru->id)],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($guru->id)],
             'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($guru->id)],
@@ -94,10 +101,11 @@ class GuruController extends Controller
         ]);
 
         $data = [
-            'name'  => $request->name,
-            'nip'   => $request->nip,
-            'email' => $request->email,
-            'phone' => $request->phone,
+            'name'   => $request->name,
+            'gender' => $request->gender,
+            'nip'    => $request->nip,
+            'email'  => $request->email,
+            'phone'  => $request->phone,
         ];
 
         if ($request->password) {

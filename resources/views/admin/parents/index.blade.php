@@ -14,7 +14,13 @@
                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
-            <select onchange="window.location.href='{{ route('admin.parents.index') }}?sort=' + this.value" class="py-2 pl-3 pr-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
+            <select onchange="window.location.href='{{ route('admin.parents.index') }}?sort={{ request('sort') }}&gender=' + this.value" class="py-2 pl-3 pr-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
+                <option value="">Semua Jenis Kelamin</option>
+                <option value="Laki-laki" {{ request('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                <option value="Perempuan" {{ request('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+            </select>
+
+            <select onchange="window.location.href='{{ route('admin.parents.index') }}?gender={{ request('gender') }}&sort=' + this.value" class="py-2 pl-3 pr-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
                 <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
                 <option value="abjad" {{ request('sort') == 'abjad' ? 'selected' : '' }}>Abjad (A-Z)</option>
                 <option value="anak_terbanyak" {{ request('sort') == 'anak_terbanyak' ? 'selected' : '' }}>Jumlah Anak Terbanyak</option>
@@ -40,6 +46,7 @@
                 <thead>
                     <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
                         <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Orang Tua</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">L/P</th>
                         <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kontak</th>
                         <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jumlah Anak</th>
                         <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
@@ -55,6 +62,15 @@
                                     </div>
                                     <div class="text-sm font-bold text-gray-900 dark:text-white">{{ $parent->name }}</div>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($parent->gender === 'Laki-laki')
+                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" title="Laki-laki">L</span>
+                                @elseif($parent->gender === 'Perempuan')
+                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400" title="Perempuan">P</span>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900 dark:text-white">{{ $parent->email }}</div>
@@ -82,7 +98,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
                                 Belum ada data orang tua.
                             </td>
                         </tr>

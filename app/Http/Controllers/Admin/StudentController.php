@@ -24,6 +24,10 @@ class StudentController extends Controller
     {
         $query = Student::with(['parents', 'guru']);
 
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
         if ($request->sort === 'abjad') {
             $query->orderBy('name', 'asc');
         } elseif ($request->sort === 'nis') {
@@ -40,47 +44,81 @@ class StudentController extends Controller
     public function create()
     {
         $gurus = User::where('role', 'guru')->get();
+        $parents = User::where('role', 'orang_tua')->orderBy('name')->get();
 
-        return view('admin.students.create', compact('gurus'));
+        return view('admin.students.create', compact('gurus', 'parents'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'nis' => 'required|string|digits:10|unique:students,nis',
-            'parent_names' => 'required|array|min:1',
-            'parent_names.*' => 'required|string|max:255',
-            'parent_phones' => 'required|array|min:1',
-            'parent_phones.*' => 'required|string|max:20',
-            'guru_id' => 'required|exists:users,id',
-            'target_juz' => 'required|integer|min:1|max:30',
-            'target_date' => 'nullable|date',
+            'name'          => 'required|string|max:255',
+            'gender'        => 'required|in:Laki-laki,Perempuan',
+            'nis'           => 'required|string|digits:10|unique:students,nis',
+            'guru_id'       => 'required|exists:users,id',
+            'target_juz'    => 'nullable|integer|min:1|max:30',
+            'target_date'   => 'nullable|date',
+            'parent_names.*'  => 'nullable|string|max:255',
+            'parent_phones.*' => 'nullable|string|max:20',
+            'parent_genders.*'=> 'nullable|in:Laki-laki,Perempuan',
+            'parent_emails.*' => 'nullable|email|max:255',
+            'existing_parent_ids.*' => 'nullable|exists:users,id',
         ], [
-            'nis.unique' => 'Gagal: Data ini sudah ada! NISN tersebut sudah terdaftar di dalam sistem.',
-            'nis.digits' => 'Gagal: NISN harus berjumlah persis 10 angka.',
+            'name.required' => 'Nama santri wajib diisi.',
+            'gender.required' => 'Jenis kelamin santri wajib dipilih.',
+            'nis.required' => 'NISN wajib diisi.',
+            'nis.digits' => 'NISN harus berjumlah persis 10 angka.',
+            'nis.unique' => 'NISN sudah terdaftar di sistem.',
+            'guru_id.required' => 'Guru pendamping wajib dipilih.',
+            'guru_id.exists' => 'Guru yang dipilih tidak valid.',
+            'parent_emails.*.email' => 'Format email orang tua tidak valid.',
         ]);
 
-        $student = Student::create($request->only(['name', 'nis', 'guru_id', 'target_juz', 'target_date']));
+        $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id', 'target_juz', 'target_date']));
 
-        // Buat akun orang tua otomatis dari input manual
         $parentIds = [];
-        foreach ($request->parent_names as $index => $parentName) {
-            $phone = $request->parent_phones[$index] ?? '';
 
-            // Cek apakah orang tua sudah ada berdasarkan nomor telepon
-            $parent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
-
-            if (!$parent) {
-                // Buat akun baru dengan password default dari nomor telepon
-                $parent = User::create([
-                    'name' => $parentName,
-                    'email' => 'parent_' . Str::slug($parentName) . '_' . Str::random(4) . '@tahfidz.local',
-                    'phone' => $phone,
-                    'password' => Hash::make($phone),
-                    'role' => 'orang_tua',
-                ]);
+        // 1. Proses orang tua yang dipilih dari data yang sudah ada
+        if ($request->filled('existing_parent_ids')) {
+            foreach ($request->existing_parent_ids as $pid) {
+                if ($pid) $parentIds[] = (int)$pid;
             }
+        }
+
+        // 2. Validasi & Proses form orang tua baru
+        foreach (($request->parent_names ?? []) as $index => $parentName) {
+            if (empty($parentName)) continue;
+
+            $phoneRaw = $request->parent_phones[$index] ?? '';
+            
+            if ($phoneRaw) {
+                // Normalisasi nomor HP ke format 08...
+                $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
+                if (str_starts_with($phone, '8')) $phone = '0' . $phone;
+                elseif (str_starts_with($phone, '628')) $phone = '0' . substr($phone, 2);
+
+                // Cek apakah nomor HP sudah ada di database
+                $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
+                if ($existingParent) {
+                    return redirect()->back()->withInput()->withErrors([
+                        "parent_phones.$index" => "Nomor HP '$phone' sudah digunakan oleh '{$existingParent->name}'. Silakan pilih data tersebut di bagian 'Cari Orang Tua'."
+                    ]);
+                }
+            }
+
+            $email  = $request->parent_emails[$index]  ?? null;
+            $gender = $request->parent_genders[$index] ?? null;
+
+            // Buat parent baru dengan nomor yang sudah dibersihkan
+            $parent = User::create([
+                'name'     => $parentName,
+                'gender'   => $gender,
+                'email'    => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                'phone'    => $phone,
+                'password' => Hash::make($phone ?: Str::random(10)),
+                'role'     => 'orang_tua',
+                'email_verified_at' => now(),
+            ]);
 
             $parentIds[] = $parent->id;
         }
@@ -93,8 +131,8 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         $student->load('parents');
-        $parents = User::where('role', 'orang_tua')->get();
-        $gurus = User::where('role', 'guru')->get();
+        $parents = User::where('role', 'orang_tua')->orderBy('name')->get();
+        $gurus = User::where('role', 'guru')->orderBy('name')->get();
 
         return view('admin.students.edit', compact('student', 'parents', 'gurus'));
     }
@@ -103,19 +141,71 @@ class StudentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
             'nis' => 'required|string|digits:10|unique:students,nis,'.$student->id,
-            'parent_ids' => 'required|array',
-            'parent_ids.*' => 'exists:users,id',
             'guru_id' => 'required|exists:users,id',
-            'target_juz' => 'required|integer|min:1|max:30',
+            'target_juz' => 'nullable|integer|min:1|max:30',
             'target_date' => 'nullable|date',
+            'parent_names.*'  => 'nullable|string|max:255',
+            'parent_phones.*' => 'nullable|string|max:20',
+            'parent_genders.*'=> 'nullable|in:Laki-laki,Perempuan',
+            'parent_emails.*' => 'nullable|email|max:255',
+            // Orang tua yang sudah ada
+            'existing_parent_ids.*' => 'nullable|exists:users,id',
         ], [
-            'nis.unique' => 'Gagal: Data ini sudah ada! NISN tersebut sudah terdaftar di dalam sistem.',
-            'nis.digits' => 'Gagal: NISN harus berjumlah persis 10 angka.',
+            'name.required' => 'Nama santri wajib diisi.',
+            'nis.required' => 'NISN wajib diisi.',
+            'nis.unique' => 'NISN sudah terdaftar di sistem.',
         ]);
 
-        $student->update($request->only(['name', 'nis', 'guru_id', 'target_juz', 'target_date']));
-        $student->parents()->sync($request->parent_ids);
+        $student->update($request->only(['name', 'gender', 'nis', 'guru_id', 'target_juz', 'target_date']));
+        
+        $parentIds = [];
+
+        // 1. Proses orang tua yang dipilih dari data yang sudah ada
+        if ($request->filled('existing_parent_ids')) {
+            foreach ($request->existing_parent_ids as $pid) {
+                if ($pid) $parentIds[] = (int)$pid;
+            }
+        }
+
+        // 2. Proses form orang tua baru (Jika ada input)
+        foreach (($request->parent_names ?? []) as $index => $parentName) {
+            if (empty($parentName)) continue;
+
+            $phoneRaw = $request->parent_phones[$index] ?? '';
+            $phone = '';
+            
+            if ($phoneRaw) {
+                $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
+                if (str_starts_with($phone, '8')) $phone = '0' . $phone;
+                elseif (str_starts_with($phone, '628')) $phone = '0' . substr($phone, 2);
+
+                $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
+                if ($existingParent) {
+                    return redirect()->back()->withInput()->withErrors([
+                        "parent_phones.$index" => "Nomor HP '$phone' sudah digunakan oleh '{$existingParent->name}'. Silakan pilih data tersebut di bagian 'Cari Orang Tua'."
+                    ]);
+                }
+            }
+
+            $email  = $request->parent_emails[$index]  ?? null;
+            $gender = $request->parent_genders[$index] ?? null;
+
+            $parent = User::create([
+                'name'     => $parentName,
+                'gender'   => $gender,
+                'email'    => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                'phone'    => $phone,
+                'password' => Hash::make($phone ?: Str::random(10)),
+                'role'     => 'orang_tua',
+                'email_verified_at' => now(),
+            ]);
+
+            $parentIds[] = $parent->id;
+        }
+
+        $student->parents()->sync($parentIds);
 
         return redirect()->route('admin.students.index')->with('success', 'Data santri berhasil diperbarui.');
     }
