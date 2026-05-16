@@ -96,10 +96,11 @@ class StudentController extends Controller
             if ($phoneRaw) {
                 // Normalisasi nomor HP ke format 08...
                 $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
-                if (str_starts_with($phone, '8'))
-                    $phone = '0' . $phone;
-                elseif (str_starts_with($phone, '628'))
+                if (str_starts_with($phone, '62')) {
                     $phone = '0' . substr($phone, 2);
+                } elseif (str_starts_with($phone, '8')) {
+                    $phone = '0' . $phone;
+                }
 
                 // Cek apakah nomor HP sudah ada di database
                 $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();

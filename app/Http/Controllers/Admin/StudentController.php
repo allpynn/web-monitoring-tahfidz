@@ -52,15 +52,15 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'gender'        => 'required|in:Laki-laki,Perempuan',
-            'nis'           => 'required|string|digits:10|unique:students,nis',
-            'guru_id'       => 'required|exists:users,id',
-            'target_juz'    => 'nullable|integer|min:1|max:30',
-            'target_date'   => 'nullable|date',
-            'parent_names.*'  => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
+            'nis' => 'required|string|digits:10|unique:students,nis',
+            'guru_id' => 'required|exists:users,id',
+            'target_juz' => 'nullable|integer|min:1|max:30',
+            'target_date' => 'nullable|date',
+            'parent_names.*' => 'nullable|string|max:255',
             'parent_phones.*' => 'nullable|string|max:20',
-            'parent_genders.*'=> 'nullable|in:Laki-laki,Perempuan',
+            'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
             'parent_emails.*' => 'nullable|email|max:255',
             'existing_parent_ids.*' => 'nullable|exists:users,id',
         ], [
@@ -81,21 +81,26 @@ class StudentController extends Controller
         // 1. Proses orang tua yang dipilih dari data yang sudah ada
         if ($request->filled('existing_parent_ids')) {
             foreach ($request->existing_parent_ids as $pid) {
-                if ($pid) $parentIds[] = (int)$pid;
+                if ($pid)
+                    $parentIds[] = (int) $pid;
             }
         }
 
         // 2. Validasi & Proses form orang tua baru
         foreach (($request->parent_names ?? []) as $index => $parentName) {
-            if (empty($parentName)) continue;
+            if (empty($parentName))
+                continue;
 
             $phoneRaw = $request->parent_phones[$index] ?? '';
-            
+
             if ($phoneRaw) {
                 // Normalisasi nomor HP ke format 08...
                 $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
-                if (str_starts_with($phone, '8')) $phone = '0' . $phone;
-                elseif (str_starts_with($phone, '628')) $phone = '0' . substr($phone, 2);
+                if (str_starts_with($phone, '62')) {
+                    $phone = '0' . substr($phone, 2);
+                } elseif (str_starts_with($phone, '8')) {
+                    $phone = '0' . $phone;
+                }
 
                 // Cek apakah nomor HP sudah ada di database
                 $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
@@ -106,17 +111,17 @@ class StudentController extends Controller
                 }
             }
 
-            $email  = $request->parent_emails[$index]  ?? null;
+            $email = $request->parent_emails[$index] ?? null;
             $gender = $request->parent_genders[$index] ?? null;
 
             // Buat parent baru dengan nomor yang sudah dibersihkan
             $parent = User::create([
-                'name'     => $parentName,
-                'gender'   => $gender,
-                'email'    => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
-                'phone'    => $phone,
+                'name' => $parentName,
+                'gender' => $gender,
+                'email' => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                'phone' => $phone,
                 'password' => Hash::make($phone ?: Str::random(10)),
-                'role'     => 'orang_tua',
+                'role' => 'orang_tua',
                 'email_verified_at' => now(),
             ]);
 
@@ -142,13 +147,13 @@ class StudentController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'gender' => 'required|in:Laki-laki,Perempuan',
-            'nis' => 'required|string|digits:10|unique:students,nis,'.$student->id,
+            'nis' => 'required|string|digits:10|unique:students,nis,' . $student->id,
             'guru_id' => 'required|exists:users,id',
             'target_juz' => 'nullable|integer|min:1|max:30',
             'target_date' => 'nullable|date',
-            'parent_names.*'  => 'nullable|string|max:255',
+            'parent_names.*' => 'nullable|string|max:255',
             'parent_phones.*' => 'nullable|string|max:20',
-            'parent_genders.*'=> 'nullable|in:Laki-laki,Perempuan',
+            'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
             'parent_emails.*' => 'nullable|email|max:255',
             // Orang tua yang sudah ada
             'existing_parent_ids.*' => 'nullable|exists:users,id',
@@ -159,27 +164,31 @@ class StudentController extends Controller
         ]);
 
         $student->update($request->only(['name', 'gender', 'nis', 'guru_id', 'target_juz', 'target_date']));
-        
+
         $parentIds = [];
 
         // 1. Proses orang tua yang dipilih dari data yang sudah ada
         if ($request->filled('existing_parent_ids')) {
             foreach ($request->existing_parent_ids as $pid) {
-                if ($pid) $parentIds[] = (int)$pid;
+                if ($pid)
+                    $parentIds[] = (int) $pid;
             }
         }
 
         // 2. Proses form orang tua baru (Jika ada input)
         foreach (($request->parent_names ?? []) as $index => $parentName) {
-            if (empty($parentName)) continue;
+            if (empty($parentName))
+                continue;
 
             $phoneRaw = $request->parent_phones[$index] ?? '';
             $phone = '';
-            
+
             if ($phoneRaw) {
                 $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
-                if (str_starts_with($phone, '8')) $phone = '0' . $phone;
-                elseif (str_starts_with($phone, '628')) $phone = '0' . substr($phone, 2);
+                if (str_starts_with($phone, '8'))
+                    $phone = '0' . $phone;
+                elseif (str_starts_with($phone, '628'))
+                    $phone = '0' . substr($phone, 2);
 
                 $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
                 if ($existingParent) {
@@ -189,16 +198,16 @@ class StudentController extends Controller
                 }
             }
 
-            $email  = $request->parent_emails[$index]  ?? null;
+            $email = $request->parent_emails[$index] ?? null;
             $gender = $request->parent_genders[$index] ?? null;
 
             $parent = User::create([
-                'name'     => $parentName,
-                'gender'   => $gender,
-                'email'    => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
-                'phone'    => $phone,
+                'name' => $parentName,
+                'gender' => $gender,
+                'email' => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                'phone' => $phone,
                 'password' => Hash::make($phone ?: Str::random(10)),
-                'role'     => 'orang_tua',
+                'role' => 'orang_tua',
                 'email_verified_at' => now(),
             ]);
 
@@ -221,6 +230,6 @@ class StudentController extends Controller
     {
         $pdf = $this->memorizationService->generateStudentReport($student);
 
-        return $pdf->download('Laporan_'.$student->nis.'.pdf');
+        return $pdf->download('Laporan_' . $student->nis . '.pdf');
     }
 }

@@ -85,10 +85,14 @@ class DashboardController extends Controller
                     $gender = $this->normalizeGender($data[4]);
 
                     $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
-                    if (str_starts_with($phone, '8'))
-                        $phone = '0' . $phone;
-                    elseif (str_starts_with($phone, '628'))
+                    // Jika diawali 62..., ubah jadi 0...
+                    if (str_starts_with($phone, '62')) {
                         $phone = '0' . substr($phone, 2);
+                    }
+                    // Jika diawali 8..., tambah 0 di depannya
+                    elseif (str_starts_with($phone, '8')) {
+                        $phone = '0' . $phone;
+                    }
 
                     if (User::where('email', $email)->orWhere('nip', $nip)->exists()) {
                         $errorMessages[] = "Baris $rowNum ($nama): Akun (Email/NIP) sudah terdaftar.";
@@ -129,6 +133,12 @@ class DashboardController extends Controller
                     $parent = User::where('email', $emailO)->first();
                     if (!$parent) {
                         $phoneO = preg_replace('/[^0-9]/', '', $phoneORaw);
+                        // Normalisasi format 08...
+                        if (str_starts_with($phoneO, '62'))
+                            $phoneO = '0' . substr($phoneO, 2);
+                        elseif (str_starts_with($phoneO, '8'))
+                            $phoneO = '0' . $phoneO;
+
                         $parent = User::create([
                             'email' => $emailO,
                             'name' => $namaO,
