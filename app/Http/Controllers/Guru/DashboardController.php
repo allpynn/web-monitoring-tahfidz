@@ -51,64 +51,31 @@ class DashboardController extends Controller
         $allSurahs = \App\Models\Surah::all();
         $surahsMap = $allSurahs->keyBy('nama_latin');
 
-        // Pre-calculate total ayat per juz level efficiently
-        $ayatPerJuzLevel = [];
-        for ($j = 1; $j <= 30; $j++) {
-            $ayatPerJuzLevel[$j] = $allSurahs
-                ->filter(fn($s) => $s->juz_awal <= $j)
-                ->sum('jumlah_ayat');
-        }
-
+        // Pre-calculate statistics
         $early_warnings = collect();
         $top_targets    = collect();
 
         foreach ($students as $student) {
-            $mems = $student->memorizations;
-
-            // ── Early Warning ──────────────────────────────────────────
-            $latestMem = $mems->sortByDesc('tanggal')->first();
+            // -- Early Warning Logic (Activity based) --
+            $latestMem = $student->memorizations->sortByDesc('tanggal')->first();
             if (
-                ! $latestMem
-                || \Carbon\Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3
-                || $latestMem->status === 'Perlu Perbaikan'
+                !$latestMem || 
+                \Carbon\Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3 || 
+                $latestMem->status === 'Perlu Perbaikan'
             ) {
-                $student->warning_reason  = ! $latestMem
-                    ? 'Belum Ada Setoran'
-                    : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor (≥ 3 Hari)');
-                $student->last_mem_date = $latestMem
-                    ? \Carbon\Carbon::parse($latestMem->tanggal)
-                    : null;
+                $student->warning_reason = !$latestMem ? 'Belum Ada Setoran' : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor (≥ 3 Hari)');
+                $student->last_mem_date = $latestMem ? \Carbon\Carbon::parse($latestMem->tanggal) : null;
                 $early_warnings->push($student);
             }
 
-            // ── Smart Progress (ayat-based) ────────────────────────────
-            $lancarRecords = $mems->where('status', 'Lancar')->where('is_present', true);
-
-            $ayatLancarCount = 0;
-            $seen = [];
-            foreach ($lancarRecords as $record) {
-                if (!$record->surah) continue;
-                $key = $record->surah . '|' . ($record->ayat ?? '');
-                if (isset($seen[$key])) continue;
-                $seen[$key] = true;
-
-                $ayat = trim($record->ayat ?? '');
-                if (preg_match('/^(\d+)-(\d+)$/', $ayat, $m)) {
-                    $ayatLancarCount += abs((int)$m[2] - (int)$m[1]) + 1;
-                } else {
-                    $ayatLancarCount += 1;
-                }
-            }
-
-            $targetJuz        = (int) ($student->target_juz ?? 30);
-            $totalAyatTarget  = $ayatPerJuzLevel[$targetJuz] ?? 0;
-
-            $student->progress_percent  = $totalAyatTarget > 0
-                ? min((int) round($ayatLancarCount / $totalAyatTarget * 100), 100)
-                : 0;
-            $student->ayat_lancar       = $ayatLancarCount;
-            $student->total_ayat_target = $totalAyatTarget;
-
+            // -- Top Achievement Logic (Multi-Target based) --
+            $activeTarget = $student->activeTarget();
+            $finishedJuz  = $student->completed_juz; // Array of completed juz IDs/numbers
+            
+            $student->finished_juz_count = count($finishedJuz);
+            $student->target_juz_count   = $activeTarget ? $activeTarget->target_juz : 30;
+            $student->progress_percent   = $student->target_progress;
+            
             $top_targets->push($student);
         }
 

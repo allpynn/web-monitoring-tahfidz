@@ -79,7 +79,8 @@ class HafalanController extends Controller
             $data['status'] = null;
         }
 
-        RiwayatHafalan::create($data);
+        $hafalan = RiwayatHafalan::create($data);
+        $hafalan->student->refreshCache();
 
         broadcast(new HafalanUpdated("Siswa " . Auth::user()->name . " telah melakukan setoran baru!"))->toOthers();
 
@@ -132,6 +133,7 @@ class HafalanController extends Controller
         }
 
         $hafalan->update($data);
+        $hafalan->student->refreshCache();
 
         broadcast(new HafalanUpdated("Update hafalan oleh " . Auth::user()->name))->toOthers();
 
@@ -142,7 +144,9 @@ class HafalanController extends Controller
     {
         $this->authorize('delete', $hafalan);
 
+        $student = $hafalan->student;
         $hafalan->delete();
+        $student->refreshCache();
 
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil dihapus.');
     }
@@ -159,6 +163,9 @@ class HafalanController extends Controller
     public function exportSemesterPdf(Student $student)
     {
         $this->authorize('view', $student);
+
+        // Pre-load relationships to avoid N+1 queries during PDF generation
+        $student->load(['memorizations', 'guru', 'targets']);
 
         $pdf = $this->memorizationService->generateSemesterRecap($student);
 

@@ -15,7 +15,8 @@
         Dashboard Guru
     </x-slot>
     <x-slot name="subtitle">
-        Selamat datang kembali, {{ auth()->user()->gender === 'Perempuan' ? 'Ustadzah' : 'Ustadz' }} {{ auth()->user()->name }}.
+        Selamat datang kembali, {{ auth()->user()->gender === 'Perempuan' ? 'Ustadzah' : 'Ustadz' }}
+        {{ auth()->user()->name }}.
     </x-slot>
 
     <!-- AKSI CEPAT DIBAGIAN ATAS -->
@@ -69,7 +70,8 @@
                 onchange="this.form.submit()">
                 @foreach(range(1, 12) as $m)
                     <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                        {{ \Carbon\Carbon::create($year, $m, 1)->translatedFormat('F') }}</option>
+                        {{ \Carbon\Carbon::create($year, $m, 1)->translatedFormat('F') }}
+                    </option>
                 @endforeach
             </select>
             <select name="year" class="rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-xs font-bold"
@@ -112,22 +114,30 @@
     <!-- OTHERS -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <x-tahfidz.card title="🏆 Top Pencapaian Target">
-            <div class="space-y-3 mt-4">
+            <div class="space-y-4 mt-4">
                 @forelse($top_targets as $top)
                     <div>
-                        <div class="flex justify-between text-sm mb-1.5 font-bold">
-                            <span>{{ $top->name }}</span>
-                            <span class="text-emerald-600">{{ $top->progress_percent }}%</span>
+                        <div class="text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                            {{ $top->name }}
                         </div>
-                        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
-                            <div class="h-2.5 rounded-full transition-all duration-500
-                                    {{ $top->progress_percent >= 75 ? 'bg-emerald-500' : ($top->progress_percent >= 40 ? 'bg-yellow-400' : 'bg-red-400') }}"
-                                style="width: {{ $top->progress_percent }}%">
-                            </div>
-                        </div>
-                        <div class="text-[10px] text-gray-400 mt-1">
-                            {{ number_format($top->ayat_lancar) }} / {{ number_format($top->total_ayat_target) }} ayat
-                            lancar
+                        <div class="space-y-3 pl-2 border-l-2 border-gray-100 dark:border-gray-700">
+                            @foreach($top->targets as $t)
+                                @php
+                                    $p = $top->getJuzProgress($t->target_juz);
+                                @endphp
+                                <div>
+                                    <div class="flex justify-between text-[10px] mb-1 font-semibold uppercase tracking-tight">
+                                        <span>Juz {{ $t->target_juz }}</span>
+                                        <span class="{{ $p == 100 ? 'text-emerald-500' : 'text-gray-500' }}">{{ $p }}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+                                        <div class="h-1.5 rounded-full transition-all duration-700
+                                                {{ $p == 100 ? 'bg-emerald-500' : ($p >= 50 ? 'bg-blue-400' : 'bg-red-300') }}"
+                                            style="width: {{ $p }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 @empty
