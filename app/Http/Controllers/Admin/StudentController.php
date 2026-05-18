@@ -22,7 +22,7 @@ class StudentController extends Controller
     }
     public function index(Request $request)
     {
-        $query = Student::with(['parents', 'guru']);
+        $query = Student::with(['parents', 'guru', 'targets', 'memorizations']);
 
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
@@ -56,13 +56,13 @@ class StudentController extends Controller
             'gender' => 'required|in:Laki-laki,Perempuan',
             'nis' => 'required|string|digits:10|unique:students,nis',
             'guru_id' => 'required|exists:users,id',
-            'target_juz' => 'nullable|integer|min:1|max:30',
-            'target_date' => 'nullable|date',
             'parent_names.*' => 'nullable|string|max:255',
             'parent_phones.*' => 'nullable|string|max:20',
             'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
             'parent_emails.*' => 'nullable|email|max:255',
             'existing_parent_ids.*' => 'nullable|exists:users,id',
+            'target_juz.*' => 'nullable|integer|min:1|max:30',
+            'target_date.*' => 'nullable|date',
         ], [
             'name.required' => 'Nama santri wajib diisi.',
             'gender.required' => 'Jenis kelamin santri wajib dipilih.',
@@ -74,7 +74,19 @@ class StudentController extends Controller
             'parent_emails.*.email' => 'Format email orang tua tidak valid.',
         ]);
 
-        $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id', 'target_juz', 'target_date']));
+        $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id']));
+
+        // Simpan Target Hafalan
+        if ($request->has('target_juz')) {
+            foreach ($request->target_juz as $idx => $juz) {
+                if ($juz) {
+                    $student->targets()->create([
+                        'target_juz' => $juz,
+                        'target_date' => $request->target_date[$idx] ?? null,
+                    ]);
+                }
+            }
+        }
 
         $parentIds = [];
 
@@ -135,7 +147,7 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
-        $student->load('parents');
+        $student->load(['parents', 'targets']);
         $parents = User::where('role', 'orang_tua')->orderBy('name')->get();
         $gurus = User::where('role', 'guru')->orderBy('name')->get();
 
@@ -149,21 +161,33 @@ class StudentController extends Controller
             'gender' => 'required|in:Laki-laki,Perempuan',
             'nis' => 'required|string|digits:10|unique:students,nis,' . $student->id,
             'guru_id' => 'required|exists:users,id',
-            'target_juz' => 'nullable|integer|min:1|max:30',
-            'target_date' => 'nullable|date',
             'parent_names.*' => 'nullable|string|max:255',
             'parent_phones.*' => 'nullable|string|max:20',
             'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
             'parent_emails.*' => 'nullable|email|max:255',
-            // Orang tua yang sudah ada
             'existing_parent_ids.*' => 'nullable|exists:users,id',
+            'target_juz.*' => 'nullable|integer|min:1|max:30',
+            'target_date.*' => 'nullable|date',
         ], [
             'name.required' => 'Nama santri wajib diisi.',
             'nis.required' => 'NISN wajib diisi.',
             'nis.unique' => 'NISN sudah terdaftar di sistem.',
         ]);
 
-        $student->update($request->only(['name', 'gender', 'nis', 'guru_id', 'target_juz', 'target_date']));
+        $student->update($request->only(['name', 'gender', 'nis', 'guru_id']));
+
+        // Update Targets
+        $student->targets()->delete();
+        if ($request->has('target_juz')) {
+            foreach ($request->target_juz as $idx => $juz) {
+                if ($juz) {
+                    $student->targets()->create([
+                        'target_juz' => $juz,
+                        'target_date' => $request->target_date[$idx] ?? null,
+                    ]);
+                }
+            }
+        }
 
         $parentIds = [];
 

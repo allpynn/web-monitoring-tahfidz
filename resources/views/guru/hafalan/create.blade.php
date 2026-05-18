@@ -14,7 +14,7 @@
             </a>
         </div>
 
-        <form action="{{ route('guru.hafalan.store') }}" method="POST" class="space-y-6">
+        <form id="hafalan-form" action="{{ route('guru.hafalan.store') }}" method="POST" class="space-y-6">
             @csrf
             
             <x-tahfidz.card title="Informasi Santri">
@@ -30,7 +30,7 @@
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pilih Santri</label>
                         <div class="relative" id="student-search-wrapper">
                             <input type="text" id="student-search-input" autocomplete="off"
-                                placeholder="Ketik nama santri..."
+                                placeholder="Ketik nama santri..." required
                                 class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
                             <input type="hidden" name="student_id" id="student_id" value="{{ old('student_id') }}" required>
                             <ul id="student-dropdown" class="hidden absolute z-20 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl mt-1 max-h-52 overflow-y-auto">
@@ -68,14 +68,17 @@
                                     <input type="text" id="surah-search-input" autocomplete="off"
                                         placeholder="Ketik nama surah..."
                                         class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm dark:text-white transition-all shadow-sm">
-                                    <input type="hidden" name="surah" id="surah" value="{{ old('surah') }}" required>
+                                    <input type="hidden" name="surah" id="surah" value="{{ old('surah') }}" >
                                     <ul id="surah-dropdown" class="hidden absolute z-20 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl mt-1 max-h-52 overflow-y-auto">
                                     </ul>
                                 </div>
                                 @error('surah') <p class="mt-1 text-xs text-red-600 font-bold italic">{{ $message }}</p> @enderror
                             </div>
                         </div>
-                        <x-tahfidz.form-input name="ayat" label="Ayat" placeholder="Contoh: 1-10" :value="old('ayat')" />
+                        <div class="grid grid-cols-2 gap-6">
+                            <x-tahfidz.form-input type="number" name="ayat_dari" label="Dari Ayat" placeholder="1" min="1" required />
+                            <x-tahfidz.form-input type="number" name="ayat_sampai" label="Sampai Ayat" placeholder="7" min="1" required />
+                        </div>
                         
                         <div class="w-full">
                             <label for="status" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Evaluasi Status</label>
@@ -103,6 +106,33 @@
 
     @push('scripts')
     <script>
+        // -- Form Submission Guard --
+        document.getElementById('hafalan-form').addEventListener('submit', function(e) {
+            const errorMsg = document.getElementById('ayat-error');
+            const isPresent = document.querySelector('input[name="is_present"]:checked').value === '1';
+            const studentId = document.getElementById('student_id').value;
+
+            if (!studentId) {
+                e.preventDefault();
+                alert('Silakan pilih nama santri terlebih dahulu.');
+                document.getElementById('student-search-input').focus();
+                return false;
+            }
+            
+            if (isPresent && errorMsg) {
+                e.preventDefault();
+                alert('Silakan perbaiki kesalahan input ayat sebelum menyimpan.');
+                return false;
+            }
+
+            const surah = document.getElementById('surah').value;
+            if (isPresent && !surah) {
+                e.preventDefault();
+                alert('Silakan pilih nama surah terlebih dahulu.');
+                return false;
+            }
+        });
+
         // ── Data from PHP ─────────────────────────────────────────────
         const surahsData = @json($surahsList->values());
         const studentsData = @json($students->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'nis' => $s->nis]));
@@ -178,8 +208,72 @@
             (surah) => {
                 // Auto-fill juz when surah is selected
                 document.getElementById('juz').value = surah.juz_awal;
+                
+                // Store max verse and update hint
+                const inputDari = document.getElementsByName('ayat_dari')[0];
+                const inputSampai = document.getElementsByName('ayat_sampai')[0];
+                
+                [inputDari, inputSampai].forEach(el => {
+                    el.max = surah.jumlah_ayat;
+                    el.dataset.maxAyat = surah.jumlah_ayat;
+                    el.placeholder = surah.jumlah_ayat;
+                });
+
+                // Clear previous error if any
+                const existingHint = document.getElementById('ayat-hint');
+                if (existingHint) existingHint.remove();
+                
+                const hint = document.createElement('p');
+                hint.id = 'ayat-hint';
+                hint.className = 'mt-1 text-[10px] font-bold text-emerald-600 uppercase tracking-tight';
+                hint.textContent = `Surah ${surah.nama_latin} memiliki ${surah.jumlah_ayat} ayat.`;
+                inputSampai.parentElement.parentElement.parentElement.appendChild(hint);
             }
         );
+
+        // -- Ayat Validation Logic --
+        const inputDari = document.getElementsByName('ayat_dari')[0];
+        const inputSampai = document.getElementsByName('ayat_sampai')[0];
+
+        function validateAyat() {
+            const max = parseInt(inputDari.dataset.maxAyat);
+            if (!max) return;
+
+            const dari = parseInt(inputDari.value);
+            const sampai = parseInt(inputSampai.value);
+            let hasError = false;
+            let msg = '';
+
+            if (dari > max || sampai > max) {
+                hasError = true;
+                msg = `⚠️ Maksimal surah ini adalah ${max} ayat.`;
+            } else if (sampai < dari) {
+                hasError = true;
+                msg = `⚠️ 'Sampai Ayat' tidak boleh lebih kecil dari 'Dari Ayat'.`;
+            }
+
+            const errorId = 'ayat-composite-error';
+            let errorMsg = document.getElementById(errorId);
+
+            if (hasError) {
+                [inputDari, inputSampai].forEach(el => el.classList.add('border-red-500', 'ring-red-500'));
+                if (!errorMsg) {
+                    errorMsg = document.createElement('p');
+                    errorMsg.id = errorId;
+                    errorMsg.className = 'mt-1 text-[11px] font-bold text-red-600 italic';
+                    inputSampai.parentElement.parentElement.parentElement.appendChild(errorMsg);
+                }
+                errorMsg.id = 'ayat-error'; // Important: Keep this ID so the form guard sees it
+                errorMsg.textContent = msg;
+            } else {
+                [inputDari, inputSampai].forEach(el => el.classList.remove('border-red-500', 'ring-red-500'));
+                const toDelete = document.getElementById('ayat-error') || document.getElementById(errorId);
+                if (toDelete) toDelete.remove();
+            }
+        }
+
+        inputDari.addEventListener('input', validateAyat);
+        inputSampai.addEventListener('input', validateAyat);
 
         // ── Toggle Hafalan Inputs ─────────────────────────────────────
         function toggleInputs(isPresent) {

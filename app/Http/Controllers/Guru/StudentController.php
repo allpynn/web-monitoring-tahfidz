@@ -20,7 +20,7 @@ class StudentController extends Controller
 
     public function index()
     {
-        $students = Student::with(['parents', 'memorizations'])
+        $students = Student::with(['parents', 'targets', 'memorizations'])
             ->where('guru_id', auth()->id())
             ->latest()
             ->get();
@@ -137,20 +137,42 @@ class StudentController extends Controller
     {
         $this->authorize('update', $student);
 
-        $student->load('parents');
+        $student->load(['parents', 'targets']);
         $parents = User::where('role', 'orang_tua')->get();
 
         return view('guru.students.edit', compact('student', 'parents'));
     }
 
-    public function update(UpdateStudentRequest $request, Student $student)
+    public function update(Request $request, Student $student)
     {
-        $data = $request->validated();
-        $parentIds = $data['parent_ids'] ?? [];
-        unset($data['parent_ids']);
+        $this->authorize('update', $student);
 
-        $student->update($data);
-        $student->parents()->sync($parentIds);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'gender' => 'required|in:Laki-laki,Perempuan',
+            'nis' => 'required|string|digits:10|unique:students,nis,' . $student->id,
+            'target_juz.*' => 'nullable|integer|min:1|max:30',
+            'target_date.*' => 'nullable|date',
+        ], [
+            'name.required' => 'Nama santri wajib diisi.',
+            'nis.required' => 'NISN wajib diisi.',
+            'nis.unique' => 'NISN sudah terdaftar.',
+        ]);
+
+        $student->update($request->only(['name', 'gender', 'nis']));
+
+        // Refresh Targets
+        $student->targets()->delete();
+        if ($request->has('target_juz')) {
+            foreach ($request->target_juz as $idx => $juz) {
+                if ($juz) {
+                    $student->targets()->create([
+                        'target_juz' => $juz,
+                        'target_date' => $request->target_date[$idx] ?? null,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('guru.students.index')->with('success', 'Data santri berhasil diperbarui.');
     }
@@ -167,6 +189,9 @@ class StudentController extends Controller
     public function exportPdf(Student $student)
     {
         $this->authorize('view', $student);
+
+        // Load all necessary relationships for PDF report
+        $student->load(['parents', 'guru', 'targets', 'memorizations']);
 
         $memorizations = $student->memorizations()->with('guru')->latest()->get();
         $logoBase64 = PdfHelper::getLogoBase64();

@@ -39,18 +39,22 @@ class DashboardController extends Controller
             ->unique('student_id')
             ->take(5);
 
-        // Load students with memorizations in ONE query (eager loaded)
+        // Load students with memorizations & targets in ONE query
         $students = Student::where('guru_id', $guruId)
-            ->with(['memorizations' => fn($q) => $q->select('id','student_id','surah','ayat','juz','status','is_present','tanggal')])
+            ->with([
+                'targets',
+                'memorizations' => fn($q) => $q->select('id','student_id','surah','ayat','juz','status','is_present','tanggal')
+            ])
             ->get();
 
-        // Pre-load surah data via cached model (no File::get per request)
-        $surahsMap = \App\Models\Surah::all()->keyBy('nama_latin');
+        // Pre-load surah data ONCE (not in loop)
+        $allSurahs = \App\Models\Surah::all();
+        $surahsMap = $allSurahs->keyBy('nama_latin');
 
-        // Pre-calculate total ayat per juz level (1..30) to avoid repeated collection filtering
+        // Pre-calculate total ayat per juz level efficiently
         $ayatPerJuzLevel = [];
         for ($j = 1; $j <= 30; $j++) {
-            $ayatPerJuzLevel[$j] = \App\Models\Surah::all()
+            $ayatPerJuzLevel[$j] = $allSurahs
                 ->filter(fn($s) => $s->juz_awal <= $j)
                 ->sum('jumlah_ayat');
         }

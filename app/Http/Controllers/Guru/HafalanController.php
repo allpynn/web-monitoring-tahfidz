@@ -48,6 +48,30 @@ class HafalanController extends Controller
         $data = $request->validated();
         $data['guru_id'] = Auth::id();
 
+        if ($request->is_present) {
+            // -- Server-side verse validation & formatting --
+            $surahInfo = Surah::all()->firstWhere('nama_latin', $request->surah);
+            $dari = (int) $request->ayat_dari;
+            $sampai = (int) $request->ayat_sampai;
+            
+            // Format for database: single number or range
+            $data['ayat'] = ($dari === $sampai) ? (string) $dari : "{$dari}-{$sampai}";
+
+            if ($surahInfo) {
+                $maxAyat = (int) $surahInfo->jumlah_ayat;
+                if ($sampai > $maxAyat || $dari > $maxAyat) {
+                    return back()->withInput()->withErrors([
+                        'ayat_sampai' => "Gagal: Surah {$surahInfo->nama_latin} hanya memiliki {$maxAyat} ayat."
+                    ]);
+                }
+                if ($sampai < $dari) {
+                    return back()->withInput()->withErrors([
+                        'ayat_sampai' => "Gagal: Ayat sampai tidak boleh lebih kecil dari ayat dari."
+                    ]);
+                }
+            }
+        }
+
         if (! $request->is_present) {
             $data['juz'] = null;
             $data['surah'] = null;
@@ -75,6 +99,30 @@ class HafalanController extends Controller
     public function update(UpdateHafalanRequest $request, RiwayatHafalan $hafalan)
     {
         $data = $request->validated();
+
+        if ($request->is_present) {
+            // -- Server-side verse validation & formatting --
+            $surahInfo = Surah::all()->firstWhere('nama_latin', $request->surah);
+            $dari = (int) $request->ayat_dari;
+            $sampai = (int) $request->ayat_sampai;
+            
+            // Format for database
+            $data['ayat'] = ($dari === $sampai) ? (string) $dari : "{$dari}-{$sampai}";
+
+            if ($surahInfo) {
+                $maxAyat = (int) $surahInfo->jumlah_ayat;
+                if ($sampai > $maxAyat || $dari > $maxAyat) {
+                    return back()->withInput()->withErrors([
+                        'ayat_sampai' => "Gagal: Surah {$surahInfo->nama_latin} hanya memiliki {$maxAyat} ayat."
+                    ]);
+                }
+                if ($sampai < $dari) {
+                    return back()->withInput()->withErrors([
+                        'ayat_sampai' => "Gagal: Ayat sampai tidak boleh lebih kecil dari ayat dari."
+                    ]);
+                }
+            }
+        }
 
         if (! $request->is_present) {
             $data['juz'] = null;

@@ -154,11 +154,56 @@
                 </div>
             </x-tahfidz.card>
 
-            <x-tahfidz.card title="Target Hafalan (Opsional)">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <x-tahfidz.form-input type="number" name="target_juz" label="Target Hafalan (Juz)" placeholder="Contoh: 30" :value="old('target_juz', $student->target_juz)" min="1" max="30" />
-                    <x-tahfidz.form-input type="date" name="target_date" label="Target Selesai" :value="old('target_date', $student->target_date)" />
+            <x-tahfidz.card title="Target Hafalan">
+                <div id="target-container" class="space-y-4">
+                    @forelse($student->targets as $index => $target)
+                    <div class="target-row p-4 {{ in_array($target->target_juz, $student->completed_juz) ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : 'bg-gray-50 dark:bg-gray-900/40' }} rounded-2xl border border-gray-100 dark:border-gray-700 space-y-4 relative">
+                        <div class="flex items-center justify-between">
+                            @php $isAchieved = in_array($target->target_juz, $student->completed_juz); @endphp
+                            <span class="text-xs font-black {{ $isAchieved ? 'text-emerald-600' : 'text-blue-600' }} uppercase tracking-widest">
+                                TARGET #{{ $index + 1 }} {{ $isAchieved ? '(TERVERIFIKASI TERCAPAI)' : '' }}
+                            </span>
+                            <button type="button" onclick="this.closest('.target-row').remove();"
+                                class="p-1.5 text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Hapus">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target Hafalan (Juz)</label>
+                                <input type="number" name="target_juz[]" value="{{ $target->target_juz }}" min="1" max="30"
+                                    class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 text-sm dark:text-white transition-all shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target Selesai</label>
+                                <input type="date" name="target_date[]" value="{{ $target->target_date ? $target->target_date : '' }}"
+                                    class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 text-sm dark:text-white transition-all shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="target-row p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target Hafalan (Juz)</label>
+                                <input type="number" name="target_juz[]" placeholder="Contoh: 30" min="1" max="30" 
+                                    class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 text-sm dark:text-white transition-all shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target Selesai</label>
+                                <input type="date" name="target_date[]" 
+                                    class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 text-sm dark:text-white transition-all shadow-sm">
+                            </div>
+                        </div>
+                        <input type="hidden" name="target_status[]" value="pending">
+                    </div>
+                    @endforelse
                 </div>
+
+                <button type="button" id="add-target-btn" class="mt-4 w-full py-3 border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-2xl text-sm font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Tambah Target Hafalan Baru
+                </button>
             </x-tahfidz.card>
 
             <div class="flex justify-end pt-4">
@@ -257,6 +302,36 @@
                 item.style.display = (!query || text.includes(query)) ? '' : 'none';
             });
         }
+
+        // ===== Tambah Target Hafalan =====
+        document.getElementById('add-target-btn').addEventListener('click', function() {
+            const container = document.getElementById('target-container');
+            const rowCount = document.querySelectorAll('.target-row').length + 1;
+            const row = document.createElement('div');
+            row.className = 'target-row p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-4 animate-fadeIn relative';
+            row.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black text-blue-600 uppercase tracking-widest">TARGET BARU</span>
+                    <button type="button" onclick="this.closest('.target-row').remove();"
+                        class="p-1.5 text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Hapus">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target Hafalan (Juz)</label>
+                        <input type="number" name="target_juz[]" placeholder="Contoh: 30" min="1" max="30" 
+                            class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 text-sm dark:text-white transition-all shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target Selesai</label>
+                        <input type="date" name="target_date[]" 
+                            class="block w-full px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 text-sm dark:text-white transition-all shadow-sm">
+                    </div>
+                </div>
+            `;
+            container.appendChild(row);
+        });
     </script>
     <style>
         @keyframes fadeIn {
