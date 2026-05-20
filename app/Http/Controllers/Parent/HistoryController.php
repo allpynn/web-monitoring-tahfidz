@@ -13,8 +13,12 @@ class HistoryController extends Controller
 {
     public function index(Request $request)
     {
-        $students = auth()->user()->students;
+        // Eager load students with relations to prevent N+1 in sidebar/selector
+        $students = auth()->user()->students()->with(['parents', 'targets'])->get();
+        
         $selectedStudentId = $request->get('student_id', $students->first()?->id);
+        $search = $request->get('search');
+        $date = $request->get('date');
 
         $student = $students->find($selectedStudentId);
 
@@ -26,18 +30,31 @@ class HistoryController extends Controller
             ]);
         }
 
-        $hafalan = RiwayatHafalan::with('guru')
-            ->where('student_id', $student->id)
-            ->latest()
-            ->paginate(15);
+        $query = RiwayatHafalan::with(['guru', 'student']) // Pre-load guru and student
+            ->where('student_id', $student->id);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('surah', 'like', "%{$search}%")
+                  ->orWhere('ayat', 'like', "%{$search}%")
+                  ->orWhere('juz', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%");
+            });
+        }
+
+        if ($date) {
+            $query->whereDate('tanggal', $date);
+        }
+
+        $hafalan = $query->latest()->paginate(25)->withQueryString();
 
         return view('parent.history.index', compact('hafalan', 'student', 'students'));
     }
 
     public function exportPdf(Student $student)
     {
-        // Security check
-        if ($student->parent_id !== auth()->id()) {
+        // Security check: Allow any parent associated with the student
+        if (!$student->parents->contains(auth()->id())) {
             abort(403);
         }
 
