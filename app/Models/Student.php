@@ -17,96 +17,145 @@ class Student extends Model
 
     protected $casts = [
         'completed_juz_cache' => 'array',
-        'progress_cache'      => 'integer',
+        'progress_cache' => 'integer',
     ];
 
+    private $memoryMemorizedMap = null;
+
     /**
-     * Refresh the progress cache for this student.
-     * This should be called whenever a memorization record is added/updated/deleted.
+     * Build map ayat yang sudah dihafal dalam satu kali jalan (Single Pass).
      */
+    private function getMemoryMemorizedMap()
+    {
+        if ($this->memoryMemorizedMap !== null) {
+            return $this->memoryMemorizedMap;
+        }
+
+        static $surahMapLocal = null;
+        if ($surahMapLocal === null) {
+            $surahMapLocal = \Cache::remember('quran_surah_map_detailed', 3600, function() {
+                return \App\Models\Surah::all()->mapWithKeys(fn($s) => [
+                    str_replace(["'", "-", " ", "‘", "’", "`", "´", "‘", "’"], "", strtolower($s->nama_latin)) => [
+                        'name' => $s->nama_latin,
+                        'total' => (int) $s->jumlah_ayat
+                    ]
+                ])->toArray();
+            });
+        }
+
+        $this->memoryMemorizedMap = [];
+        
+        // Gunakan collection yang sudah di-load jika ada, untuk menghindari query N+1
+        $mems = $this->relationLoaded('memorizations') 
+            ? $this->memorizations->where('status', 'Lancar')->where('is_present', true)
+            : $this->memorizations()->where('status', 'Lancar')->where('is_present', true)->get();
+
+        foreach ($mems as $m) {
+            $key = str_replace(["'", "-", " ", "‘", "’", "`", "´", "‘", "’"], "", strtolower($m->surah));
+            $info = $surahMapLocal[$key] ?? null;
+            if (!$info) continue;
+
+            if (!isset($this->memoryMemorizedMap[$key])) {
+                $this->memoryMemorizedMap[$key] = [];
+            }
+
+            $totalInDB = $info['total'];
+            $range = trim($m->ayat);
+            
+            if (str_contains($range, '-') || str_contains($range, '–')) {
+                $parts = explode(str_contains($range, '-') ? '-' : '–', $range);
+                $start = (int) ($parts[0] ?? 0);
+                $end = (int) ($parts[1] ?? 0);
+                
+                $finalStart = max(1, $start);
+                $finalEnd = min($totalInDB, $end);
+                
+                if ($finalStart <= $finalEnd) {
+                    for ($i = $finalStart; $i <= $finalEnd; $i++) {
+                        $this->memoryMemorizedMap[$key][$i] = true;
+                    }
+                }
+            } else {
+                $v = (int) $range;
+                if ($v > 0 && $v <= $totalInDB) {
+                    $this->memoryMemorizedMap[$key][$v] = true;
+                }
+            }
+        }
+
+        return $this->memoryMemorizedMap;
+    }
+
     public function refreshCache()
     {
+        $this->memoryMemorizedMap = null; 
         $completedJuz = $this->calculateSmartCompletedJuz();
-        
+
         $target = $this->activeTarget();
         $targetJuzCount = $target ? $target->target_juz : 30;
-        $progress = ($targetJuzCount > 0) 
-            ? min(round((count($completedJuz) / $targetJuzCount) * 100), 100) 
+        $progress = ($targetJuzCount > 0)
+            ? min(round((count($completedJuz) / $targetJuzCount) * 100), 100)
             : 0;
 
         $this->update([
             'completed_juz_cache' => $completedJuz,
-            'progress_cache'      => $progress,
+            'progress_cache' => $progress,
         ]);
 
         return $this;
     }
 
-    /**
-     * Core logic (Heavy) to calculate which Juz are completed.
-     */
     public function calculateSmartCompletedJuz()
     {
-        // Use loaded relationship if available
-        $mems = $this->relationLoaded('memorizations') ? $this->memorizations : $this->memorizations()->get();
-        
-        static $surahMap = null;
-        if ($surahMap === null) {
-            $surahMap = \App\Models\Surah::all()->mapWithKeys(function ($s) {
-                $key = str_replace(["'", "-", " "], "", strtolower($s->nama_latin));
-                return [$key => $s];
-            });
-        }
+        $memorizedMap = $this->getMemoryMemorizedMap();
+        $surahMap = \Cache::get('quran_surah_map_detailed');
 
-        $memsBySurah = $mems->where('status', 'Lancar')->where('is_present', true)->groupBy(function ($m) {
-            return str_replace(["'", "-", " "], "", strtolower($m->surah));
-        });
+        if (!$surahMap || empty($memorizedMap)) return [];
 
         $completed = [];
-
         for ($juz = 1; $juz <= 30; $juz++) {
-            $requiredSurahNames = \App\Helpers\QuranHelper::getSurahsInJuz($juz);
-            if (empty($requiredSurahNames)) continue;
+            $required = \App\Helpers\QuranHelper::getSurahsInJuz($juz);
+            if (empty($required)) continue;
 
-            $allSurahsInJuzComplete = true;
+            $complete = true;
+            foreach ($required as $name) {
+                $key = str_replace(["'", "-", " ", "‘", "’", "`", "´"], "", strtolower($name));
+                $total = $surahMap[$key]['total'] ?? 0;
+                $count = isset($memorizedMap[$key]) ? count($memorizedMap[$key]) : 0;
 
-            foreach ($requiredSurahNames as $rawName) {
-                $normalizedKey = str_replace(["'", "-", " "], "", strtolower($rawName));
-                $info = $surahMap[$normalizedKey] ?? null;
-
-                if (!$info) continue;
-
-                $totalAyatInSurah = (int) $info->jumlah_ayat;
-                $records = $memsBySurah[$normalizedKey] ?? collect();
-                
-                $memorizedVerses = [];
-                foreach ($records as $rec) {
-                    $ayatRange = trim($rec->ayat);
-                    if (empty($ayatRange)) continue;
-
-                    if (str_contains($ayatRange, '-') || str_contains($ayatRange, '–')) {
-                        $sep = str_contains($ayatRange, '-') ? '-' : '–';
-                        $parts = explode($sep, $ayatRange);
-                        $start = (int) ($parts[0] ?? 0);
-                        $end   = (int) ($parts[1] ?? 0);
-                        for ($i = $start; $i <= $end; $i++) { $memorizedVerses[$i] = true; }
-                    } else {
-                        $memorizedVerses[(int) $ayatRange] = true;
-                    }
-                }
-
-                if (count($memorizedVerses) < $totalAyatInSurah) {
-                    $allSurahsInJuzComplete = false;
+                if ($total > 0 && $count < $total) {
+                    $complete = false;
                     break;
                 }
             }
-
-            if ($allSurahsInJuzComplete && count($requiredSurahNames) > 0) {
-                $completed[] = $juz;
-            }
+            if ($complete) $completed[] = $juz;
         }
 
         return $completed;
+    }
+
+    public function getIncompleteSurahs(int $juz)
+    {
+        $memorizedMap = $this->getMemoryMemorizedMap();
+        $surahMap = \Cache::get('quran_surah_map_detailed');
+        if (!$surahMap) return [];
+
+        $incomplete = [];
+        foreach (\App\Helpers\QuranHelper::getSurahsInJuz($juz) as $name) {
+            $key = str_replace(["'", "-", " ", "‘", "’", "`", "´"], "", strtolower($name));
+            $total = $surahMap[$key]['total'] ?? 0;
+            $count = isset($memorizedMap[$key]) ? count($memorizedMap[$key]) : 0;
+            
+            if ($count < $total) {
+                $incomplete[] = [
+                    'surah' => $name,
+                    'count' => $count,
+                    'total' => $total,
+                    'missing' => $total - $count
+                ];
+            }
+        }
+        return $incomplete;
     }
 
     public function targets()
@@ -116,15 +165,11 @@ class Student extends Model
 
     public function activeTarget()
     {
-        // Ambil semua target dulu (ini biasanya hanya 1-2 record per santri)
-        // Cara ini paling aman dari error Relation Call
-        $targets = $this->targets()->get();
+        // Gunakan collection yang sudah di-load jika ada
+        $targets = $this->relationLoaded('targets') ? $this->targets : $this->targets()->get();
         
         if ($targets->isEmpty()) return null;
-
-        // Prioritaskan status pending
         $target = $targets->where('status', 'pending')->sortByDesc('created_at')->first();
-        
         return $target ?: $targets->sortByDesc('created_at')->first();
     }
 
@@ -138,61 +183,32 @@ class Student extends Model
         return $this->belongsTo(User::class, 'guru_id');
     }
 
-    /**
-     * Menghitung persentase progres untuk SATU Juz tertentu.
-     * Return: integer (0 - 100)
-     */
     public function getJuzProgress(int $juz)
     {
-        $requiredSurahNames = \App\Helpers\QuranHelper::getSurahsInJuz($juz);
-        if (empty($requiredSurahNames)) return 0;
-
-        // Gunakan mapping yang sudah kita buat agar cepat
-        static $surahMap = null;
-        if ($surahMap === null) {
-            $surahMap = \App\Models\Surah::all()->mapWithKeys(fn($s) => [
-                str_replace(["'", "-", " "], "", strtolower($s->nama_latin)) => $s
-            ]);
+        if ($this->completed_juz && in_array($juz, $this->completed_juz)) {
+            return 100;
         }
 
-        // Kelompokkan hafalan lancar
-        $mems = $this->relationLoaded('memorizations') ? $this->memorizations : $this->memorizations()->get();
-        $memsBySurah = $mems->where('status', 'Lancar')->where('is_present', true)->groupBy(fn($m) => 
-            str_replace(["'", "-", " "], "", strtolower($m->surah))
-        );
+        $memorizedMap = $this->getMemoryMemorizedMap();
+        $surahMap = \Cache::get('quran_surah_map_detailed');
+        $required = \App\Helpers\QuranHelper::getSurahsInJuz($juz);
+        
+        if (empty($required) || !$surahMap) return 0;
 
-        $totalSurahs = count($requiredSurahNames);
         $totalProgress = 0;
+        $countSurahs = count($required);
 
-        foreach ($requiredSurahNames as $rawName) {
-            $normalizedKey = str_replace(["'", "-", " "], "", strtolower($rawName));
-            $info = $surahMap[$normalizedKey] ?? null;
-            if (!$info) continue;
+        foreach ($required as $name) {
+            $key = str_replace(["'", "-", " ", "‘", "’", "`", "´"], "", strtolower($name));
+            $total = $surahMap[$key]['total'] ?? 0;
+            $mCount = isset($memorizedMap[$key]) ? count($memorizedMap[$key]) : 0;
 
-            $totalAyatInSurah = (int) $info->jumlah_ayat;
-            $records = $memsBySurah[$normalizedKey] ?? collect();
-            
-            $memorizedVerses = [];
-            foreach ($records as $rec) {
-                $ayatRange = trim($rec->ayat);
-                if (empty($ayatRange)) continue;
-                if (str_contains($ayatRange, '-') || str_contains($ayatRange, '–')) {
-                    $sep = str_contains($ayatRange, '-') ? '-' : '–';
-                    $parts = explode($sep, $ayatRange);
-                    $start = (int) ($parts[0] ?? 0);
-                    $end   = (int) ($parts[1] ?? 0);
-                    for ($i = $start; $i <= $end; $i++) { $memorizedVerses[$i] = true; }
-                } else {
-                    $memorizedVerses[(int) $ayatRange] = true;
-                }
-            }
-
-            // Tambahkan rasio ketuntasan surah ini ke total progres juz
-            $surahRatio = ($totalAyatInSurah > 0) ? (count($memorizedVerses) / $totalAyatInSurah) : 0;
-            $totalProgress += ($surahRatio / $totalSurahs);
+            $ratio = ($total > 0) ? ($mCount / $total) : 0;
+            $totalProgress += ($ratio / $countSurahs);
         }
 
-        return min(round($totalProgress * 100), 100);
+        $result = round($totalProgress * 100);
+        return ($result >= 99 && $totalProgress > 0.99) ? 100 : min($result, 100);
     }
 
     public function memorizations()
@@ -202,38 +218,30 @@ class Student extends Model
 
     public function getCurrentJuzAttribute()
     {
-        $mems = $this->relationLoaded('memorizations') ? $this->memorizations : $this->memorizations()->get();
-        return $mems->where('is_present', true)->sortByDesc('id')->first()?->juz ?? 0;
+        return $this->memorizations()->where('is_present', true)->orderByDesc('id')->value('juz') ?? 0;
     }
 
     public function getTotalMemorizedJuzAttribute()
     {
-        $mems = $this->relationLoaded('memorizations') ? $this->memorizations : $this->memorizations()->get();
-        return $mems->where('is_present', true)
-            ->whereNotNull('juz')
-            ->pluck('juz')
-            ->unique()
-            ->count();
+        return $this->memorizations()->where('is_present', true)->whereNotNull('juz')->distinct('juz')->count('juz');
     }
 
     public function getCompletedJuzAttribute()
     {
-        // Always return from cache if it exists, otherwise fall back to real-time calculation
         return $this->completed_juz_cache ?? $this->calculateSmartCompletedJuz();
+    }
+
+    public function getTargetJuzAttribute()
+    {
+        $target = $this->activeTarget();
+        return $target ? $target->target_juz : 0;
     }
 
     public function getTargetProgressAttribute()
     {
-        // Return from cache if we have it
-        if ($this->progress_cache !== null) {
-            return $this->progress_cache;
-        }
-
-        $target = $this->activeTarget();
-        $finishedJuzCount = count($this->completed_juz);
-        
-        return ($target && $target->target_juz > 0)
-            ? min(round(($finishedJuzCount / $target->target_juz) * 100), 100)
-            : 0;
+        if ($this->progress_cache !== null) return $this->progress_cache;
+        $targetJuz = $this->target_juz;
+        $finished = count($this->completed_juz);
+        return ($targetJuz > 0) ? min(round(($finished / $targetJuz) * 100), 100) : 0;
     }
 }

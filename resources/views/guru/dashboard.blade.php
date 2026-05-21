@@ -132,7 +132,7 @@
                                     </div>
                                     <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
                                         <div class="h-1.5 rounded-full transition-all duration-700
-                                                {{ $p == 100 ? 'bg-emerald-500' : ($p >= 50 ? 'bg-blue-400' : 'bg-red-300') }}"
+                                                                {{ $p == 100 ? 'bg-emerald-500' : ($p >= 50 ? 'bg-blue-400' : 'bg-red-300') }}"
                                             style="width: {{ $p }}%">
                                         </div>
                                     </div>

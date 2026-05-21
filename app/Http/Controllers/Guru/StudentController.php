@@ -50,8 +50,12 @@ class StudentController extends Controller
     public function show(Student $student)
     {
         $this->authorize('view', $student);
-        $student->load(['parents', 'targets', 'memorizations.guru']);
-        return view('guru.students.show', compact('student'));
+        $student->load(['parents', 'targets']);
+        
+        // Ambil riwayat hafalan secara terpisah agar bisa diurutkan dari yang terbaru
+        $memorizations = $student->memorizations()->with('guru')->latest()->get();
+        
+        return view('guru.students.show', compact('student', 'memorizations'));
     }
 
     public function create()

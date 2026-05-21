@@ -28,17 +28,17 @@ class HafalanController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 25);
-        $search  = $request->get('search');
-        $date    = $request->get('date');
+        $perPage = $request->input('per_page', 25);
+        $search = $request->input('search');
+        $date = $request->input('date');
 
         $query = RiwayatHafalan::with('student')
             ->where('guru_id', Auth::id());
 
         if ($search) {
-            $query->whereHas('student', function($q) use ($search) {
+            $query->whereHas('student', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('nis', 'like', "%{$search}%");
+                    ->orWhere('nis', 'like', "%{$search}%");
             });
         }
 

@@ -16,9 +16,9 @@ class HistoryController extends Controller
         // Eager load students with relations to prevent N+1 in sidebar/selector
         $students = auth()->user()->students()->with(['parents', 'targets'])->get();
         
-        $selectedStudentId = $request->get('student_id', $students->first()?->id);
-        $search = $request->get('search');
-        $date = $request->get('date');
+        $selectedStudentId = $request->input('student_id', $students->first()?->id);
+        $search = $request->input('search');
+        $date = $request->input('date');
 
         $student = $students->find($selectedStudentId);
 
