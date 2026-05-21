@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $month = (int) request('month', now()->month);
         $year  = (int) request('year',  now()->year);

@@ -42,19 +42,37 @@
                            class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
                 </div>
                 <div class="w-full lg:w-40">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Jumlah Data</label>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Status</label>
+                    <select name="status" onchange="this.form.submit()" 
+                            class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                        <option value="">Semua Status</option>
+                        <option value="Lancar" {{ request('status') == 'Lancar' ? 'selected' : '' }}>Lancar</option>
+                        <option value="Perlu Perbaikan" {{ request('status') == 'Perlu Perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
+                    </select>
+                </div>
+                <div class="w-full lg:w-40">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Kehadiran</label>
+                    <select name="presence" onchange="this.form.submit()" 
+                            class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                        <option value="">Semua Kehadiran</option>
+                        <option value="hadir" {{ request('presence') == 'hadir' ? 'selected' : '' }}>Hadir</option>
+                        <option value="absen" {{ request('presence') == 'absen' ? 'selected' : '' }}>Tidak Hadir</option>
+                    </select>
+                </div>
+                <div class="w-full lg:w-32">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Jumlah</label>
                     <select name="per_page" onchange="this.form.submit()" 
                             class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer">
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Per Halaman</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Per Halaman</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Per Halaman</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                     </select>
                 </div>
                 <div class="flex gap-2 w-full lg:w-auto">
                     <button type="submit" class="flex-1 lg:flex-none px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-sm">
                         Filter
                     </button>
-                    @if(request()->anyFilled(['search', 'date', 'per_page']))
+                    @if(request()->anyFilled(['search', 'date', 'per_page', 'status', 'presence']))
                         <a href="{{ route('guru.hafalan.index') }}" class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-500 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition-all font-bold">
                             Reset
                         </a>
@@ -70,7 +88,8 @@
                         <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
                         <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Santri</th>
                         <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Materi Hafalan</th>
-                        <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Kehadiran</th>
+                        <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
+                        <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Kehadiran</th>
                         <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -90,11 +109,20 @@
                                     <span class="text-gray-400 italic">Tidak ada setoran</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 text-center">
                                 @if($item->is_present)
-                                    <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-lg uppercase border border-emerald-200">Hadir</span>
+                                    <span class="px-2 py-1 text-[10px] font-black uppercase rounded-lg border {{ $item->status === 'Lancar' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-orange-50 text-orange-600 border-orange-100' }}">
+                                        {{ $item->status }}
+                                    </span>
                                 @else
-                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-lg uppercase border border-red-200">Tidak Hadir</span>
+                                    <span class="text-gray-300">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if($item->is_present)
+                                    <span class="px-2 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-lg uppercase shadow-sm">Hadir</span>
+                                @else
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-lg uppercase border border-gray-200">Absen</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">

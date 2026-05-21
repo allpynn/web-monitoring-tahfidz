@@ -31,6 +31,8 @@ class HafalanController extends Controller
         $perPage = $request->input('per_page', 25);
         $search = $request->input('search');
         $date = $request->input('date');
+        $status = $request->input('status');
+        $presence = $request->input('presence');
 
         $query = RiwayatHafalan::with('student')
             ->where('guru_id', Auth::id());
@@ -44,6 +46,14 @@ class HafalanController extends Controller
 
         if ($date) {
             $query->whereDate('tanggal', $date);
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($presence) {
+            $query->where('is_present', $presence === 'hadir');
         }
 
         $hafalan = $query->latest()->paginate($perPage)->withQueryString();

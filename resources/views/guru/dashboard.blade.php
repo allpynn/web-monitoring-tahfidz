@@ -155,10 +155,21 @@
                                     class="font-bold block w-24 truncate">{{ $activity->student->name }}</span><span
                                     class="text-[10px] text-gray-400">{{ \Carbon\Carbon::parse($activity->tanggal)->format('d/m/Y') }}</span>
                             </td>
-                            <td class="py-2 text-gray-600 dark:text-gray-300">Jz.{{ $activity->juz }} {{ $activity->surah }}
+                            <td class="py-2 text-gray-600 dark:text-gray-300">
+                                @if($activity->is_present)
+                                    Jz.{{ $activity->juz }} {{ $activity->surah }}
+                                @else
+                                    <span class="text-red-400 italic text-xs">Absen / Tidak Setor</span>
+                                @endif
                             </td>
-                            <td class="py-2 text-right"><span
-                                    class="text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded {{ $activity->status === 'Lancar' ? 'bg-emerald-500' : 'bg-orange-500' }}">{{ $activity->status }}</span>
+                            <td class="py-2 text-right">
+                                @if($activity->is_present)
+                                    <span class="text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded {{ $activity->status === 'Lancar' ? 'bg-emerald-500' : 'bg-orange-500' }}">
+                                        {{ $activity->status }}
+                                    </span>
+                                @else
+                                    <span class="text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded bg-gray-400">Absen</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
