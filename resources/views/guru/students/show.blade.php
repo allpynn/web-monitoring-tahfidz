@@ -30,14 +30,47 @@
                         <span class="text-xs font-bold text-gray-400 uppercase">Orang Tua</span>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $student->parents->pluck('name')->join(', ') ?: '-' }}</p>
                     </div>
-                    <div>
-                        <span class="text-xs font-bold text-gray-400 uppercase">Target Hafalan</span>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $student->target_juz }} Juz</p>
+                    {{-- Progres Juz Aktif --}}
+                    @php
+                        $currentJuz = $student->current_juz ?: 30;
+                        $juzProgress = $student->getJuzProgress($currentJuz);
+                    @endphp
+                    <div class="mb-5 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progres Juz Aktif (Juz {{ $currentJuz }})</span>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-xs font-black {{ $juzProgress == 100 ? 'text-emerald-500' : 'text-blue-500' }}">
+                                {{ $juzProgress == 100 ? '🎉 Tuntas' : $juzProgress . '%' }}
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1.5">
+                            <div class="h-2 rounded-full transition-all duration-1000 {{ $juzProgress == 100 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-blue-500' }}" 
+                                 style="width: {{ $juzProgress }}%"></div>
+                        </div>
                     </div>
+
+                    {{-- Progres Target Total --}}
                     <div>
-                        <span class="text-xs font-bold text-gray-400 uppercase">Target Selesai</span>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white text-emerald-600 font-bold">
-                            {{ $student->target_date ? \Carbon\Carbon::parse($student->target_date)->format('d M Y') : '-' }}
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Progres Target</span>
+                        <div class="flex items-center justify-between gap-2 mt-1">
+                            <p class="text-xs font-bold text-gray-900 dark:text-white">
+                                Target: {{ $student->target_juz }} Juz
+                            </p>
+                            @php
+                                $progress = $student->target_progress;
+                            @endphp
+                            <span class="text-[10px] font-black text-gray-500">
+                                {{ count($student->completed_juz) }} / {{ $student->target_juz }} Juz
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1 mt-1">
+                            <div class="h-1 rounded-full bg-gray-400" style="width: {{ $progress }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Selesai</span>
+                        <p class="text-sm font-bold mt-1 {{ $student->activeTarget() && $student->activeTarget()->target_date ? 'text-emerald-600' : 'text-gray-400 italic' }}">
+                            {{ ($student->activeTarget() && $student->activeTarget()->target_date) ? \Carbon\Carbon::parse($student->activeTarget()->target_date)->translatedFormat('d M Y') : 'Belum ditentukan' }}
                         </p>
                     </div>
                 </div>
