@@ -63,4 +63,16 @@ class DashboardController extends Controller
 
         return back()->with('success', 'Pesan berhasil dikirim ke Ustadz.');
     }
+
+    public function clearChat(Student $student)
+    {
+        // Security check: Ensure parent owns this student
+        if (!$student->parents->contains(Auth::id())) {
+            abort(403);
+        }
+
+        Pesan::where('student_id', $student->id)->delete();
+
+        return back()->with('success', 'Riwayat chat berhasil dibersihkan.');
+    }
 }

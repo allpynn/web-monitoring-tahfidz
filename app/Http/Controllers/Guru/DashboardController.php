@@ -34,10 +34,22 @@ class DashboardController extends Controller
 
         $parent_messages = Pesan::with(['sender', 'student'])
             ->where('receiver_id', $guruId)
+            ->where('is_resolved', false)
             ->latest()
             ->get()
             ->unique('student_id')
             ->take(5);
+
+        // Load full conversation for each unique student thread
+        foreach ($parent_messages as $thread) {
+            $thread->conversation = Pesan::where('student_id', $thread->student_id)
+                ->where(function($q) use ($guruId, $thread) {
+                    $q->where('sender_id', $guruId)->where('receiver_id', $thread->sender_id)
+                      ->orWhere('sender_id', $thread->sender_id)->where('receiver_id', $guruId);
+                })
+                ->orderBy('created_at', 'asc')
+                ->get();
+        }
 
         // Load students with memorizations & targets in ONE query
         $students = Student::where('guru_id', $guruId)
@@ -116,5 +128,22 @@ class DashboardController extends Controller
         ]);
 
         return back()->with('success', 'Balasan pesan berhasil dikirim.');
+    }
+
+    public function destroyMessage(Pesan $pesan)
+    {
+        if ($pesan->receiver_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Mark all messages in this thread (between this parent and guru for this student) as resolved
+        Pesan::where('student_id', $pesan->student_id)
+            ->where(function($q) use ($pesan) {
+                $q->where('sender_id', $pesan->sender_id)->where('receiver_id', Auth::id())
+                  ->orWhere('sender_id', Auth::id())->where('receiver_id', $pesan->sender_id);
+            })
+            ->update(['is_resolved' => true]);
+
+        return back()->with('success', 'Percakapan telah diselesaikan dan dipindahkan dari antrean.');
     }
 }

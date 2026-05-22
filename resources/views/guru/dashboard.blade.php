@@ -182,29 +182,82 @@
         </x-tahfidz.card>
     </div>
 
-    <!-- PESAN DARI ORANG TUA -->
-    <div class="mt-8">
-        <x-tahfidz.card title="📨 Pesan Dari Orang Tua">
-            <div class="space-y-4 mt-3">
+    <!-- PESAN DARI ORANG TUA (WHATSAPP STYLE) -->
+    <div class="mt-8" x-data="{ openChat: null }">
+        <x-tahfidz.card title="📨 Pesan Orang Tua (Antrean)">
+            <div class="space-y-3 mt-3">
                 @forelse($parent_messages as $msg)
-                    <div class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl">
-                        <div class="flex justify-between mb-2">
-                            <span
-                                class="text-xs font-bold text-emerald-700 dark:text-emerald-500">{{ $msg->sender->name ?? 'Orang Tua' }}
-                                — {{ $msg->student->name ?? '' }}</span>
-                            <span class="text-xs text-gray-400">{{ $msg->created_at->diffForHumans() }}</span>
+                    <div class="border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden transition-all duration-300"
+                        :class="openChat === {{ $msg->id }} ? 'ring-2 ring-emerald-500 shadow-lg' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40'">
+                        
+                        <!-- Header (Preview) -->
+                        <div class="p-4 cursor-pointer flex items-center justify-between" @click="openChat = (openChat === {{ $msg->id }} ? null : {{ $msg->id }})">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-black">
+                                    {{ substr($msg->sender->name ?? 'P', 0, 1) }}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-black text-gray-800 dark:text-white uppercase tracking-tighter">
+                                        {{ $msg->sender->name ?? 'Orang Tua' }}
+                                    </span>
+                                    <span class="text-[10px] font-bold text-emerald-600">
+                                        Santri: {{ $msg->student->name ?? '-' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-medium text-gray-400">{{ $msg->created_at->diffForHumans() }}</span>
+                                <svg class="w-5 h-5 text-gray-300 transition-transform duration-300" :class="openChat === {{ $msg->id }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
-                        <p class="text-sm text-gray-700 dark:text-gray-300 italic">"{{ $msg->message }}"</p>
-                        <form action="{{ route('guru.messages.reply', $msg) }}" method="POST" class="mt-3 flex gap-2">
-                            @csrf
-                            <input type="text" name="message" required placeholder="Balas pesan..."
-                                class="flex-1 rounded-lg border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-                            <button type="submit"
-                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors">Balas</button>
-                        </form>
+
+                        <!-- Chat Body (Expandable) -->
+                        <div x-show="openChat === {{ $msg->id }}" x-collapse x-cloak>
+                            <div class="bg-gray-50 dark:bg-gray-900/40 p-4 border-t border-gray-100 dark:border-gray-700">
+                                {{-- Conversation Area --}}
+                                <div class="space-y-4 mb-4 max-h-[300px] overflow-y-auto px-2 custom-scrollbar">
+                                    @foreach($msg->conversation as $c)
+                                        <div class="flex {{ $c->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
+                                            <div class="max-w-[80%]">
+                                                <div class="px-4 py-2.5 rounded-2xl text-sm {{ $c->sender_id === auth()->id() ? 'bg-emerald-600 text-white rounded-tr-none shadow-md' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-tl-none shadow-sm' }}">
+                                                    {{ $c->message }}
+                                                </div>
+                                                <p class="text-[9px] text-gray-400 mt-1 {{ $c->sender_id === auth()->id() ? 'text-right' : 'text-left' }} font-bold">
+                                                    {{ $c->created_at->format('H:i') }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- Action Bar (Reply & Resolve) --}}
+                                <div class="flex items-center gap-3">
+                                    <form action="{{ route('guru.messages.reply', $msg) }}" method="POST" class="flex-1 flex gap-2">
+                                        @csrf
+                                        <input type="text" name="message" required placeholder="Balas ke Orang Tua..."
+                                            class="flex-1 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                                        <button type="submit" class="p-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all shadow-md active:scale-95">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                        </button>
+                                    </form>
+
+                                    {{-- Resolve Button (Hide from Queue) --}}
+                                    <form action="{{ route('guru.messages.destroy', $msg) }}" method="POST" onsubmit="return confirm('Selesaikan percakapan? Pesan akan dipindahkan dari antrean.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all" title="Selesaikan & Hapus dari Antrean">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 @empty
-                    <p class="text-sm text-gray-500 italic text-center py-6">Tidak ada pesan baru dari orang tua.</p>
+                    <div class="flex flex-col items-center justify-center py-12 bg-gray-50 dark:bg-gray-900/20 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                        <svg class="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        <p class="text-sm text-gray-400 font-medium italic">Semua pesan telah diselesaikan. Antrean bersih! ✨</p>
+                    </div>
                 @endforelse
             </div>
         </x-tahfidz.card>

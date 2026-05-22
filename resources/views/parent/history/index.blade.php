@@ -54,8 +54,26 @@
                             <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
                     </div>
-                    <div class="w-full md:w-56">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Filter Tanggal</label>
+                    <div class="w-full md:w-36">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Status</label>
+                        <select name="status" onchange="this.form.submit()" 
+                                class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4 cursor-pointer font-bold">
+                            <option value="">Semua</option>
+                            <option value="Lancar" {{ request('status') == 'Lancar' ? 'selected' : '' }}>Lancar</option>
+                            <option value="Perlu Perbaikan" {{ request('status') == 'Perlu Perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-36">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Hadir</label>
+                        <select name="presence" onchange="this.form.submit()" 
+                                class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4 cursor-pointer font-bold">
+                            <option value="">Semua</option>
+                            <option value="hadir" {{ request('presence') == 'hadir' ? 'selected' : '' }}>Hadir</option>
+                            <option value="absen" {{ request('presence') == 'absen' ? 'selected' : '' }}>Absen</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-44">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Tanggal</label>
                         <input type="date" name="date" value="{{ request('date') }}" onchange="this.form.submit()"
                                class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4">
                     </div>
@@ -63,7 +81,7 @@
                         <button type="submit" class="flex-1 md:flex-none px-6 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-sm">
                             Filter
                         </button>
-                        @if(request()->anyFilled(['search', 'date']))
+                        @if(request()->anyFilled(['search', 'date', 'status', 'presence']))
                             <a href="{{ route('parent.history.index', ['student_id' => $student->id]) }}" 
                                class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-500 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition-all font-bold">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>

@@ -113,8 +113,45 @@ class RiwayatHafalanService
      * @param Student $student
      * @return string
      */
-    public function getPrediction(Student $student)
+    public function getPrediction(Student $student): string
     {
+        $target = $student->activeTarget();
+
+        // Cek apakah target sudah tuntas
+        $completedJuz = count($student->completed_juz);
+        $targetJuz    = $target ? $target->target_juz : 0;
+
+        if ($targetJuz > 0 && $completedJuz >= $targetJuz) {
+            return 'Target Tuntas ✨';
+        }
+
+        // Jika ada target_date, gunakan sebagai patokan utama
+        if ($target && $target->target_date) {
+            $deadline = \Carbon\Carbon::parse($target->target_date);
+            $now      = \Carbon\Carbon::now();
+
+            if ($now->gt($deadline)) {
+                // Sudah melewati deadline
+                $overdueDays = $now->diffInDays($deadline);
+                return 'Terlambat ' . $overdueDays . ' Hari ⚠️';
+            }
+
+            $daysLeft   = $now->diffInDays($deadline);
+            $monthsLeft = $now->diffInMonths($deadline);
+
+            if ($daysLeft <= 14) {
+                return $daysLeft . ' Hari Lagi';
+            } elseif ($monthsLeft < 1) {
+                return $daysLeft . ' Hari Lagi';
+            } elseif ($monthsLeft < 12) {
+                return 'Sekitar ' . $monthsLeft . ' Bulan Lagi';
+            } else {
+                $yearsLeft = round($monthsLeft / 12, 1);
+                return 'Sekitar ' . $yearsLeft . ' Tahun Lagi';
+            }
+        }
+
+        // Fallback: hitung estimasi berdasarkan kecepatan hafalan
         $setorans = $student->memorizations()
             ->where('is_present', true)
             ->whereNotNull('juz')
@@ -122,45 +159,47 @@ class RiwayatHafalanService
             ->get();
 
         if ($setorans->count() < 3) {
-            return 'Dalam Evaluasi';
+            return 'Menghitung...';
         }
 
         $first = $setorans->first();
-        $last = $setorans->last();
+        $last  = $setorans->last();
+        $days  = $last->created_at->diffInDays($first->created_at);
 
-        // Calculate unique juz count at different points
         $totalUniqueJuz = $student->memorizations()
-            ->where('is_present', true)
-            ->whereNotNull('juz')
-            ->distinct()
-            ->count('juz');
+            ->where('is_present', true)->whereNotNull('juz')
+            ->distinct()->count('juz');
 
         $startingUniqueJuz = $student->memorizations()
-            ->where('is_present', true)
-            ->whereNotNull('juz')
+            ->where('is_present', true)->whereNotNull('juz')
             ->where('created_at', '<=', $first->created_at->addDay())
-            ->distinct()
-            ->count('juz');
+            ->distinct()->count('juz');
 
         $juzGained = $totalUniqueJuz - $startingUniqueJuz;
-        $days = $last->created_at->diffInDays($first->created_at);
 
         if ($juzGained > 0 && $days > 0) {
-            $daysPerJuz = $days / $juzGained;
-            $juzRemaining = $student->target_juz - $totalUniqueJuz;
-            
+            $daysPerJuz   = $days / $juzGained;
+            $juzRemaining = $targetJuz - $totalUniqueJuz;
+
             if ($juzRemaining <= 0) {
-                return 'Selesai ✨';
+                return 'Target Tuntas ✨';
             }
 
-            $daysLeft = $juzRemaining * $daysPerJuz;
-            return now()->addDays($daysLeft)->format('M Y');
-        } 
+            $daysLeft = round($juzRemaining * $daysPerJuz);
 
-        if ($juzGained === 0 && $days > 30) {
-            return 'Butuh Semangat 🔥';
+            if ($daysLeft > 365) {
+                return 'Sekitar ' . round($daysLeft / 365, 1) . ' Tahun';
+            } elseif ($daysLeft > 30) {
+                return 'Sekitar ' . round($daysLeft / 30) . ' Bulan';
+            } else {
+                return $daysLeft . ' Hari Lagi';
+            }
         }
 
-        return 'Dalam Evaluasi';
+        if ($juzGained === 0 && $days > 14) {
+            return 'Butuh Konsistensi 🔥';
+        }
+
+        return 'Menghitung...';
     }
 }

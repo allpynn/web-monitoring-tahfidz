@@ -20,6 +20,9 @@ class HistoryController extends Controller
         $search = $request->input('search');
         $date = $request->input('date');
 
+        $status = $request->input('status');
+        $presence = $request->input('presence');
+
         $student = $students->find($selectedStudentId);
 
         if (! $student) {
@@ -44,6 +47,14 @@ class HistoryController extends Controller
 
         if ($date) {
             $query->whereDate('tanggal', $date);
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($presence) {
+            $query->where('is_present', $presence === 'hadir');
         }
 
         $hafalan = $query->latest()->paginate(25)->withQueryString();

@@ -55,12 +55,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/students/{student}/export-pdf', [App\Http\Controllers\Guru\StudentController::class, 'exportPdf'])->name('students.export');
         Route::get('/students/{student}/export-semester-pdf', [HafalanController::class, 'exportSemesterPdf'])->name('students.export_semester');
         Route::post('/messages/{pesan}/reply', [App\Http\Controllers\Guru\DashboardController::class, 'replyMessage'])->name('messages.reply');
+        Route::delete('/messages/{pesan}', [App\Http\Controllers\Guru\DashboardController::class, 'destroyMessage'])->name('messages.destroy');
     });
 
     // Parent Routes
     Route::middleware(['role:orang_tua'])->prefix('parent')->name('parent.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Parent\DashboardController::class, 'index'])->name('dashboard');
         Route::post('/messages/{student}', [App\Http\Controllers\Parent\DashboardController::class, 'sendMessage'])->name('messages.send');
+        Route::delete('/messages/{pesan}', [App\Http\Controllers\Parent\DashboardController::class, 'destroyMessage'])->name('messages.destroy');
+        Route::delete('/messages/clear/{student}', [App\Http\Controllers\Parent\DashboardController::class, 'clearChat'])->name('messages.clear');
         Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
         Route::get('/history/{student}/export-pdf', [HistoryController::class, 'exportPdf'])->name('history.export');
     });

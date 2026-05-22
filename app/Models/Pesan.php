@@ -14,6 +14,7 @@ class Pesan extends Model
         'student_id',
         'message',
         'is_read',
+        'is_resolved',
     ];
 
     public function sender()
