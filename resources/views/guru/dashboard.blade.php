@@ -164,11 +164,18 @@
                             </td>
                             <td class="py-2 text-right">
                                 @if($activity->is_present)
-                                    <span class="text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded {{ $activity->status === 'Lancar' ? 'bg-emerald-500' : 'bg-orange-500' }}">
+                                    @php
+                                        $statusClasses = [
+                                            'Lancar' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+                                            'Perlu Perbaikan' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/10 dark:text-orange-400 border-orange-200 dark:border-orange-800',
+                                        ];
+                                        $currentClass = $statusClasses[$activity->status] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+                                    @endphp
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase border {{ $currentClass }}">
                                         {{ $activity->status }}
                                     </span>
                                 @else
-                                    <span class="text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded bg-gray-400">Absen</span>
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-red-50 text-red-600 border border-red-100 italic">Absen</span>
                                 @endif
                             </td>
                         </tr>
