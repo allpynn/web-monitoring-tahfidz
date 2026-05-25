@@ -14,6 +14,16 @@ class GuruController extends Controller
     {
         $query = User::where('role', 'guru');
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
         }
@@ -26,7 +36,8 @@ class GuruController extends Controller
             $query->latest();
         }
 
-        $gurus = $query->get();
+        $perPage = $request->input('per_page', 25);
+        $gurus = $query->paginate($perPage)->withQueryString();
 
         return view('admin.guru.index', compact('gurus'));
     }

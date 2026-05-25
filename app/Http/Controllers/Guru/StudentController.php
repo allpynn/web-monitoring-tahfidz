@@ -42,7 +42,8 @@ class StudentController extends Controller
             $query->latest();
         }
 
-        $students = $query->paginate(25)->withQueryString();
+        $perPage = $request->input('per_page', 25);
+        $students = $query->paginate($perPage)->withQueryString();
 
         return view('guru.students.index', compact('students'));
     }

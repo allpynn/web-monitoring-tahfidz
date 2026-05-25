@@ -57,7 +57,8 @@ class HistoryController extends Controller
             $query->where('is_present', $presence === 'hadir');
         }
 
-        $hafalan = $query->latest()->paginate(25)->withQueryString();
+        $perPage = $request->input('per_page', 25);
+        $hafalan = $query->latest()->paginate($perPage)->withQueryString();
 
         return view('parent.history.index', compact('hafalan', 'student', 'students'));
     }

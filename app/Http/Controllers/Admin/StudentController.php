@@ -24,6 +24,14 @@ class StudentController extends Controller
     {
         $query = Student::with(['parents', 'guru', 'targets', 'memorizations']);
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%");
+            });
+        }
+
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
         }
@@ -36,7 +44,8 @@ class StudentController extends Controller
             $query->latest();
         }
 
-        $students = $query->get();
+        $perPage = $request->input('per_page', 25);
+        $students = $query->paginate($perPage)->withQueryString();
 
         return view('admin.students.index', compact('students'));
     }

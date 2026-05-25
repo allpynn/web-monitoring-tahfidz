@@ -8,29 +8,10 @@
 
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Daftar Guru</h2>
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="relative">
-                <input type="text" id="searchGuru" placeholder="Cari guru..." class="pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 w-64" oninput="filterTable(this.value)">
-                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            </div>
-
-            <select onchange="window.location.href='{{ route('admin.guru.index') }}?sort={{ request('sort') }}&gender=' + this.value" class="py-2 pl-3 pr-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
-                <option value="">Semua Jenis Kelamin</option>
-                <option value="Laki-laki" {{ request('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                <option value="Perempuan" {{ request('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
-            </select>
-
-            <select onchange="window.location.href='{{ route('admin.guru.index') }}?gender={{ request('gender') }}&sort=' + this.value" class="py-2 pl-3 pr-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
-                <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
-                <option value="abjad" {{ request('sort') == 'abjad' ? 'selected' : '' }}>Abjad (A-Z)</option>
-                <option value="nip" {{ request('sort') == 'nip' ? 'selected' : '' }}>NIP / Identitas</option>
-            </select>
-
-            <a href="{{ route('admin.guru.create') }}" class="px-5 py-2.5 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center gap-2 text-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Tambah Guru
-            </a>
-        </div>
+        <a href="{{ route('admin.guru.create') }}" class="px-5 py-2.5 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg flex items-center gap-2 text-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Tambah Guru
+        </a>
     </div>
 
     @if(session('success'))
@@ -41,6 +22,48 @@
     @endif
 
     <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-sm">
+        <!-- ADVANCED FILTER BAR -->
+        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20">
+            <form action="{{ route('admin.guru.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4 items-end">
+                <div class="flex-1 w-full">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Cari Nama / NIP</label>
+                    <div class="relative">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari guru..." class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-10">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-48">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Jenis Kelamin</label>
+                    <select name="gender" onchange="this.form.submit()" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                        <option value="">Semua</option>
+                        <option value="Laki-laki" {{ request('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="Perempuan" {{ request('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                    </select>
+                </div>
+
+                <div class="w-full lg:w-40">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Urutan</label>
+                    <select name="sort" onchange="this.form.submit()" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                        <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
+                        <option value="abjad" {{ request('sort') == 'abjad' ? 'selected' : '' }}>Abjad (A-Z)</option>
+                        <option value="nip" {{ request('sort') == 'nip' ? 'selected' : '' }}>NIP</option>
+                    </select>
+                </div>
+
+
+                <div class="flex gap-2 w-full lg:w-auto">
+                    <button type="submit" class="flex-1 lg:flex-none px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-sm">
+                        Filter
+                    </button>
+                    @if(request()->anyFilled(['search', 'gender', 'sort', 'per_page']))
+                        <a href="{{ route('admin.guru.index') }}" class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-500 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition-all font-bold">
+                            Reset
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
         <div class="overflow-x-auto">
             <table id="guruTable" class="w-full text-left border-collapse">
                 <thead>
@@ -109,18 +132,14 @@
                 </tbody>
             </table>
         </div>
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+            {{ $gurus->links('vendor.pagination.custom') }}
+        </div>
     </div>
 
     @push('scripts')
     <script>
-        function filterTable(query) {
-            const rows = document.querySelectorAll('#guruTable tbody tr');
-            query = query.toLowerCase();
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
-        }
+        // Client-side filtering is now removed in favor of server-side search and pagination
     </script>
     @endpush
 </x-tahfidz-layout>

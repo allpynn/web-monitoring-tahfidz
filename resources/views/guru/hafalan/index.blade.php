@@ -59,15 +59,6 @@
                         <option value="absen" {{ request('presence') == 'absen' ? 'selected' : '' }}>Tidak Hadir</option>
                     </select>
                 </div>
-                <div class="w-full lg:w-32">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Jumlah</label>
-                    <select name="per_page" onchange="this.form.submit()" 
-                            class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer">
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                    </select>
-                </div>
                 <div class="flex gap-2 w-full lg:w-auto">
                     <button type="submit" class="flex-1 lg:flex-none px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-sm">
                         Filter
@@ -144,11 +135,9 @@
             </table>
         </div>
 
-        @if($hafalan->hasPages())
-            <div class="px-6 py-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
-                {{ $hafalan->appends(request()->input())->links() }}
-            </div>
-        @endif
+        <div class="px-6 py-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
+            {{ $hafalan->appends(request()->input())->links('vendor.pagination.custom') }}
+        </div>
     </div>
     @push('scripts')
         <script>
