@@ -28,14 +28,16 @@
                 <div class="flex-1 w-full">
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Cari Nama / Email / HP</label>
                     <div class="relative">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari orang tua..." class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-10">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari orang tua..."
+                            class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-10"
+                            oninput="debounceSubmit(this.form)">
                         <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                 </div>
 
                 <div class="w-full lg:w-48">
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Jenis Kelamin</label>
-                    <select name="gender" onchange="this.form.submit()" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                    <select name="gender" onchange="updateTable(this.form)" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
                         <option value="">Semua</option>
                         <option value="Laki-laki" {{ request('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
                         <option value="Perempuan" {{ request('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
@@ -44,99 +46,124 @@
 
                 <div class="w-full lg:w-40">
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Urutan</label>
-                    <select name="sort" onchange="this.form.submit()" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                    <select name="sort" onchange="updateTable(this.form)" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
                         <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
                         <option value="abjad" {{ request('sort') == 'abjad' ? 'selected' : '' }}>Abjad (A-Z)</option>
                         <option value="anak_terbanyak" {{ request('sort') == 'anak_terbanyak' ? 'selected' : '' }}>Anak Terbanyak</option>
                     </select>
                 </div>
-
-
-                <div class="flex gap-2 w-full lg:w-auto">
-                    <button type="submit" class="flex-1 lg:flex-none px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-sm">
-                        Filter
-                    </button>
-                    @if(request()->anyFilled(['search', 'gender', 'sort', 'per_page']))
-                        <a href="{{ route('admin.parents.index') }}" class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-500 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition-all font-bold">
-                            Reset
-                        </a>
-                    @endif
-                </div>
             </form>
         </div>
-        <div class="overflow-x-auto">
-            <table id="parentTable" class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Orang Tua</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">L/P</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kontak</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jumlah Anak</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @forelse($parents as $parent)
-                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold">
-                                        {{ substr($parent->name, 0, 1) }}
+
+        <div id="table-container">
+            <div class="overflow-x-auto">
+                <table id="parentTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Orang Tua</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">L/P</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kontak</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jumlah Anak</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        @forelse($parents as $parent)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold">
+                                            {{ substr($parent->name, 0, 1) }}
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-900 dark:text-white">{{ $parent->name }}</div>
                                     </div>
-                                    <div class="text-sm font-bold text-gray-900 dark:text-white">{{ $parent->name }}</div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                @if($parent->gender === 'Laki-laki')
-                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" title="Laki-laki">L</span>
-                                @elseif($parent->gender === 'Perempuan')
-                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400" title="Perempuan">P</span>
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900 dark:text-white">{{ $parent->email }}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $parent->phone }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-bold rounded-full uppercase">
-                                    {{ $parent->students_count }} Santri
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.parents.edit', $parent) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all" title="Edit">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    </a>
-                                    <form action="{{ route('admin.parents.destroy', $parent) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all" title="Hapus">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
-                                Belum ada data orang tua.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700">
-            {{ $parents->links('vendor.pagination.custom') }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if($parent->gender === 'Laki-laki')
+                                        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" title="Laki-laki">L</span>
+                                    @elseif($parent->gender === 'Perempuan')
+                                        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400" title="Perempuan">P</span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 dark:text-white">{{ $parent->email }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $parent->phone }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-bold rounded-full uppercase">
+                                        {{ $parent->students_count }} Santri
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('admin.parents.edit', $parent) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all" title="Edit">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </a>
+                                        <form action="{{ route('admin.parents.destroy', $parent) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all" title="Hapus">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">Belum ada data orang tua.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+                {{ $parents->links('vendor.pagination.custom') }}
+            </div>
         </div>
     </div>
 
     @push('scripts')
     <script>
-        // Client-side filtering is now removed in favor of server-side search and pagination
+        let debounceTimer;
+        function debounceSubmit(form) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                updateTable(form);
+            }, 300);
+        }
+
+        async function updateTable(form) {
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+            const url = `${form.action}?${params.toString()}`;
+
+            window.history.pushState({}, '', url);
+
+            try {
+                const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTable = doc.getElementById('table-container');
+                if (newTable) {
+                    document.getElementById('table-container').innerHTML = newTable.innerHTML;
+                }
+            } catch (error) {
+                console.error('Gagal mengambil data:', error);
+                form.submit();
+            }
+        }
+
+        const parentFilterForm = document.querySelector('form[action="{{ route('admin.parents.index') }}"]');
+        if (parentFilterForm) {
+            parentFilterForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                updateTable(e.target);
+            });
+        }
     </script>
     @endpush
 </x-tahfidz-layout>

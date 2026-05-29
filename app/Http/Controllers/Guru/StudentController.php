@@ -4,11 +4,17 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\User;
 use App\Models\RiwayatHafalan;
+use App\Models\StudentTarget;
 use App\Helpers\PdfHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -61,21 +67,96 @@ class StudentController extends Controller
 
     public function create()
     {
-        return view('guru.students.create');
+        $parents = User::where('role', 'orang_tua')->orderBy('name')->get();
+        return view('guru.students.create', compact('parents'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'nis' => 'required|string|unique:students,nis',
+            'nis' => 'required|string|digits:10|unique:students,nis',
             'gender' => 'required|in:Laki-laki,Perempuan',
+            'parent_names.*' => 'nullable|string|max:255',
+            'parent_phones.*' => 'nullable|string|max:20',
+            'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
+            'parent_emails.*' => 'nullable|email|max:255',
+            'existing_parent_ids.*' => 'nullable|exists:users,id',
+            'target_juz' => 'nullable|integer|min:1|max:30',
+            'target_date' => 'nullable|date',
         ]);
 
-        $validated['guru_id'] = auth()->id();
-        Student::create($validated);
+        return DB::transaction(function () use ($request) {
+            $student = Student::create([
+                'name' => $request->name,
+                'nis' => $request->nis,
+                'gender' => $request->gender,
+                'guru_id' => auth()->id(),
+            ]);
 
-        return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan.');
+            // Simpan Target Hafalan
+            if ($request->filled('target_juz')) {
+                $student->targets()->create([
+                    'target_juz' => $request->target_juz,
+                    'target_date' => $request->target_date,
+                ]);
+            }
+
+            $parentIds = [];
+
+            // 1. Proses orang tua yang dipilih dari data yang sudah ada
+            if ($request->filled('existing_parent_ids')) {
+                foreach ($request->existing_parent_ids as $pid) {
+                    if ($pid)
+                        $parentIds[] = (int) $pid;
+                }
+            }
+
+            // 2. Proses form orang tua baru
+            foreach (($request->parent_names ?? []) as $index => $parentName) {
+                if (empty($parentName))
+                    continue;
+
+                $phoneRaw = $request->parent_phones[$index] ?? '';
+                $phone = '';
+
+                if ($phoneRaw) {
+                    $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
+                    if (str_starts_with($phone, '62')) {
+                        $phone = '0' . substr($phone, 2);
+                    } elseif (str_starts_with($phone, '8')) {
+                        $phone = '0' . $phone;
+                    }
+
+                    // Cek apakah nomor HP sudah ada di database
+                    $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
+                    if ($existingParent) {
+                        throw ValidationException::withMessages([
+                            "parent_phones.$index" => "Nomor HP '$phone' sudah digunakan oleh '{$existingParent->name}'. Silakan pilih data tersebut di bagian 'Cari Orang Tua'."
+                        ]);
+                    }
+                }
+
+                $email = $request->parent_emails[$index] ?? null;
+                $gender = $request->parent_genders[$index] ?? null;
+
+                $parent = User::create([
+                    'name' => $parentName,
+                    'gender' => $gender,
+                    'email' => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                    'phone' => $phone,
+                    'password' => Hash::make($phone ?: Str::random(10)),
+                    'role' => 'orang_tua',
+                    'email_verified_at' => now(),
+                ]);
+
+                $parentIds[] = $parent->id;
+            }
+
+            $student->parents()->sync($parentIds);
+
+            return redirect()->route('guru.students.index')->with('success', 'Santri berhasil ditambahkan. Akun orang tua otomatis dibuat dengan password = nomor telepon.');
+        });
     }
 
     public function edit(Student $student)
@@ -88,13 +169,33 @@ class StudentController extends Controller
     {
         $this->authorize('update', $student);
 
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'nis' => 'required|string|unique:students,nis,' . $student->id,
             'gender' => 'required|in:Laki-laki,Perempuan',
+            'target_juz.*' => 'nullable|integer|min:1|max:30',
+            'target_date.*' => 'nullable|date',
         ]);
 
-        $student->update($validated);
+        $student->update([
+            'name' => $request->name,
+            'nis' => $request->nis,
+            'gender' => $request->gender,
+        ]);
+
+        // Update Targets
+        if ($request->has('target_juz')) {
+            $student->targets()->delete();
+            foreach ($request->target_juz as $idx => $juz) {
+                if ($juz) {
+                    $student->targets()->create([
+                        'target_juz' => $juz,
+                        'target_date' => $request->target_date[$idx] ?? null,
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('guru.students.index')->with('success', 'Profil santri berhasil diperbarui.');
     }
 
