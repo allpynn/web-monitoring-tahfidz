@@ -1,26 +1,20 @@
 stages:
-
-* build
+  - build
 
 variables:
-IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
-IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
 build_image:
-stage: build
-
-image: docker:24
-
-services:
-- docker:24-dind
-
-before_script:
-- echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-
-script:
-- docker build -t $IMAGE_LATEST -t $IMAGE_TAG .
-- docker push $IMAGE_LATEST
-- docker push $IMAGE_TAG
-
-rules:
-- if: '$CI_COMMIT_BRANCH == "main"'
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_LATEST -t $IMAGE_TAG .
+    - docker push $IMAGE_LATEST
+    - docker push $IMAGE_TAG
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
