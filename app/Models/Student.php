@@ -91,11 +91,15 @@ class Student extends Model
         $this->memoryMemorizedMap = null; 
         $completedJuz = $this->calculateSmartCompletedJuz();
 
-        $target = $this->activeTarget();
-        $targetJuzCount = $target ? $target->target_juz : 30;
-        $progress = ($targetJuzCount > 0)
-            ? min(round((count($completedJuz) / $targetJuzCount) * 100), 100)
-            : 0;
+        $targetedJuzList = $this->targets()->pluck('target_juz')->unique()->filter()->toArray();
+        $targetCount = count($targetedJuzList);
+        
+        if ($targetCount > 0) {
+            $achievedCount = count(array_intersect($completedJuz, $targetedJuzList));
+            $progress = min(round(($achievedCount / $targetCount) * 100), 100);
+        } else {
+            $progress = 0;
+        }
 
         $this->update([
             'completed_juz_cache' => $completedJuz,
@@ -165,12 +169,12 @@ class Student extends Model
 
     public function activeTarget()
     {
-        // Gunakan collection yang sudah di-load jika ada
+        // Use loaded relation if available to prevent N+1
         $targets = $this->relationLoaded('targets') ? $this->targets : $this->targets()->get();
-        
         if ($targets->isEmpty()) return null;
-        $target = $targets->where('status', 'pending')->sortByDesc('created_at')->first();
-        return $target ?: $targets->sortByDesc('created_at')->first();
+
+        // Sort by id descending as a reliable proxy for 'latest'
+        return $targets->sortByDesc('id')->first();
     }
 
     public function parents()
@@ -218,7 +222,12 @@ class Student extends Model
 
     public function getCurrentJuzAttribute()
     {
-        return $this->memorizations()->where('is_present', true)->orderByDesc('id')->value('juz') ?? 0;
+        return $this->memorizations()
+            ->where('is_present', true)
+            ->whereNotNull('juz')
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id')
+            ->value('juz') ?? 30;
     }
 
     public function getTotalMemorizedJuzAttribute()
@@ -233,15 +242,20 @@ class Student extends Model
 
     public function getTargetJuzAttribute()
     {
-        $target = $this->activeTarget();
-        return $target ? $target->target_juz : 0;
+        return $this->targets()->pluck('target_juz')->unique()->count();
     }
 
     public function getTargetProgressAttribute()
     {
-        if ($this->progress_cache !== null) return $this->progress_cache;
-        $targetJuz = $this->target_juz;
-        $finished = count($this->completed_juz);
-        return ($targetJuz > 0) ? min(round(($finished / $targetJuz) * 100), 100) : 0;
+        $targetedJuzList = $this->targets()->pluck('target_juz')->unique()->filter()->toArray();
+        $targetCount = count($targetedJuzList);
+        
+        if ($targetCount > 0) {
+            $completedJuz = $this->completed_juz;
+            $achievedCount = count(array_intersect($completedJuz, $targetedJuzList));
+            return min(round(($achievedCount / $targetCount) * 100), 100);
+        }
+        
+        return 0;
     }
 }

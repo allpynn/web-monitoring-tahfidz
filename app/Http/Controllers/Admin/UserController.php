@@ -10,9 +10,13 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $users = User::whereIn('role', ['guru', 'orang_tua'])->get();
+        $perPage = $request->input('per_page', 25);
+        $users = User::whereIn('role', ['guru', 'orang_tua'])
+                    ->latest()
+                    ->paginate($perPage)
+                    ->withQueryString();
 
         return view('admin.users.index', compact('users'));
     }

@@ -76,8 +76,8 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-6">
-                            <x-tahfidz.form-input type="number" name="ayat_dari" label="Dari Ayat" placeholder="1" min="1" required />
-                            <x-tahfidz.form-input type="number" name="ayat_sampai" label="Sampai Ayat" placeholder="7" min="1" required />
+                            <x-tahfidz.form-input type="number" name="ayat_dari" label="Dari Ayat" placeholder="1" min="1" />
+                            <x-tahfidz.form-input type="number" name="ayat_sampai" label="Sampai Ayat" placeholder="7" min="1" />
                         </div>
                         
                         <div class="w-full">

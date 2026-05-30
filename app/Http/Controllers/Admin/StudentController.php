@@ -10,6 +10,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\RiwayatHafalanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 
 class StudentController extends Controller
@@ -24,6 +26,14 @@ class StudentController extends Controller
     {
         $query = Student::with(['parents', 'guru', 'targets', 'memorizations']);
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%");
+            });
+        }
+
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
         }
@@ -36,7 +46,8 @@ class StudentController extends Controller
             $query->latest();
         }
 
-        $students = $query->get();
+        $perPage = $request->input('per_page', 25);
+        $students = $query->paginate($perPage)->withQueryString();
 
         return view('admin.students.index', compact('students'));
     }
@@ -74,75 +85,78 @@ class StudentController extends Controller
             'parent_emails.*.email' => 'Format email orang tua tidak valid.',
         ]);
 
-        $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id']));
+        return DB::transaction(function () use ($request) {
+            $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id']));
 
-        // Simpan Target Hafalan
-        if ($request->has('target_juz')) {
-            foreach ($request->target_juz as $idx => $juz) {
-                if ($juz) {
-                    $student->targets()->create([
-                        'target_juz' => $juz,
-                        'target_date' => $request->target_date[$idx] ?? null,
-                    ]);
-                }
-            }
-        }
-
-        $parentIds = [];
-
-        // 1. Proses orang tua yang dipilih dari data yang sudah ada
-        if ($request->filled('existing_parent_ids')) {
-            foreach ($request->existing_parent_ids as $pid) {
-                if ($pid)
-                    $parentIds[] = (int) $pid;
-            }
-        }
-
-        // 2. Validasi & Proses form orang tua baru
-        foreach (($request->parent_names ?? []) as $index => $parentName) {
-            if (empty($parentName))
-                continue;
-
-            $phoneRaw = $request->parent_phones[$index] ?? '';
-
-            if ($phoneRaw) {
-                // Normalisasi nomor HP ke format 08...
-                $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
-                if (str_starts_with($phone, '62')) {
-                    $phone = '0' . substr($phone, 2);
-                } elseif (str_starts_with($phone, '8')) {
-                    $phone = '0' . $phone;
-                }
-
-                // Cek apakah nomor HP sudah ada di database
-                $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
-                if ($existingParent) {
-                    return redirect()->back()->withInput()->withErrors([
-                        "parent_phones.$index" => "Nomor HP '$phone' sudah digunakan oleh '{$existingParent->name}'. Silakan pilih data tersebut di bagian 'Cari Orang Tua'."
-                    ]);
+            // Simpan Target Hafalan
+            if ($request->has('target_juz')) {
+                foreach ($request->target_juz as $idx => $juz) {
+                    if ($juz) {
+                        $student->targets()->create([
+                            'target_juz' => $juz,
+                            'target_date' => $request->target_date[$idx] ?? null,
+                        ]);
+                    }
                 }
             }
 
-            $email = $request->parent_emails[$index] ?? null;
-            $gender = $request->parent_genders[$index] ?? null;
+            $parentIds = [];
 
-            // Buat parent baru dengan nomor yang sudah dibersihkan
-            $parent = User::create([
-                'name' => $parentName,
-                'gender' => $gender,
-                'email' => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
-                'phone' => $phone,
-                'password' => Hash::make($phone ?: Str::random(10)),
-                'role' => 'orang_tua',
-                'email_verified_at' => now(),
-            ]);
+            // 1. Proses orang tua yang dipilih dari data yang sudah ada
+            if ($request->filled('existing_parent_ids')) {
+                foreach ($request->existing_parent_ids as $pid) {
+                    if ($pid)
+                        $parentIds[] = (int) $pid;
+                }
+            }
 
-            $parentIds[] = $parent->id;
-        }
+            // 2. Validasi & Proses form orang tua baru
+            foreach (($request->parent_names ?? []) as $index => $parentName) {
+                if (empty($parentName))
+                    continue;
 
-        $student->parents()->sync($parentIds);
+                $phoneRaw = $request->parent_phones[$index] ?? '';
+                $phone = '';
 
-        return redirect()->route('admin.students.index')->with('success', 'Santri berhasil ditambahkan. Akun orang tua otomatis dibuat dengan password = nomor telepon.');
+                if ($phoneRaw) {
+                    // Normalisasi nomor HP ke format 08...
+                    $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
+                    if (str_starts_with($phone, '62')) {
+                        $phone = '0' . substr($phone, 2);
+                    } elseif (str_starts_with($phone, '8')) {
+                        $phone = '0' . $phone;
+                    }
+
+                    // Cek apakah nomor HP sudah ada di database
+                    $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
+                    if ($existingParent) {
+                        throw ValidationException::withMessages([
+                            "parent_phones.$index" => "Nomor HP '$phone' sudah digunakan oleh '{$existingParent->name}'. Silakan pilih data tersebut di bagian 'Cari Orang Tua'."
+                        ]);
+                    }
+                }
+
+                $email = $request->parent_emails[$index] ?? null;
+                $gender = $request->parent_genders[$index] ?? null;
+
+                // Buat parent baru dengan nomor yang sudah dibersihkan
+                $parent = User::create([
+                    'name' => $parentName,
+                    'gender' => $gender,
+                    'email' => $email ?: ('ortu_' . Str::slug($parentName) . '_' . Str::random(5) . '@tahfidz.local'),
+                    'phone' => $phone,
+                    'password' => Hash::make($phone ?: Str::random(10)),
+                    'role' => 'orang_tua',
+                    'email_verified_at' => now(),
+                ]);
+
+                $parentIds[] = $parent->id;
+            }
+
+            $student->parents()->sync($parentIds);
+
+            return redirect()->route('admin.students.index')->with('success', 'Santri berhasil ditambahkan. Akun orang tua otomatis dibuat dengan password = nomor telepon.');
+        });
     }
 
     public function edit(Student $student)

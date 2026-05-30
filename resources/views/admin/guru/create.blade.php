@@ -77,13 +77,10 @@
                 </div>
             </x-tahfidz.card>
 
-            <div class="flex justify-end pt-4">
-                <button type="submit"
-                    class="px-8 py-4 bg-emerald-700 text-white rounded-2xl font-bold text-lg hover:bg-emerald-800 shadow-xl shadow-emerald-200 dark:shadow-none transition-all flex items-center gap-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
-                        </path>
+            <div class="flex justify-center pt-8">
+                <button type="submit" class="group px-12 py-4 bg-[#066447] text-white rounded-full font-bold text-xl hover:bg-[#044d36] shadow-2xl shadow-emerald-200/50 dark:shadow-none transition-all flex items-center gap-4 hover:scale-[1.02] active:scale-[0.98]">
+                    <svg class="w-7 h-7 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                     </svg>
                     Simpan Akun Guru
                 </button>

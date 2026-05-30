@@ -12,7 +12,16 @@ class ParentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'orang_tua');
+        $query = User::where('role', 'orang_tua')->withCount('students');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
 
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
@@ -21,12 +30,13 @@ class ParentController extends Controller
         if ($request->sort === 'abjad') {
             $query->orderBy('name', 'asc');
         } elseif ($request->sort === 'anak_terbanyak') {
-            $query->withCount('students')->orderBy('students_count', 'desc');
+            $query->orderBy('students_count', 'desc');
         } else {
             $query->latest();
         }
 
-        $parents = $query->get();
+        $perPage = $request->input('per_page', 25);
+        $parents = $query->paginate($perPage)->withQueryString();
 
         return view('admin.parents.index', compact('parents'));
     }
