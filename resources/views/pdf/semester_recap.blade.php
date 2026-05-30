@@ -107,8 +107,8 @@
         </tbody>
         <tfoot>
             <tr class="bold">
-                <td colspan="2" class="text-right">TOTAL AKUMULASI</td>
-                <td class="text-center">{{ $memorizations->where('is_present', true)->count() }} Kali</td>
+                <td colspan="2" class="text-right">TOTAL AKUMULASI (LIFETIME)</td>
+                <td class="text-center">{{ $student->memorizations()->where('is_present', true)->count() }} Kali</td>
                 <td colspan="2">Capaian Akhir: Juz {{ $student->current_juz }}</td>
             </tr>
         </tfoot>

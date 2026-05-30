@@ -171,13 +171,23 @@
         <table class="summary-table">
             <tr>
                 <td class="summary-label">Total Setoran Tahfizh</td>
-                <td>{{ $memorizations->where('is_present', true)->count() }} Kali</td>
+                <td>{{ $student->memorizations()->where('is_present', true)->count() }} Kali</td>
                 <td class="summary-label">Target Hafalan</td>
-                <td>{{ $student->target_juz }} Juz</td>
+                <td>
+                    @php
+                        $targets = $student->targets->pluck('target_juz')->unique()->sort();
+                    @endphp
+                    {{ $targets->isEmpty() ? '-' : 'Juz ' . $targets->implode(', ') }}
+                </td>
             </tr>
             <tr>
-                <td class="summary-label">Hafalan Terakhir</td>
-                <td>Juz {{ $student->current_juz }}</td>
+                <td class="summary-label">Capaian Target</td>
+                <td>
+                    @php
+                        $completed = collect($student->completed_juz)->sort();
+                    @endphp
+                    {{ $completed->isEmpty() ? '-' : 'Juz ' . $completed->implode(', ') }}
+                </td>
                 <td class="summary-label">Persentase Capaian</td>
                 <td class="bold">{{ $student->target_progress }}%</td>
             </tr>

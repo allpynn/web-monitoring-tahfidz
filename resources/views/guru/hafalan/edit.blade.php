@@ -74,8 +74,8 @@
                             $sampai = isset($parts[1]) ? (int) trim($parts[1]) : $dari;
                         @endphp
                         <div class="grid grid-cols-2 gap-6">
-                            <x-tahfidz.form-input type="number" name="ayat_dari" label="Dari Ayat" placeholder="1" :value="old('ayat_dari', $dari)" min="1" required />
-                            <x-tahfidz.form-input type="number" name="ayat_sampai" label="Sampai Ayat" placeholder="7" :value="old('ayat_sampai', $sampai)" min="1" required />
+                            <x-tahfidz.form-input type="number" name="ayat_dari" label="Dari Ayat" placeholder="1" :value="old('ayat_dari', $dari)" min="1" />
+                            <x-tahfidz.form-input type="number" name="ayat_sampai" label="Sampai Ayat" placeholder="7" :value="old('ayat_sampai', $sampai)" min="1" />
                         </div>
                         
                         <div class="w-full">

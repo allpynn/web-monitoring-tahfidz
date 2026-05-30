@@ -196,6 +196,7 @@ class StudentController extends Controller
             }
         }
 
+        $student->refreshCache();
         return redirect()->route('guru.students.index')->with('success', 'Profil santri berhasil diperbarui.');
     }
 

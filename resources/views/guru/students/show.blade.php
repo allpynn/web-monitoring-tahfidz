@@ -59,7 +59,11 @@
                                 $progress = $student->target_progress;
                             @endphp
                             <span class="text-[10px] font-black text-gray-500">
-                                {{ count($student->completed_juz) }} / {{ $student->target_juz }} Juz
+                                @php
+                                    $targetedJuzList = $student->targets->pluck('target_juz')->unique()->filter()->toArray();
+                                    $achievedCount = count(array_intersect($student->completed_juz, $targetedJuzList));
+                                @endphp
+                                {{ $achievedCount }} / {{ $student->target_juz }} Juz
                             </span>
                         </div>
                         <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1 mt-1">
