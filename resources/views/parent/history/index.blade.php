@@ -20,64 +20,69 @@
                     </select>
                 </form>
             </div>
-        @else
+        @endif
+
+        <div id="table-header-ajax" class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 flex-1 w-full">
             @if($student)
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Riwayat: {{ $student->name }}</h2>
-                    <p class="text-xs text-gray-400 font-medium italic mt-1 font-bold">Menampilkan seluruh catatan setoran hafalan.</p>
+                @if($students->count() <= 1)
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Riwayat: {{ $student->name }}</h2>
+                        <p class="text-xs text-gray-400 font-medium italic mt-1 font-bold">Menampilkan seluruh catatan setoran hafalan.</p>
+                    </div>
+                @else
+                    <div></div> {{-- Spacer for flex --}}
+                @endif
+
+                <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                    <a href="{{ route('parent.history.export', $student) }}" 
+                       class="flex-1 lg:flex-none px-6 py-3 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Download Rekap
+                    </a>
                 </div>
             @endif
-        @endif
-
-        @if($student)
-            <div class="flex flex-wrap gap-3 w-full lg:w-auto">
-                <a href="{{ route('parent.history.export', $student) }}" 
-                   class="flex-1 lg:flex-none px-6 py-3 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Download PDF
-                </a>
-            </div>
-        @endif
+        </div>
     </div>
 
-    <div id="table-container">
-        @if($student)
-            <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-sm">
-                <!-- ADVANCED SEARCH & FILTER BAR -->
-                <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/10">
-                    <form action="{{ route('parent.history.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4 items-end">
-                        <input type="hidden" name="student_id" value="{{ $student->id }}">
-                        <div class="flex-1 w-full">
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1 tracking-widest">Cari Hafalan</label>
-                            <div class="relative">
-                                <input type="text" name="search" id="parentSearch" value="{{ request('search') }}" 
-                                       placeholder="Surah, Juz, atau Catatan..." 
-                                       oninput="debounceSubmit(this.form)"
-                                       class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-11 font-medium">
-                                <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </div>
+    @if($student)
+        <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-sm">
+            <!-- ADVANCED SEARCH & FILTER BAR -->
+            <div id="filter-bar-ajax" class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/10">
+                <form action="{{ route('parent.history.index') }}" method="GET" id="searchFilter" class="flex flex-col lg:flex-row gap-4 items-end">
+                    <input type="hidden" name="student_id" value="{{ $student->id }}">
+                    <div class="flex-1 w-full">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1 tracking-widest">Cari Hafalan</label>
+                        <div class="relative">
+                            <input type="text" name="search" id="parentSearch" value="{{ request('search') }}" 
+                                   placeholder="Cari surah atau catatan..." 
+                                   oninput="debounceSubmit(this.form)"
+                                   class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-11 font-medium">
+                            <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <div class="w-full lg:w-40">
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1 tracking-widest">Status</label>
-                            <select name="status" onchange="updateTable(this.form)" 
-                                    class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4 cursor-pointer font-bold">
-                                <option value="">Semua Status</option>
-                                <option value="Lancar" {{ request('status') == 'Lancar' ? 'selected' : '' }}>Lancar</option>
-                                <option value="Perlu Perbaikan" {{ request('status') == 'Perlu Perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
-                            </select>
-                        </div>
-                        <div class="w-full lg:w-40">
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1 tracking-widest">Kehadiran</label>
-                            <select name="presence" onchange="updateTable(this.form)" 
-                                    class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4 cursor-pointer font-bold">
-                                <option value="">Semua</option>
-                                <option value="hadir" {{ request('presence') == 'hadir' ? 'selected' : '' }}>Hadir</option>
-                                <option value="absen" {{ request('presence') == 'absen' ? 'selected' : '' }}>Izin/Absen</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="w-full lg:w-40">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1 tracking-widest">Status</label>
+                        <select name="status" onchange="updateTable(this.form)" 
+                                class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4 cursor-pointer font-bold">
+                            <option value="">Semua Status</option>
+                            <option value="Lancar" {{ request('status') == 'Lancar' ? 'selected' : '' }}>Lancar</option>
+                            <option value="Perlu Perbaikan" {{ request('status') == 'Perlu Perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
+                        </select>
+                    </div>
+                    <div class="w-full lg:w-40">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1 tracking-widest">Kehadiran</label>
+                        <select name="presence" onchange="updateTable(this.form)" 
+                                class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm px-4 cursor-pointer font-bold">
+                            <option value="">Semua</option>
+                            <option value="hadir" {{ request('presence') == 'hadir' ? 'selected' : '' }}>Hadir</option>
+                            <option value="absen" {{ request('presence') == 'absen' ? 'selected' : '' }}>Izin/Absen</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
 
+            <!-- TABLE CONTAINER -->
+            <div id="table-container">
                 <!-- TABLE -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -146,16 +151,16 @@
                     {{ $hafalan->appends(request()->input())->links('vendor.pagination.custom') }}
                 </div>
             </div>
-        @else
-            <div class="p-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 text-center shadow-lg">
-                <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </div>
-                <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase">Pilih Data Ananda</h3>
-                <p class="text-sm text-gray-500 mt-2 font-medium">Silakan pilih salah satu ananda Anda pada pilihan di atas <br> untuk melihat detail riwayat hafalan selengkapnya.</p>
+        </div>
+    @else
+        <div class="p-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 text-center shadow-lg">
+            <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             </div>
-        @endif
-    </div>
+            <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase">Pilih Data Ananda</h3>
+            <p class="text-sm text-gray-500 mt-2 font-medium">Silakan pilih salah satu ananda Anda pada pilihan di atas <br> untuk melihat detail riwayat hafalan selengkapnya.</p>
+        </div>
+    @endif
 
     @push('scripts')
     <script>
@@ -180,9 +185,30 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 
+                // Update table container (the actual data)
                 const newTable = doc.getElementById('table-container');
                 if (newTable) {
-                    document.getElementById('table-container').innerHTML = newTable.innerHTML;
+                    const tableContainer = document.getElementById('table-container');
+                    if(tableContainer) {
+                        tableContainer.innerHTML = newTable.innerHTML;
+                    } else {
+                        location.reload(); 
+                    }
+                }
+
+                // Update header info
+                const newHeader = doc.getElementById('table-header-ajax');
+                if (newHeader) {
+                    document.getElementById('table-header-ajax').innerHTML = newHeader.innerHTML;
+                }
+
+                // IMPORTANT: Update the filter bar ONLY if we switched student (to sync the hidden student_id)
+                // We DON'T update it when searching/filtering to preserve input focus.
+                if (form.id === 'studentFilter') {
+                    const newFilterBar = doc.getElementById('filter-bar-ajax');
+                    if (newFilterBar) {
+                        document.getElementById('filter-bar-ajax').innerHTML = newFilterBar.innerHTML;
+                    }
                 }
             } catch (error) {
                 console.error('Gagal mengambil data:', error);
