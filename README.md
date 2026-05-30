@@ -19,7 +19,7 @@ Sistem Monitoring Tahfidz Al-Qur'an berbasis web yang dirancang khusus untuk int
 ## 🛠️ Instalasi
 1. Clone repositori:
    ```bash
-   git clone https://github.com/allpynn/web-monitoring-tahfidz.git
+   git clone https://github.com/allpynn/web-monitoring-tahfidz.git;
    ```
 2. Instal dependensi:
    ```bash
