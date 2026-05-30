@@ -91,7 +91,15 @@
             </div>
         </x-tahfidz.card>
 
-        <x-tahfidz.card title="Perhatian Khusus (Alert)" class="border-red-200 dark:border-red-900" icon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-red-600"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>'>
+        <x-tahfidz.card class="border-red-200 dark:border-red-900 shadow-red-50 dark:shadow-none bg-red-50/10">
+            <x-slot name="title_slot">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-red-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                    <h5 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Perhatian Khusus (Alert)</h5>
+                </div>
+            </x-slot>
             <div class="space-y-3">
                 @forelse($early_warnings as $warning)
                     <div

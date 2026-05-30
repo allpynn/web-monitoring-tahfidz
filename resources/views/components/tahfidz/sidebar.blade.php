@@ -75,8 +75,8 @@
             <li>
                <a href="{{ route('parent.history.index') }}"
                   class="flex items-center p-3 text-gray-900 rounded-2xl dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/30 group {{ request()->routeIs('parent.history.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 font-bold' : '' }}">
-                  <svg class="flex-shrink-0 w-5 h-5 transition duration-75 text-gray-500 group-hover:text-emerald-700 dark:text-gray-400 dark:group-hover:text-emerald-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                     <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" />
                   </svg>
                   <span class="flex-1 ms-3 whitespace-nowrap">Riwayat Hafalan</span>
                </a>
