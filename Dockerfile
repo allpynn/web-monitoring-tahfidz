@@ -1,10 +1,8 @@
 # Stage 1: Build assets using Node.js
 FROM node:20-alpine AS asset-builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
 COPY . .
-RUN npm run build
+RUN npm install && npm run build
 
 # Stage 2: Final image using FrankenPHP
 FROM dunglas/frankenphp:latest-php8.2
@@ -42,11 +40,11 @@ RUN install-php-extensions \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy application code
+# Copy application code first
 COPY . .
 
-# Copy built assets from Stage 1
-COPY --from=asset-builder /app/public/build ./public/build
+# Copy built assets from Stage 1 (Overwriting any local build directory)
+COPY --from=asset-builder /app/public/build /var/www/public/build
 
 # Set permissions for Laravel
 RUN mkdir -p storage bootstrap/cache && \
