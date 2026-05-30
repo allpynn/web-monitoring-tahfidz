@@ -1,3 +1,12 @@
+# Stage 1: Build assets using Node.js
+FROM node:20-alpine AS asset-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Stage 2: Final image using FrankenPHP
 FROM dunglas/frankenphp:latest-php8.2
 
 # Set working directory
@@ -18,7 +27,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP Extensions using official installer
+# Install PHP Extensions
 RUN install-php-extensions \
     pdo_mysql \
     mbstring \
@@ -35,6 +44,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy application code
 COPY . .
+
+# Copy built assets from Stage 1
+COPY --from=asset-builder /app/public/build ./public/build
 
 # Set permissions for Laravel
 RUN mkdir -p storage bootstrap/cache && \
