@@ -22,9 +22,6 @@ class Student extends Model
 
     private $memoryMemorizedMap = null;
 
-    /**
-     * Build map ayat yang sudah dihafal dalam satu kali jalan (Single Pass).
-     */
     private function getMemoryMemorizedMap()
     {
         if ($this->memoryMemorizedMap !== null) {
@@ -45,7 +42,6 @@ class Student extends Model
 
         $this->memoryMemorizedMap = [];
         
-        // Gunakan collection yang sudah di-load jika ada, untuk menghindari query N+1
         $mems = $this->relationLoaded('memorizations') 
             ? $this->memorizations->where('status', 'Lancar')->where('is_present', true)
             : $this->memorizations()->where('status', 'Lancar')->where('is_present', true)->get();
@@ -169,11 +165,9 @@ class Student extends Model
 
     public function activeTarget()
     {
-        // Use loaded relation if available to prevent N+1
         $targets = $this->relationLoaded('targets') ? $this->targets : $this->targets()->get();
         if ($targets->isEmpty()) return null;
 
-        // Sort by id descending as a reliable proxy for 'latest'
         return $targets->sortByDesc('id')->first();
     }
 

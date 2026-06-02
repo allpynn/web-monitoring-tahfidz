@@ -40,7 +40,6 @@ class DashboardController extends Controller
             ->unique('student_id')
             ->take(5);
 
-        // Load full conversation for each unique student thread
         foreach ($parent_messages as $thread) {
             $thread->conversation = Pesan::where('student_id', $thread->student_id)
                 ->where(function($q) use ($guruId, $thread) {
@@ -51,7 +50,6 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Load students with memorizations & targets in ONE query
         $students = Student::where('guru_id', $guruId)
             ->with([
                 'targets',
@@ -59,16 +57,13 @@ class DashboardController extends Controller
             ])
             ->get();
 
-        // Pre-load surah data ONCE (not in loop)
         $allSurahs = \App\Models\Surah::all();
         $surahsMap = $allSurahs->keyBy('nama_latin');
 
-        // Pre-calculate statistics
         $early_warnings = collect();
         $top_targets    = collect();
 
         foreach ($students as $student) {
-            // -- Early Warning Logic (Activity based) --
             $latestMem = $student->memorizations->sortByDesc('tanggal')->first();
             if (
                 !$latestMem || 
@@ -80,9 +75,8 @@ class DashboardController extends Controller
                 $early_warnings->push($student);
             }
 
-            // -- Top Achievement Logic (Multi-Target based) --
             $activeTarget = $student->activeTarget();
-            $finishedJuz  = $student->completed_juz; // Array of completed juz IDs/numbers
+            $finishedJuz  = $student->completed_juz;
             
             $student->finished_juz_count = count($finishedJuz);
             $student->target_juz_count   = $activeTarget ? $activeTarget->target_juz : 30;
@@ -94,7 +88,6 @@ class DashboardController extends Controller
         $early_warnings = $early_warnings->take(5);
         $top_targets    = $top_targets->sortByDesc('progress_percent')->take(5);
 
-        // Monthly chart — 4 weeks (plain array, no DB loop)
         $endDay       = Carbon::createFromDate($year, $month, 1)->daysInMonth;
         $weeklyLabels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
         $ranges       = [[1, 7], [8, 14], [15, 21], [22, $endDay]];
@@ -136,7 +129,6 @@ class DashboardController extends Controller
             abort(403);
         }
 
-        // Mark all messages in this thread (between this parent and guru for this student) as resolved
         Pesan::where('student_id', $pesan->student_id)
             ->where(function($q) use ($pesan) {
                 $q->where('sender_id', $pesan->sender_id)->where('receiver_id', Auth::id())

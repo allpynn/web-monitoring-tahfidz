@@ -10,13 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class RiwayatHafalanService
 {
-    /**
-     * Generate student report PDF.
-     *
-     * @param Student $student
-     * @param int|null $limit
-     * @return \Barryvdh\DomPDF\PDF
-     */
     public function generateStudentReport(Student $student, $limit = null)
     {
         $query = $student->memorizations()->with('guru')->latest();
@@ -35,12 +28,6 @@ class RiwayatHafalanService
         ]);
     }
 
-    /**
-     * Generate semester recap PDF.
-     *
-     * @param Student $student
-     * @return \Barryvdh\DomPDF\PDF
-     */
     public function generateSemesterRecap(Student $student)
     {
         $memorizations = $student->memorizations()
@@ -57,19 +44,12 @@ class RiwayatHafalanService
         ]);
     }
 
-    /**
-     * Calculate student progress analytics.
-     *
-     * @param Student $student
-     * @return array
-     */
     public function getAnalytics(Student $student)
     {
         $analyticsData = $student->memorizations()
             ->where('created_at', '>=', now()->subDays(90))
             ->get();
 
-        // Trend Chart (8 Weeks)
         $trends = [];
         for ($i = 7; $i >= 0; $i--) {
             $start = now()->subWeeks($i)->startOfWeek();
@@ -81,7 +61,6 @@ class RiwayatHafalanService
             ];
         }
 
-        // Attendance Heatmap (90 Days)
         $attendance = [];
         for ($i = 89; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
@@ -89,7 +68,6 @@ class RiwayatHafalanService
             $attendance[$date] = $status ? ($status->is_present ? 'present' : 'absent') : 'none';
         }
 
-        // Quality Chart (30 Days)
         $last30Days = $analyticsData->filter(fn ($m) => $m->created_at >= now()->subDays(30) && $m->is_present);
         
         return [
@@ -107,17 +85,10 @@ class RiwayatHafalanService
         ];
     }
 
-    /**
-     * Get prediction for student memorization completion.
-     *
-     * @param Student $student
-     * @return string
-     */
     public function getPrediction(Student $student): string
     {
         $target = $student->activeTarget();
 
-        // Cek apakah target sudah tuntas
         $completedJuz = count($student->completed_juz);
         $targetJuz    = $target ? $target->target_juz : 0;
 
@@ -125,13 +96,11 @@ class RiwayatHafalanService
             return 'Target Tuntas ✨';
         }
 
-        // Jika ada target_date, gunakan sebagai patokan utama
         if ($target && $target->target_date) {
             $deadline = \Carbon\Carbon::parse($target->target_date);
             $now      = \Carbon\Carbon::now();
 
             if ($now->gt($deadline)) {
-                // Sudah melewati deadline
                 $overdueDays = $now->diffInDays($deadline);
                 return 'Terlambat ' . $overdueDays . ' Hari ⚠️';
             }
@@ -151,7 +120,6 @@ class RiwayatHafalanService
             }
         }
 
-        // Fallback: hitung estimasi berdasarkan kecepatan hafalan
         $setorans = $student->memorizations()
             ->where('is_present', true)
             ->whereNotNull('juz')

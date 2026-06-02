@@ -1,16 +1,11 @@
-version: '3.8'
-
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
     container_name: laravel_app
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
-    cpus: "1.0"
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: "0.75"
     logging:
       driver: json-file
       options:
@@ -21,47 +16,21 @@ services:
     ports:
       - "8081:8000"
     command: php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000
-    depends_on:
-      - db
 
   reverb:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
     container_name: laravel_reverb
     restart: always
+    mem_limit: 256m
+    memswap_limit: 256m
+    cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
     env_file:
       - .env
     ports:
       - "8082:8080"
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
-    depends_on:
-      - app
-
-  db:
-    image: mysql:8.0
-    container_name: laravel_db
-    restart: always
-    environment:
-      MYSQL_DATABASE: tahfidz_db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: laravel_phpmyadmin
-    restart: always
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-    ports:
-      - "8080:80"
-    depends_on:
-      - db
-
-volumes:
-  mysql_data:

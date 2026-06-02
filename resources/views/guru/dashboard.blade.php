@@ -1,16 +1,4 @@
 <x-tahfidz-layout>
-    @php
-        /**
-         * @var array $stats
-         * @var array $weeklyLabels
-         * @var array $weeklyData
-         * @var \Illuminate\Database\Eloquent\Collection|\App\Models\RiwayatHafalan[] $recent_activities
-         * @var \Illuminate\Database\Eloquent\Collection|\App\Models\RiwayatHafalan[] $parent_feedbacks
-         * @var \Illuminate\Support\Collection|\App\Models\Student[] $early_warnings
-         * @var \Illuminate\Support\Collection|\App\Models\Student[] $top_targets
-         */
-    @endphp
-
     <x-slot name="header">
         Dashboard Guru
     </x-slot>
@@ -19,7 +7,6 @@
         {{ auth()->user()->name }}.
     </x-slot>
 
-    <!-- AKSI CEPAT DIBAGIAN ATAS -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <a href="{{ route('guru.hafalan.create') }}"
             class="p-4 bg-emerald-600 dark:bg-emerald-700 text-white rounded-2xl flex items-center gap-4 hover:bg-emerald-700 transition shadow-lg">
@@ -50,7 +37,6 @@
         </a>
     </div>
 
-    <!-- CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <x-tahfidz.card title="Total Setoran" :value="$stats['total_hafalan']"
             icon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" /></svg>' />
@@ -60,7 +46,6 @@
             icon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" /></svg>' />
     </div>
 
-    <!-- FILTER & CHART -->
     <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
         <h3 class="font-bold text-gray-800 dark:text-white">Statistik Hafalan</h3>
         <form action="{{ route('guru.dashboard') }}" method="GET"
@@ -119,7 +104,6 @@
         </x-tahfidz.card>
     </div>
 
-    <!-- OTHERS -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <x-tahfidz.card title="Top Pencapaian Target">
             <div class="space-y-4 mt-4">
@@ -197,7 +181,6 @@
         </x-tahfidz.card>
     </div>
 
-    <!-- PESAN DARI ORANG TUA (WHATSAPP STYLE) -->
     <div class="mt-8" x-data="{ openChat: null }">
         <x-tahfidz.card title="Pesan Orang Tua (Antrean)">
             <div class="space-y-3 mt-3">
@@ -229,7 +212,6 @@
                         <!-- Chat Body (Expandable) -->
                         <div x-show="openChat === {{ $msg->id }}" x-collapse x-cloak>
                             <div class="bg-gray-50 dark:bg-gray-900/40 p-4 border-t border-gray-100 dark:border-gray-700">
-                                {{-- Conversation Area --}}
                                 <div class="space-y-4 mb-4 max-h-[300px] overflow-y-auto px-2 custom-scrollbar">
                                     @foreach($msg->conversation as $c)
                                         <div class="flex {{ $c->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
@@ -245,7 +227,6 @@
                                     @endforeach
                                 </div>
 
-                                {{-- Action Bar (Reply & Resolve) --}}
                                 <div class="flex items-center gap-3">
                                     <form action="{{ route('guru.messages.reply', $msg) }}" method="POST" class="flex-1 flex gap-2">
                                         @csrf
@@ -256,7 +237,6 @@
                                         </button>
                                     </form>
 
-                                    {{-- Resolve Button (Hide from Queue) --}}
                                     <form action="{{ route('guru.messages.destroy', $msg) }}" method="POST" onsubmit="return confirm('Selesaikan percakapan? Pesan akan dipindahkan dari antrean.')">
                                         @csrf
                                         @method('DELETE')
