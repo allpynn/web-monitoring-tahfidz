@@ -1,0 +1,24 @@
+services:
+  app:
+    image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
+    container_name: laravel_app_dev
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www
+    ports:
+      - "8081:8000"
+    command: php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000 --watch
+
+  reverb:
+    image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
+    container_name: laravel_reverb_dev
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www
+    ports:
+      - "8082:8080"
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080

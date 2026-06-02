@@ -15,7 +15,6 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap"
         rel="stylesheet">
 
-    <!-- Theme Toggle Initialization -->
     <script>
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -35,7 +34,6 @@
             font-family: 'Amiri', serif;
         }
 
-        /* Simple Professional Background with Dynamic Glow */
         .simple-glow-bg {
             background-color: #ffffff;
             background-image: radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
@@ -44,11 +42,9 @@
 
         .dark .simple-glow-bg {
             background-color: #030712;
-            /* Deeper background */
             background-image: radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 60%);
         }
 
-        /* Ambient Orbs */
         .orb {
             position: absolute;
             border-radius: 50%;
@@ -69,7 +65,6 @@
             background: rgba(5, 150, 105, 0.12);
         }
 
-        /* Professional Card Shadow */
         .pro-card {
             background: white;
             border: 1px solid #f1f5f9;
@@ -78,18 +73,15 @@
 
         .dark .pro-card {
             background: #0f172a;
-            /* Slightly lighter than bg for contrast */
             border: 1px solid rgba(255, 255, 255, 0.03);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        /* Hide scrollbars but allow scrolling */
         ::-webkit-scrollbar {
             width: 0px;
             background: transparent;
         }
 
-        /* Custom reveal animations */
         @keyframes subtle-bounce {
 
             0%,
@@ -113,19 +105,15 @@
 
     <div class="orb orb-green"></div>
 
-    <!-- Background Centered Logo with Green Light -->
     <div class="fixed inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
         <div class="relative w-full max-w-2xl px-4 scale-75 lg:scale-100">
-            <!-- Green Light Aura -->
             <div
                 class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[600px] h-[400px] lg:h-[600px] bg-emerald-600/25 dark:bg-emerald-500/15 rounded-full blur-[100px] lg:blur-[140px] pointer-events-none">
             </div>
-            <!-- Translucent Large Logo -->
             <x-application-logo class="w-full h-auto opacity-[0.08] dark:opacity-[0.04] relative z-10" />
         </div>
     </div>
 
-    <!-- ── Theme Toggle ────────────────────────────────────────── -->
     <div class="fixed top-4 lg:top-8 right-4 lg:right-8 z-50">
         <button id="theme-toggle" type="button"
             class="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg hover:border-emerald-500 transition-all duration-300 group">
@@ -142,10 +130,8 @@
         </button>
     </div>
 
-    <!-- ── Content Wrapper ─────────────────────────────────────── -->
     <main class="min-h-screen w-full flex flex-col lg:flex-row relative z-10">
 
-        <!-- SIDE 1: BRANDING -->
         <div
             class="w-full lg:w-[50%] flex flex-col justify-center items-center lg:items-end p-10 lg:p-24 lg:pr-12 text-center lg:text-right">
             <div class="max-w-xl w-full">
@@ -174,7 +160,6 @@
                     </p>
                 </div>
 
-                <!-- Feature Pills -->
                 <div
                     class="mt-12 lg:mt-16 flex flex-wrap justify-center lg:justify-end gap-3 lg:gap-4 animate-in fade-in duration-1000 delay-300">
                     <div
@@ -187,11 +172,9 @@
             </div>
         </div>
 
-        <!-- SIDE 2: LOGIN (Flexible Panel) -->
         <div class="w-full lg:w-[50%] flex items-center justify-center lg:justify-start">
 
             <div class="w-full h-full min-h-[600px] lg:min-h-screen">
-                <!-- Professional Login Card (Panel Style) -->
                 <div
                     class="pro-card h-full w-full p-10 lg:p-24 flex flex-col justify-center rounded-t-[3rem] lg:rounded-t-0 lg:rounded-l-[4rem] animate-in slide-in-from-right duration-700">
                     <div class="max-w-md w-full mx-auto lg:mx-0">
@@ -204,13 +187,11 @@
                             </p>
                         </div>
 
-                        <!-- Session Status -->
                         <x-auth-session-status class="mb-8" :status="session('status')" />
 
                         <form method="POST" action="{{ route('login') }}" class="space-y-6">
                             @csrf
 
-                            <!-- Identifier -->
                             <div class="space-y-2">
                                 <label for="email"
                                     class="block text-xs lg:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1 tracking-wide">Email
@@ -231,7 +212,6 @@
                                 <x-input-error :messages="$errors->get('email')" class="mt-1 ml-1" />
                             </div>
 
-                            <!-- Password -->
                             <div class="space-y-2">
                                 <label for="password"
                                     class="block text-xs lg:text-sm font-bold text-slate-500 dark:text-slate-400 ml-1 tracking-wide">Kata
@@ -248,7 +228,6 @@
                                         autocomplete="current-password" placeholder="••••••••"
                                         class="block w-full pl-14 pr-14 py-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 dark:text-white rounded-3xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-300 font-medium text-base placeholder:text-slate-300 dark:placeholder:text-slate-600">
 
-                                    <!-- Toggle Password Visibility -->
                                     <button type="button" id="toggle-password"
                                         class="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer focus:outline-none">
                                         <svg id="eye-icon" class="h-6 w-6" fill="none" stroke="currentColor"
@@ -268,7 +247,6 @@
                                 <x-input-error :messages="$errors->get('password')" class="mt-1 ml-1" />
                             </div>
 
-                            <!-- Remember Me -->
                             <div class="flex items-center px-1">
                                 <label for="remember_me" class="inline-flex items-center group cursor-pointer">
                                     <input id="remember_me" type="checkbox" name="remember" {{ Cookie::get('remember_email') ? 'checked' : '' }}
@@ -279,7 +257,6 @@
                                 </label>
                             </div>
 
-                            <!-- Submit -->
                             <div class="pt-6">
                                 <button type="submit"
                                     class="w-full py-5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-3xl font-black text-base lg:text-lg tracking-widest shadow-2xl shadow-emerald-700/20 dark:shadow-none hover:-translate-y-1 active:scale-[0.98] transition-all outline-none focus:ring-4 focus:ring-emerald-500/30">
@@ -328,7 +305,6 @@
             updateIcons();
         });
 
-        // Toggle Password Visibility Logic
         const togglePassword = document.getElementById('toggle-password');
         const passwordInput = document.getElementById('password');
         const eyeIcon = document.getElementById('eye-icon');
@@ -338,18 +314,15 @@
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
 
-            // Toggle Icons
             eyeIcon.classList.toggle('hidden');
             eyeOffIcon.classList.toggle('hidden');
         });
 
-        // Reverb Real-time Listener
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof Echo !== 'undefined') {
                 window.Echo.channel('hafalan-updates')
                     .listen('HafalanUpdated', (e) => {
                         console.log('Update Hafalan:', e.message);
-                        // Implementasi notifikasi Toast bisa dilakukan di sini
                     });
             }
         });

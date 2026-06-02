@@ -19,10 +19,5 @@
             </div>
         </div>
 
-        <div class="p-8 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none rounded-2xl">
-            <div class="max-w-xl">
-                @include('profile.partials.delete-user-form')
-            </div>
-        </div>
     </div>
 </x-tahfidz-layout>

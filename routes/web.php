@@ -17,11 +17,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-
-
-
 Route::get('/dashboard', function () {
-    /** @var \App\Models\User $user */
     $user = Auth::user();
     $role = $user?->role;
 
@@ -34,7 +30,6 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Admin Routes
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('students', StudentController::class);
@@ -46,7 +41,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/import', [DashboardController::class, 'import'])->name('import');
     });
 
-    // Guru Routes
     Route::middleware(['role:guru'])->prefix('guru')->name('guru.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('hafalan', HafalanController::class);
@@ -58,7 +52,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/messages/{pesan}', [App\Http\Controllers\Guru\DashboardController::class, 'destroyMessage'])->name('messages.destroy');
     });
 
-    // Parent Routes
     Route::middleware(['role:orang_tua'])->prefix('parent')->name('parent.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Parent\DashboardController::class, 'index'])->name('dashboard');
         Route::post('/messages/{student}', [App\Http\Controllers\Parent\DashboardController::class, 'sendMessage'])->name('messages.send');

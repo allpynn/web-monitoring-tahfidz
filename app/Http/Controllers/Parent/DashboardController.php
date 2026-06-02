@@ -24,7 +24,6 @@ class DashboardController extends Controller
 
     public function index()
     {
-        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         $students = $user->students()
@@ -40,7 +39,6 @@ class DashboardController extends Controller
             $student->quality_chart_data = $analytics['quality'];
             $student->latest_notes = $analytics['latest_notes'];
             
-            // Get messages for this student
             $student->messages = Pesan::with(['sender', 'receiver'])
                 ->where('student_id', $student->id)
                 ->orderBy('created_at', 'asc')
@@ -66,7 +64,6 @@ class DashboardController extends Controller
 
     public function clearChat(Student $student)
     {
-        // Security check: Ensure parent owns this student
         if (!$student->parents->contains(Auth::id())) {
             abort(403);
         }

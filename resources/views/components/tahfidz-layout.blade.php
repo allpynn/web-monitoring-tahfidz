@@ -8,12 +8,10 @@
         <title>{{ config('app.name', 'Sistem Monitoring Tahfidz') }}</title>
         <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        <!-- Scripts -->
         <script>
             if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -41,23 +39,19 @@
         
         <x-tahfidz.sidebar :role="$role" />
 
-        <!-- Sidebar Backdrop for Mobile -->
         <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-900/50 z-30 hidden sm:hidden backdrop-blur-sm transition-opacity"></div>
 
         <div class="p-4 sm:ml-64 pt-20">
             <div class="p-4 rounded-lg dark:border-gray-700">
-                <!-- Page Breadcrumbs/Header -->
                 <div class="mb-6">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $header ?? '' }}</h1>
                     <p class="text-gray-600 dark:text-gray-400">{{ $subtitle ?? '' }}</p>
                 </div>
 
-                <!-- Page Content -->
                 {{ $slot }}
             </div>
         </div>
         <script>
-            // Sidebar Toggle Logic
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
             const toggleButtons = document.querySelectorAll('[data-drawer-toggle="sidebar"]');
@@ -80,11 +74,9 @@
                 }
             });
 
-            // Theme Toggle Logic
             var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
             var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
 
-            // Change the icons inside the button based on previous settings
             if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 themeToggleLightIcon.classList.remove('hidden');
             } else {
@@ -94,11 +86,9 @@
             var themeToggleBtn = document.getElementById('theme-toggle');
 
             themeToggleBtn.addEventListener('click', function() {
-                // toggle icons inside button
                 themeToggleDarkIcon.classList.toggle('hidden');
                 themeToggleLightIcon.classList.toggle('hidden');
 
-                // if set via local storage previously
                 if (localStorage.getItem('color-theme')) {
                     if (localStorage.getItem('color-theme') === 'light') {
                         document.documentElement.classList.add('dark');
@@ -108,7 +98,6 @@
                         localStorage.setItem('color-theme', 'light');
                     }
 
-                // if NOT set via local storage previously
                 } else {
                     if (document.documentElement.classList.contains('dark')) {
                         document.documentElement.classList.remove('dark');

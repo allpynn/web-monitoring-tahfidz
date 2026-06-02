@@ -27,7 +27,6 @@
     @endif
 
     <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-sm">
-        <!-- ADVANCED FILTER BAR -->
         <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/10">
             <form action="{{ route('guru.students.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
                 <div class="flex-1">
@@ -151,7 +150,6 @@
                 const params = new URLSearchParams(formData);
                 const url = `${form.action}?${params.toString()}`;
 
-                // Update URL browser tanpa reload
                 window.history.pushState({}, '', url);
 
                 try {
@@ -172,7 +170,6 @@
                 }
             }
 
-            // Cegah submit form biasa agar tidak reload
             const filterForm = document.querySelector('form[action="{{ route('guru.students.index') }}"]');
             if (filterForm) {
                 filterForm.addEventListener('submit', (e) => {

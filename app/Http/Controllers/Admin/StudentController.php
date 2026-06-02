@@ -88,7 +88,6 @@ class StudentController extends Controller
         return DB::transaction(function () use ($request) {
             $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id']));
 
-            // Simpan Target Hafalan
             if ($request->has('target_juz')) {
                 foreach ($request->target_juz as $idx => $juz) {
                     if ($juz) {
@@ -102,7 +101,6 @@ class StudentController extends Controller
 
             $parentIds = [];
 
-            // 1. Proses orang tua yang dipilih dari data yang sudah ada
             if ($request->filled('existing_parent_ids')) {
                 foreach ($request->existing_parent_ids as $pid) {
                     if ($pid)
@@ -110,7 +108,6 @@ class StudentController extends Controller
                 }
             }
 
-            // 2. Validasi & Proses form orang tua baru
             foreach (($request->parent_names ?? []) as $index => $parentName) {
                 if (empty($parentName))
                     continue;
@@ -119,7 +116,6 @@ class StudentController extends Controller
                 $phone = '';
 
                 if ($phoneRaw) {
-                    // Normalisasi nomor HP ke format 08...
                     $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
                     if (str_starts_with($phone, '62')) {
                         $phone = '0' . substr($phone, 2);
@@ -127,7 +123,6 @@ class StudentController extends Controller
                         $phone = '0' . $phone;
                     }
 
-                    // Cek apakah nomor HP sudah ada di database
                     $existingParent = User::where('phone', $phone)->where('role', 'orang_tua')->first();
                     if ($existingParent) {
                         throw ValidationException::withMessages([
@@ -139,7 +134,6 @@ class StudentController extends Controller
                 $email = $request->parent_emails[$index] ?? null;
                 $gender = $request->parent_genders[$index] ?? null;
 
-                // Buat parent baru dengan nomor yang sudah dibersihkan
                 $parent = User::create([
                     'name' => $parentName,
                     'gender' => $gender,
@@ -190,7 +184,6 @@ class StudentController extends Controller
 
         $student->update($request->only(['name', 'gender', 'nis', 'guru_id']));
 
-        // Update Targets
         $student->targets()->delete();
         if ($request->has('target_juz')) {
             foreach ($request->target_juz as $idx => $juz) {
@@ -213,7 +206,6 @@ class StudentController extends Controller
             }
         }
 
-        // 2. Proses form orang tua baru (Jika ada input)
         foreach (($request->parent_names ?? []) as $index => $parentName) {
             if (empty($parentName))
                 continue;

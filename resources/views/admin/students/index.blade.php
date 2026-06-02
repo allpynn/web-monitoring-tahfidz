@@ -27,7 +27,6 @@
     @endif
 
     <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-sm">
-        <!-- ADVANCED FILTER BAR -->
         <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20">
             <form action="{{ route('admin.students.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4 items-end">
                 <div class="flex-1 w-full">
