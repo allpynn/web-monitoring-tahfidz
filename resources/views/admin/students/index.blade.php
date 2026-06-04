@@ -70,19 +70,19 @@
                 <table id="studentTable" class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">JK</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Orang Tua</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Guru Pendamping</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Target(JUZ)</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-emerald-600">Terverifikasi Selesai</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">JK</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Orang Tua</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Guru Pendamping</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Target(JUZ)</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-emerald-600">Terverifikasi Selesai</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @forelse($students as $student)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold">
                                             {{ substr($student->name, 0, 1) }}
@@ -93,7 +93,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     @if($student->gender === 'Laki-laki')
                                         <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" title="Laki-laki">L</span>
                                     @elseif($student->gender === 'Perempuan')
@@ -102,7 +102,7 @@
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     @if($student->parents->count())
                                         @foreach($student->parents as $p)
                                             <div class="text-sm text-gray-900 dark:text-white font-medium">{{ $p->name }}</div>
@@ -112,12 +112,12 @@
                                         <span class="text-xs text-gray-400 italic">Belum diassign</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full">
                                         {{ $student->guru->name ?? 'Belum Ditentukan' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="flex flex-wrap gap-1.5 max-w-[150px]">
                                         @php $completedJuz = $student->completed_juz; @endphp
                                         @forelse($student->targets as $t)
@@ -136,7 +136,7 @@
                                         @endforelse
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="flex flex-wrap gap-1">
                                         @forelse($student->completed_juz as $cj)
                                             <span class="px-2 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-md shadow-sm">{{ $cj }}</span>
@@ -145,8 +145,8 @@
                                         @endforelse
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
+                                <td class="px-6 py-2.5 text-right">
+                                    <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('admin.students.edit', $student) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all" title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         </a>

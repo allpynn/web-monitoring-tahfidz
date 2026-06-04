@@ -38,6 +38,12 @@ class RiwayatHafalanPolicy
         if ($user->role === 'admin') {
             return true;
         }
+
+        // Jika status Lancar, tidak boleh diedit kecuali oleh admin
+        if ($riwayatHafalan->status === 'Lancar') {
+            return false;
+        }
+
         if ($user->id === $riwayatHafalan->guru_id) {
             return true;
         }
@@ -55,6 +61,15 @@ class RiwayatHafalanPolicy
      */
     public function delete(User $user, RiwayatHafalan $riwayatHafalan)
     {
-        return $user->id === $riwayatHafalan->guru_id || $user->role === 'admin';
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        // Jika status Lancar, tidak boleh dihapus kecuali oleh admin
+        if ($riwayatHafalan->status === 'Lancar') {
+            return false;
+        }
+
+        return $user->id === $riwayatHafalan->guru_id;
     }
 }

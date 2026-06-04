@@ -30,44 +30,63 @@
                         <span class="text-xs font-bold text-gray-400 uppercase">Orang Tua</span>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $student->parents->pluck('name')->join(', ') ?: '-' }}</p>
                     </div>
-                    {{-- Progres Juz Aktif --}}
+                    {{-- Overview 30 Juz --}}
+                    <div class="mb-5">
+                        <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-3 block">Monitoring 30 Juz</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            @php
+                                $completedList = $student->completed_juz;
+                            @endphp
+                            @for($j = 1; $j <= 30; $j++)
+                                @php
+                                    $isCompleted = in_array($j, $completedList);
+                                    $prog = $isCompleted ? 100 : $student->getJuzProgress($j);
+                                    
+                                    $bgClass = $isCompleted 
+                                        ? 'bg-emerald-500 text-white' 
+                                        : ($prog > 0 ? 'bg-amber-400 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400/60');
+                                    
+                                    $statusLabel = $isCompleted ? 'Mumtaz' : ($prog > 0 ? $prog . '%' : 'Belum');
+                                @endphp
+                                <div class="relative group">
+                                    <div class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black {{ $bgClass }} transition-all duration-200 hover:scale-110 cursor-default shadow-sm border border-transparent {{ $isCompleted ? 'shadow-emerald-100/50' : '' }}">
+                                        {{ $j }}
+                                    </div>
+                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[8px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
+                                        Juz {{ $j }}: {{ $statusLabel }}
+                                    </div>
+                                </div>
+                            @endfor
+                        </div>
+
+                        <div class="flex items-center justify-between mt-4 px-3 py-2 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-800">
+                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tight">Capaian: <span class="text-emerald-600 font-extrabold">{{ count($completedList) }}/30 Juz</span></span>
+                            <div class="flex gap-2.5">
+                                <div class="flex items-center gap-1 text-[8px] font-bold text-gray-400 uppercase">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Selesai
+                                </div>
+                                <div class="flex items-center gap-1 text-[8px] font-bold text-gray-400 uppercase">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Progres
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Detail Progres Aktif --}}
                     @php
                         $currentJuz = $student->current_juz ?: 30;
                         $juzProgress = $student->getJuzProgress($currentJuz);
                     @endphp
-                    <div class="mb-5 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progres Juz Aktif (Juz {{ $currentJuz }})</span>
-                        <div class="flex items-center justify-between mt-1">
-                            <span class="text-xs font-black {{ $juzProgress == 100 ? 'text-emerald-500' : 'text-blue-500' }}">
-                                {{ $juzProgress == 100 ? '🎉 Tuntas' : $juzProgress . '%' }}
+                    <div class="p-3 bg-emerald-50/30 dark:bg-emerald-900/10 rounded-xl border border-emerald-100/50 dark:border-emerald-900/20">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase">Fokus: Juz {{ $currentJuz }}</span>
+                            <span class="text-[9px] font-black {{ $juzProgress == 100 ? 'text-emerald-600' : 'text-amber-600' }}">
+                                {{ $juzProgress == 100 ? 'Mumtaz' : $juzProgress . '%' }}
                             </span>
                         </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1.5">
-                            <div class="h-2 rounded-full transition-all duration-1000 {{ $juzProgress == 100 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-blue-500' }}" 
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full transition-all duration-1000 {{ $juzProgress == 100 ? 'bg-emerald-500' : 'bg-amber-400' }}" 
                                  style="width: {{ $juzProgress }}%"></div>
-                        </div>
-                    </div>
-
-                    {{-- Progres Target Total --}}
-                    <div>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Progres Target</span>
-                        <div class="flex items-center justify-between gap-2 mt-1">
-                            <p class="text-xs font-bold text-gray-900 dark:text-white">
-                                Target: {{ $student->target_juz }} Juz
-                            </p>
-                            @php
-                                $progress = $student->target_progress;
-                            @endphp
-                            <span class="text-[10px] font-black text-gray-500">
-                                @php
-                                    $targetedJuzList = $student->targets->pluck('target_juz')->unique()->filter()->toArray();
-                                    $achievedCount = count(array_intersect($student->completed_juz, $targetedJuzList));
-                                @endphp
-                                {{ $achievedCount }} / {{ $student->target_juz }} Juz
-                            </span>
-                        </div>
-                        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1 mt-1">
-                            <div class="h-1 rounded-full bg-gray-400" style="width: {{ $progress }}%"></div>
                         </div>
                     </div>
 
@@ -189,16 +208,21 @@
                                     </td>
                                     <td class="px-4 py-4 text-right">
                                         <div class="flex justify-end items-center gap-3">
-                                            <a href="{{ route('guru.hafalan.edit', $m) }}" class="flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-90" title="Ubah">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                            </a>
-                                            <form action="{{ route('guru.hafalan.destroy', $m) }}" method="POST" class="inline" onsubmit="return confirm('Hapus rekaman ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="flex items-center justify-center w-9 h-9 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-90" title="Hapus">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                </button>
-                                            </form>
+                                            @can('update', $m)
+                                                <a href="{{ route('guru.hafalan.edit', $m) }}" class="flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-90" title="Ubah">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                </a>
+                                            @endcan
+
+                                            @can('delete', $m)
+                                                <form action="{{ route('guru.hafalan.destroy', $m) }}" method="POST" class="inline" onsubmit="return confirm('Hapus rekaman ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="flex items-center justify-center w-9 h-9 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-90" title="Hapus">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
