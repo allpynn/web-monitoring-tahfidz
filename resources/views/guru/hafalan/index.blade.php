@@ -67,23 +67,23 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Santri</th>
-                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Materi Hafalan</th>
-                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
-                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Kehadiran</th>
-                            <th class="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                            <th class="px-6 py-3 text-xs font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-6 py-3 text-xs font-black text-gray-500 uppercase tracking-wider">Santri</th>
+                            <th class="px-6 py-3 text-xs font-black text-gray-500 uppercase tracking-wider">Materi Hafalan</th>
+                            <th class="px-6 py-3 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
+                            <th class="px-6 py-3 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Kehadiran</th>
+                            <th class="px-6 py-3 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
                         @forelse($hafalan as $item)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
-                                <td class="px-6 py-4 text-gray-500">{{ $item->created_at->format('d/m/Y') }}</td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5 text-gray-500">{{ $item->created_at->format('d/m/Y') }}</td>
+                                <td class="px-6 py-2.5">
                                     <div class="font-bold text-gray-900 dark:text-white">{{ $item->student->name }}</div>
                                     <div class="text-[11px] text-gray-400">NIS: {{ $item->student->nis }}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     @if($item->is_present)
                                         <span class="font-bold text-emerald-600">Juz {{ $item->juz }}</span> •
                                         <span class="text-gray-600 dark:text-gray-300">{{ $item->surah }} ({{ $item->ayat }})</span>
@@ -91,7 +91,7 @@
                                         <span class="text-gray-400 italic">Tidak ada setoran</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-2.5 text-center">
                                     @if($item->is_present)
                                         <span class="px-2 py-1 text-[10px] font-black uppercase rounded-lg border {{ $item->status === 'Lancar' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-orange-50 text-orange-600 border-orange-100' }}">
                                             {{ $item->status }}
@@ -100,14 +100,14 @@
                                         <span class="text-gray-300">-</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-2.5 text-center">
                                     @if($item->is_present)
                                         <span class="px-2 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-lg uppercase shadow-sm">Hadir</span>
                                     @else
                                         <span class="px-2 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-lg uppercase border border-gray-200">Absen</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-2.5 text-right">
                                     <div class="flex justify-end gap-2">
                                         @can('update', $item)
                                             <a href="{{ route('guru.hafalan.edit', $item) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all">

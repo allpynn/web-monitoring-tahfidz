@@ -154,10 +154,10 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-                                <th class="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider">Materi Hafalan</th>
-                                <th class="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
-                                <th class="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                                <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider">Materi Hafalan</th>
+                                <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
+                                <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700" id="logTableBody">
@@ -165,10 +165,10 @@
                                 <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all log-row" 
                                     data-status="{{ $m->is_present ? $m->status : 'Absen' }}" 
                                     data-date="{{ $m->created_at->format('Y-m-d') }}">
-                                    <td class="px-4 py-4 text-xs font-bold text-gray-500">
+                                    <td class="px-4 py-2.5 text-xs font-bold text-gray-500">
                                         {{ $m->created_at->format('d/m/y') }}
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-4 py-2.5">
                                         @if($m->is_present)
                                             <div class="text-sm font-bold text-gray-800 dark:text-white leading-tight flex items-center gap-1.5">
                                                 <span class="text-emerald-600 dark:text-emerald-400">Juz {{ $m->juz }}</span>
@@ -191,7 +191,7 @@
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-tighter text-center">Absensi / Tanpa Setoran</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-4 text-center">
+                                    <td class="px-4 py-2.5 text-center">
                                         @if($m->is_present)
                                             @php
                                                 $statusClasses = [
@@ -206,7 +206,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-4 text-right">
+                                    <td class="px-4 py-2.5 text-right">
                                         <div class="flex justify-end items-center gap-3">
                                             @can('update', $m)
                                                 <a href="{{ route('guru.hafalan.edit', $m) }}" class="flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-90" title="Ubah">

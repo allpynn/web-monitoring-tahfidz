@@ -65,16 +65,16 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                        <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Nama & Identitas</th>
-                        <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Kontak</th>
-                        <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Role</th>
-                        <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Aksi</th>
+                        <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Nama & Identitas</th>
+                        <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Kontak</th>
+                        <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Role</th>
+                        <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     @forelse($users as $user)
                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-2.5">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl {{ $user->role === 'guru' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600' }} flex items-center justify-center font-bold text-lg">
                                         {{ substr($user->name, 0, 1) }}
@@ -85,19 +85,19 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-2.5">
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $user->email }}</div>
                                 <div class="text-xs text-gray-500 font-bold italic">{{ $user->phone }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-2.5">
                                 @if($user->role === 'guru')
                                     <span class="inline-flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[10px] font-black rounded-lg uppercase tracking-tight">Guru</span>
                                 @else
                                     <span class="inline-flex items-center px-3 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-black rounded-lg uppercase tracking-tight">Orang Tua</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex items-center gap-2">
+                            <td class="px-6 py-2.5 text-right">
+                                <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('admin.users.edit', $user) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all" title="Edit">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     </a>
