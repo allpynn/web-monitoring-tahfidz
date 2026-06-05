@@ -78,10 +78,10 @@
                                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                         @forelse($student->memorizations->take(10) as $m)
                                             <tr>
-                                                <td class="py-4 text-[10px] text-gray-500 font-black bg-gray-50/30 dark:bg-gray-900/10 px-3 rounded-l-xl uppercase">
+                                                <td class="py-2 text-[10px] text-gray-500 font-black bg-gray-50/30 dark:bg-gray-900/10 px-3 rounded-l-xl uppercase">
                                                     {{ $m->tanggal ? \Carbon\Carbon::parse($m->tanggal)->format('d M') : $m->created_at->format('d M') }}
                                                 </td>
-                                                <td class="py-4 px-4 font-bold text-gray-900 dark:text-white text-sm">
+                                                <td class="py-2 px-4 font-bold text-gray-900 dark:text-white text-sm">
                                                     @if($m->is_present)
                                                         <div class="flex flex-col lg:flex-row lg:items-center gap-1">
                                                             <span class="text-emerald-700 dark:text-emerald-400">Jz.{{ $m->juz }} {{ $m->surah }}</span>
@@ -91,14 +91,14 @@
                                                         <span class="text-red-500 uppercase text-[10px] font-black italic">Izin / Sakit</span>
                                                     @endif
                                                 </td>
-                                                <td class="py-4 px-4">
+                                                <td class="py-2 px-4">
                                                     @if($m->is_present)
                                                         <span class="px-2 py-0.5 {{ $m->status === 'Lancar' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700' }} text-[9px] font-black rounded-lg uppercase tracking-tighter">
                                                             {{ $m->status }}
                                                         </span>
                                                     @endif
                                                 </td>
-                                                <td class="py-4 text-right pr-3 rounded-r-xl">
+                                                <td class="py-2 text-right pr-3 rounded-r-xl">
                                                     @if($m->is_present)
                                                         <span class="text-[10px] text-gray-400 italic">Disimak: {{ $m->guru->name ?? 'Guru' }}</span>
                                                     @endif
@@ -215,6 +215,12 @@
                 <p class="text-gray-500">Anda tidak terhubung dengan data santri manapun. Silakan hubungi Admin.</p>
             </div>
         @endforelse
+
+        @if($students->hasPages())
+            <div class="mt-8 flex justify-center">
+                {{ $students->links('vendor.pagination.custom') }}
+            </div>
+        @endif
     </div>
 
     @push('scripts')

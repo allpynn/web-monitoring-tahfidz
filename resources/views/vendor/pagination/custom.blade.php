@@ -40,18 +40,7 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-4">
-            {{-- Per Page Selector --}}
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-gray-400 uppercase">Baris:</span>
-                <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.set('page', 1); window.location.href = url.toString();" 
-                        class="text-xs border-gray-200 dark:border-gray-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-900 dark:text-gray-300 py-1 pl-2 pr-8 font-bold cursor-pointer">
-                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                    <option value="25" {{ request('per_page') == 25 || !request('per_page') ? 'selected' : '' }}>25</option>
-                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                </select>
-            </div>
+        <div class="flex items-center gap-8">
 
             <span class="relative z-0 inline-flex shadow-sm rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                 {{-- Previous Page Link --}}

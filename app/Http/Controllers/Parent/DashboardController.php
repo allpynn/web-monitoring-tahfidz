@@ -28,7 +28,7 @@ class DashboardController extends Controller
 
         $students = $user->students()
             ->with(['memorizations' => fn ($q) => $q->latest()])
-            ->get();
+            ->paginate(2);
 
         foreach ($students as $student) {
             $analytics = $this->memorizationService->getAnalytics($student);

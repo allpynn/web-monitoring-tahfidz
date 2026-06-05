@@ -8,13 +8,6 @@
 
     <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Semua Santri</h2>
-        <a href="{{ route('guru.students.create') }}"
-            class="px-5 py-2.5 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center gap-2 text-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Tambah Santri
-        </a>
     </div>
 
     @if(session('success'))
@@ -67,16 +60,16 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                            <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Info Santri</th>
-                            <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Target</th>
-                            <th class="px-6 py-5 text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">Terverifikasi</th>
-                            <th class="px-6 py-5 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none text-right">Aksi</th>
+                            <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Info Santri</th>
+                            <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">Target</th>
+                            <th class="px-6 py-3 text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">Terverifikasi</th>
+                            <th class="px-6 py-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @forelse($students as $student)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
-                                <td class="px-6 py-5">
+                                <td class="px-6 py-2.5">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shadow-sm">
                                             {{ substr($student->name, 0, 1) }}
@@ -87,7 +80,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-6 py-2.5">
                                     <div class="flex flex-wrap gap-1.5 max-w-[200px]">
                                         @php $completedJuz = $student->completed_juz; @endphp
                                         @forelse($student->targets as $t)
@@ -100,7 +93,7 @@
                                         @endforelse
                                     </div>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-6 py-2.5">
                                     <div class="flex flex-wrap gap-1">
                                         @forelse($student->completed_juz as $cj)
                                             <span class="px-2 py-0.5 bg-emerald-600 text-white text-[9px] font-black rounded uppercase">Juz {{ $cj }}</span>
@@ -109,7 +102,7 @@
                                         @endforelse
                                     </div>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-6 py-2.5 text-right">
                                     <div class="flex justify-end gap-2">
                                         <a href="{{ route('guru.students.show', $student) }}" class="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all" title="Detail">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>

@@ -48,7 +48,10 @@
 
     <div class="document-title">
         <h2>REKAPITULASI CAPAIAN TAHFIDZ</h2>
-        <p class="bold">Semester {{ now()->month > 6 ? 'Ganjil' : 'Genap' }} TA {{ now()->year }}/{{ now()->year + 1 }}</p>
+        <p class="bold">
+            Semester {{ $semester ? ucfirst($semester) : (now()->month > 6 ? 'Ganjil' : 'Genap') }} 
+            TA {{ $academic_year ?? (now()->year . '/' . (now()->year + 1)) }}
+        </p>
     </div>
 
     <table class="info-table">

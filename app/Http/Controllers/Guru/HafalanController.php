@@ -167,11 +167,18 @@ class HafalanController extends Controller
         return $pdf->download('Raport_Tahfidz_' . $student->nis . '.pdf');
     }
 
-    public function exportSemesterPdf(Student $student)
+    public function exportSemesterPdf(Request $request, Student $student)
     {
         $this->authorize('view', $student);
         $student->load(['memorizations', 'guru', 'targets']);
-        $pdf = $this->memorizationService->generateSemesterRecap($student);
-        return $pdf->download('Rekap_Semester_' . $student->nis . '.pdf');
+        
+        $semester = $request->input('semester');
+        $year = $request->input('year');
+        
+        $pdf = $this->memorizationService->generateSemesterRecap($student, $semester, $year);
+        
+        $filename = 'Rekap_Semester_' . ($semester ? ucfirst($semester) . '_' : '') . ($year ? str_replace('/', '-', $year) . '_' : '') . $student->nis . '.pdf';
+        
+        return $pdf->download($filename);
     }
 }

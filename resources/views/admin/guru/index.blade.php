@@ -60,18 +60,18 @@
                 <table id="guruTable" class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Identitas Guru</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">L/P</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">NIP</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email Akses</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nomor HP / Telepon</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Identitas Guru</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">L/P</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">NIP</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email Akses</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nomor HP / Telepon</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @forelse($gurus as $guru)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold">
                                             {{ substr($guru->name, 0, 1) }}
@@ -81,7 +81,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     @if($guru->gender === 'Laki-laki')
                                         <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" title="Laki-laki">L</span>
                                     @elseif($guru->gender === 'Perempuan')
@@ -90,16 +90,16 @@
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $guru->nip ?? '-' }}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $guru->email }}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $guru->phone ?? '-' }}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-2.5">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('admin.guru.edit', $guru) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all" title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>

@@ -159,16 +159,6 @@
                             HR. Bukhari</span>
                     </p>
                 </div>
-
-                <div
-                    class="mt-12 lg:mt-16 flex flex-wrap justify-center lg:justify-end gap-3 lg:gap-4 animate-in fade-in duration-1000 delay-300">
-                    <div
-                        class="px-6 py-3 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-600 dark:text-slate-400 rounded-2xl font-bold text-xs lg:text-sm border border-slate-200/50 dark:border-slate-700/50">
-                        Premium Monitoring</div>
-                    <div
-                        class="px-6 py-3 bg-emerald-50/80 dark:bg-emerald-900/30 backdrop-blur-sm text-emerald-700 dark:text-emerald-400 rounded-2xl font-bold text-xs lg:text-sm border border-emerald-100/50 dark:border-emerald-800/50">
-                        Secure Access</div>
-                </div>
             </div>
         </div>
 
@@ -264,13 +254,6 @@
                                 </button>
                             </div>
                         </form>
-
-                        <div class="mt-16 text-center opacity-40">
-                            <p
-                                class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.5em]">
-                                Education • Discipline • Integrity
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
