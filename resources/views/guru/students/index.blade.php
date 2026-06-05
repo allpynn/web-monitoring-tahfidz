@@ -8,13 +8,6 @@
 
     <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Semua Santri</h2>
-        <a href="{{ route('guru.students.create') }}"
-            class="px-5 py-2.5 bg-emerald-700 text-white rounded-2xl font-bold hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center gap-2 text-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Tambah Santri
-        </a>
     </div>
 
     @if(session('success'))

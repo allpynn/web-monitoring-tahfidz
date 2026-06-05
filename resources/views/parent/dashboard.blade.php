@@ -215,6 +215,12 @@
                 <p class="text-gray-500">Anda tidak terhubung dengan data santri manapun. Silakan hubungi Admin.</p>
             </div>
         @endforelse
+
+        @if($students->hasPages())
+            <div class="mt-8 flex justify-center">
+                {{ $students->links('vendor.pagination.custom') }}
+            </div>
+        @endif
     </div>
 
     @push('scripts')
