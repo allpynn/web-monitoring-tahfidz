@@ -5,6 +5,8 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      DB_DATABASE: tahfidz_db
     volumes:
       - .:/var/www
     ports:
@@ -17,6 +19,8 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      DB_DATABASE: tahfidz_db
     volumes:
       - .:/var/www
     ports:
