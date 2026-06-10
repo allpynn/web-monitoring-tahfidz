@@ -38,10 +38,10 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <x-tahfidz.card title="Total Setoran" :value="$stats['total_hafalan']"
-            icon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" /></svg>' />
-        <x-tahfidz.card title="Total Santri" :value="$stats['total_santri']"
+        <x-tahfidz.card title="Total Santri" :value="$stats['total_overall_santri']"
             icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" /><path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" /></svg>' />
+        <x-tahfidz.card title="Total Santri Diampu" :value="$stats['total_santri_diampu']"
+            icon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>' />
         <x-tahfidz.card title="Setoran Hari Ini" :value="$stats['today_entries']"
             icon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" /></svg>' />
     </div>
@@ -50,26 +50,27 @@
         <h3 class="font-bold text-gray-800 dark:text-white">Statistik Hafalan</h3>
         <form action="{{ route('guru.dashboard') }}" method="GET"
             class="flex items-center gap-4 bg-white/80 dark:bg-gray-800/80 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
-            <select name="month"
+            <select name="semester"
                 class="rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-xs font-bold"
                 onchange="this.form.submit()">
-                @foreach(range(1, 12) as $m)
-                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                        {{ \Carbon\Carbon::create($year, $m, 1)->translatedFormat('F') }}
-                    </option>
-                @endforeach
+                <option value="Ganjil" {{ $semester == 'Ganjil' ? 'selected' : '' }}>Semester Ganjil</option>
+                <option value="Genap"  {{ $semester == 'Genap'  ? 'selected' : '' }}>Semester Genap</option>
             </select>
-            <select name="year" class="rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-xs font-bold"
+            <select name="academic_year" class="rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-xs font-bold"
                 onchange="this.form.submit()">
-                @foreach(range(now()->year - 3, now()->year + 1) as $y)
-                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @php
+                    $startYear = now()->year - 3;
+                @endphp
+                @foreach(range($startYear, now()->year + 1) as $y)
+                    @php $ay = $y . '/' . ($y + 1); @endphp
+                    <option value="{{ $ay }}" {{ $academicYear == $ay ? 'selected' : '' }}>TA {{ $ay }}</option>
                 @endforeach
             </select>
         </form>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <x-tahfidz.card title="Grafik Bulanan">
+        <x-tahfidz.card title="Grafik Capaian Santri">
             <div class="relative h-48 w-full">
                 <canvas id="weeklyChart" data-labels='@json($weeklyLabels)' data-values='@json($weeklyData)'>
                 </canvas>
@@ -308,7 +309,7 @@
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: 'Jumlah Setoran',
+                                label: 'Jumlah Santri',
                                 data: values,
                                 backgroundColor: 'rgba(16, 185, 129, 0.8)',
                                 hoverBackgroundColor: 'rgba(5, 150, 105, 1)',
@@ -321,7 +322,7 @@
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: { display: false },
-                                tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y} setoran` } }
+                                tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y} santri` } }
                             },
                             scales: {
                                 x: {

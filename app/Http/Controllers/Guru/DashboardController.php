@@ -14,15 +14,44 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $month = (int) request('month', now()->month);
-        $year  = (int) request('year',  now()->year);
+        $currentMonth = now()->month;
+        $currentYear  = now()->year;
+        
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+        $defaultSemester = ($currentMonth >= 7) ? 'Ganjil' : 'Genap';
 
+        $academicYear = $request->input('academic_year', $defaultAcademicYear);
+        $semester     = $request->input('semester', $defaultSemester);
+
+        // Parse academic year (split 2025/2026)
+        $years = explode('/', $academicYear);
+        $baseYear = (int) $years[0];
+
+        if ($semester === 'Ganjil') {
+            $startDate = Carbon::create($baseYear, 7, 1)->startOfDay();
+            $endDate   = Carbon::create($baseYear, 12, 31)->endOfDay();
+            $months    = [7, 8, 9, 10, 11, 12];
+        } else {
+            $startDate = Carbon::create($baseYear + 1, 1, 1)->startOfDay();
+            $endDate   = Carbon::create($baseYear + 1, 6, 30)->endOfDay();
+            $months    = [1, 2, 3, 4, 5, 6];
+        }
+
+        $isCurrentPeriod = now()->between($startDate, $endDate);
         $guruId = Auth::id();
 
         $stats = [
-            'total_hafalan'  => RiwayatHafalan::where('guru_id', $guruId)->where('is_present', true)->count(),
-            'total_santri'   => Student::where('guru_id', $guruId)->count(),
-            'today_entries'  => RiwayatHafalan::where('guru_id', $guruId)->whereDate('tanggal', today())->count(),
+            'total_overall_santri' => Student::where('guru_id', $guruId)
+                ->orWhereHas('memorizations', fn($q) => $q->where('guru_id', $guruId))
+                ->count('id'),
+            'total_santri_diampu'  => $isCurrentPeriod
+                ? Student::where('guru_id', $guruId)->count()
+                : RiwayatHafalan::where('guru_id', $guruId)
+                    ->whereBetween('tanggal', [$startDate, $endDate])
+                    ->distinct('student_id')
+                    ->count('student_id'),
+            'today_entries'        => RiwayatHafalan::where('guru_id', $guruId)->whereDate('tanggal', today())->count(),
         ];
 
         $recent_activities = RiwayatHafalan::with('student')
@@ -57,9 +86,6 @@ class DashboardController extends Controller
             ])
             ->get();
 
-        $allSurahs = \App\Models\Surah::all();
-        $surahsMap = $allSurahs->keyBy('nama_latin');
-
         $early_warnings = collect();
         $top_targets    = collect();
 
@@ -67,45 +93,45 @@ class DashboardController extends Controller
             $latestMem = $student->memorizations->sortByDesc('tanggal')->first();
             if (
                 !$latestMem || 
-                \Carbon\Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3 || 
+                Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3 || 
                 $latestMem->status === 'Perlu Perbaikan'
             ) {
                 $student->warning_reason = !$latestMem ? 'Belum Ada Setoran' : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor (≥ 3 Hari)');
-                $student->last_mem_date = $latestMem ? \Carbon\Carbon::parse($latestMem->tanggal) : null;
+                $student->last_mem_date = $latestMem ? Carbon::parse($latestMem->tanggal) : null;
                 $early_warnings->push($student);
             }
 
             $activeTarget = $student->activeTarget();
-            $finishedJuz  = $student->completed_juz;
-            
-            $student->finished_juz_count = count($finishedJuz);
-            $student->target_juz_count   = $activeTarget ? $activeTarget->target_juz : 30;
-            $student->progress_percent   = $student->target_progress;
-            
+            $student->progress_percent = $student->target_progress;
             $top_targets->push($student);
         }
 
         $early_warnings = $early_warnings->take(5);
         $top_targets    = $top_targets->sortByDesc('progress_percent')->take(5);
 
-        $endDay       = Carbon::createFromDate($year, $month, 1)->daysInMonth;
-        $weeklyLabels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
-        $ranges       = [[1, 7], [8, 14], [15, 21], [22, $endDay]];
+        // Achievement Chart: Overall student progress distribution (Not filtered)
+        $achievementStats = Student::where('guru_id', $guruId)
+            ->get()
+            ->groupBy(function($s) {
+                return count($s->completed_juz);
+            })
+            ->map->count();
+
+        $weeklyLabels = [];
         $weeklyData   = [];
 
-        foreach ($ranges as [$from, $to]) {
-            $weeklyData[] = RiwayatHafalan::where('guru_id', $guruId)
-                ->whereBetween('tanggal', [
-                    Carbon::createFromDate($year, $month, $from)->format('Y-m-d'),
-                    Carbon::createFromDate($year, $month, $to)->format('Y-m-d'),
-                ])
-                ->count();
+        // Determine max juz achieved to set range
+        $maxAchieved = $achievementStats->keys()->max() ?: 5;
+        
+        for ($i = 0; $i <= $maxAchieved; $i++) {
+            $weeklyLabels[] = $i . " Juz";
+            $weeklyData[]   = $achievementStats->get($i, 0);
         }
 
         return view('guru.dashboard', compact(
             'stats', 'recent_activities', 'parent_messages',
             'early_warnings', 'top_targets',
-            'weeklyLabels', 'weeklyData', 'month', 'year'
+            'weeklyLabels', 'weeklyData', 'academicYear', 'semester'
         ));
     }
 
