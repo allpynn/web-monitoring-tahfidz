@@ -8,26 +8,31 @@
     </x-slot>
 
     <x-slot name="header_actions">
-        <form action="{{ route('guru.dashboard') }}" method="GET"
-            class="flex items-center gap-4 bg-white/80 dark:bg-gray-800/80 p-2 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <select name="semester"
-                class="rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-xs font-bold focus:ring-emerald-500 focus:border-emerald-500"
-                onchange="this.form.submit()">
-                <option value="Ganjil" {{ $semester == 'Ganjil' ? 'selected' : '' }}>Semester Ganjil</option>
-                <option value="Genap" {{ $semester == 'Genap' ? 'selected' : '' }}>Semester Genap</option>
-            </select>
-            <select name="academic_year"
-                class="rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-xs font-bold focus:ring-emerald-500 focus:border-emerald-500"
-                onchange="this.form.submit()">
-                @php
-                    $startYear = now()->year - 3;
-                @endphp
-                @foreach(range($startYear, now()->year + 1) as $y)
-                    @php $ay = $y . '/' . ($y + 1); @endphp
-                    <option value="{{ $ay }}" {{ $academicYear == $ay ? 'selected' : '' }}>TA {{ $ay }}
-                    </option>
-                @endforeach
-            </select>
+        <form action="{{ route('guru.dashboard') }}" method="GET" class="flex items-center gap-2">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm px-3 py-1.5 flex items-center gap-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest hidden sm:inline">Semester</span>
+                <select name="semester"
+                    class="border-none bg-transparent text-xs font-bold focus:ring-0 p-0 pr-8 cursor-pointer"
+                    onchange="this.form.submit()">
+                    <option value="Ganjil" {{ $semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                    <option value="Genap" {{ $semester == 'Genap' ? 'selected' : '' }}>Genap</option>
+                </select>
+            </div>
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm px-3 py-1.5 flex items-center gap-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest hidden sm:inline">Tahun</span>
+                <select name="academic_year"
+                    class="border-none bg-transparent text-xs font-bold focus:ring-0 p-0 pr-8 cursor-pointer"
+                    onchange="this.form.submit()">
+                    @php
+                        $startYear = now()->year - 3;
+                    @endphp
+                    @foreach(range($startYear, now()->year + 1) as $y)
+                        @php $ay = $y . '/' . ($y + 1); @endphp
+                        <option value="{{ $ay }}" {{ $academicYear == $ay ? 'selected' : '' }}>{{ $ay }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </form>
     </x-slot>
 
