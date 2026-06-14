@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
+use App\Models\StudentAssignment;
 use App\Models\Pesan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -15,14 +16,14 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $currentMonth = now()->month;
-        $currentYear  = now()->year;
-        
+        $currentYear = now()->year;
+
         $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
         $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
         $defaultSemester = ($currentMonth >= 7) ? 'Ganjil' : 'Genap';
 
         $academicYear = $request->input('academic_year', $defaultAcademicYear);
-        $semester     = $request->input('semester', $defaultSemester);
+        $semester = $request->input('semester', $defaultSemester);
 
         // Parse academic year (split 2025/2026)
         $years = explode('/', $academicYear);
@@ -30,28 +31,18 @@ class DashboardController extends Controller
 
         if ($semester === 'Ganjil') {
             $startDate = Carbon::create($baseYear, 7, 1)->startOfDay();
-            $endDate   = Carbon::create($baseYear, 12, 31)->endOfDay();
-            $months    = [7, 8, 9, 10, 11, 12];
+            $endDate = Carbon::create($baseYear, 12, 31)->endOfDay();
+            $months = [7, 8, 9, 10, 11, 12];
         } else {
             $startDate = Carbon::create($baseYear + 1, 1, 1)->startOfDay();
-            $endDate   = Carbon::create($baseYear + 1, 6, 30)->endOfDay();
-            $months    = [1, 2, 3, 4, 5, 6];
+            $endDate = Carbon::create($baseYear + 1, 6, 30)->endOfDay();
+            $months = [1, 2, 3, 4, 5, 6];
         }
 
-        $isCurrentPeriod = now()->between($startDate, $endDate);
         $guruId = Auth::id();
-
         $stats = [
-            'total_overall_santri' => Student::where('guru_id', $guruId)
-                ->orWhereHas('memorizations', fn($q) => $q->where('guru_id', $guruId))
-                ->count('id'),
-            'total_santri_diampu'  => $isCurrentPeriod
-                ? Student::where('guru_id', $guruId)->count()
-                : RiwayatHafalan::where('guru_id', $guruId)
-                    ->whereBetween('tanggal', [$startDate, $endDate])
-                    ->distinct('student_id')
-                    ->count('student_id'),
-            'today_entries'        => RiwayatHafalan::where('guru_id', $guruId)->whereDate('tanggal', today())->count(),
+            'total_overall_santri' => StudentAssignment::where('guru_id', $guruId)->distinct('student_id')->count('student_id'),
+            'total_santri_diampu'  => StudentAssignment::where('guru_id', $guruId)->where('academic_year', $academicYear)->count(),
         ];
 
         $recent_activities = RiwayatHafalan::with('student')
@@ -70,10 +61,16 @@ class DashboardController extends Controller
             ->take(5);
 
         foreach ($parent_messages as $thread) {
+            // Find if there are unread messages for the teacher in this thread
+            $thread->has_unread = Pesan::where('student_id', $thread->student_id)
+                ->where('receiver_id', $guruId)
+                ->where('is_read', false)
+                ->exists();
+
             $thread->conversation = Pesan::where('student_id', $thread->student_id)
-                ->where(function($q) use ($guruId, $thread) {
+                ->where(function ($q) use ($guruId, $thread) {
                     $q->where('sender_id', $guruId)->where('receiver_id', $thread->sender_id)
-                      ->orWhere('sender_id', $thread->sender_id)->where('receiver_id', $guruId);
+                        ->orWhere('sender_id', $thread->sender_id)->where('receiver_id', $guruId);
                 })
                 ->orderBy('created_at', 'asc')
                 ->get();
@@ -82,18 +79,18 @@ class DashboardController extends Controller
         $students = Student::where('guru_id', $guruId)
             ->with([
                 'targets',
-                'memorizations' => fn($q) => $q->select('id','student_id','surah','ayat','juz','status','is_present','tanggal')
+                'memorizations' => fn($q) => $q->select('id', 'student_id', 'surah', 'ayat', 'juz', 'status', 'is_present', 'tanggal')
             ])
             ->get();
 
         $early_warnings = collect();
-        $top_targets    = collect();
+        $top_targets = collect();
 
         foreach ($students as $student) {
             $latestMem = $student->memorizations->sortByDesc('tanggal')->first();
             if (
-                !$latestMem || 
-                Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3 || 
+                !$latestMem ||
+                Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3 ||
                 $latestMem->status === 'Perlu Perbaikan'
             ) {
                 $student->warning_reason = !$latestMem ? 'Belum Ada Setoran' : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor (≥ 3 Hari)');
@@ -107,31 +104,16 @@ class DashboardController extends Controller
         }
 
         $early_warnings = $early_warnings->take(5);
-        $top_targets    = $top_targets->sortByDesc('progress_percent')->take(5);
-
-        // Achievement Chart: Overall student progress distribution (Not filtered)
-        $achievementStats = Student::where('guru_id', $guruId)
-            ->get()
-            ->groupBy(function($s) {
-                return count($s->completed_juz);
-            })
-            ->map->count();
-
-        $weeklyLabels = [];
-        $weeklyData   = [];
-
-        // Determine max juz achieved to set range
-        $maxAchieved = $achievementStats->keys()->max() ?: 5;
-        
-        for ($i = 0; $i <= $maxAchieved; $i++) {
-            $weeklyLabels[] = $i . " Juz";
-            $weeklyData[]   = $achievementStats->get($i, 0);
-        }
+        $top_targets = $top_targets->sortByDesc('progress_percent')->take(5);
 
         return view('guru.dashboard', compact(
-            'stats', 'recent_activities', 'parent_messages',
-            'early_warnings', 'top_targets',
-            'weeklyLabels', 'weeklyData', 'academicYear', 'semester'
+            'stats',
+            'recent_activities',
+            'parent_messages',
+            'early_warnings',
+            'top_targets',
+            'academicYear',
+            'semester'
         ));
     }
 
@@ -146,6 +128,11 @@ class DashboardController extends Controller
             'message' => $request->message,
         ]);
 
+        // Mark incoming messages as read when teacher replies
+        Pesan::where('student_id', $pesan->student_id)
+            ->where('receiver_id', Auth::id())
+            ->update(['is_read' => true]);
+
         return back()->with('success', 'Balasan pesan berhasil dikirim.');
     }
 
@@ -156,12 +143,21 @@ class DashboardController extends Controller
         }
 
         Pesan::where('student_id', $pesan->student_id)
-            ->where(function($q) use ($pesan) {
+            ->where(function ($q) use ($pesan) {
                 $q->where('sender_id', $pesan->sender_id)->where('receiver_id', Auth::id())
-                  ->orWhere('sender_id', Auth::id())->where('receiver_id', $pesan->sender_id);
+                    ->orWhere('sender_id', Auth::id())->where('receiver_id', $pesan->sender_id);
             })
             ->update(['is_resolved' => true]);
 
         return back()->with('success', 'Percakapan telah diselesaikan dan dipindahkan dari antrean.');
+    }
+
+    public function markAsRead(Student $student)
+    {
+        Pesan::where('student_id', $student->id)
+            ->where('receiver_id', Auth::id())
+            ->update(['is_read' => true]);
+
+        return response()->json(['success' => true]);
     }
 }

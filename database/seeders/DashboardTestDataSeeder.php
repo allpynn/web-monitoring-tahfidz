@@ -49,7 +49,7 @@ class DashboardTestDataSeeder extends Seeder
         // But they have records with this Guru in the past.
         $pastStudent = Student::updateOrCreate(
             ['nis' => 'TEST003'],
-            ['name' => 'Santri Masa Lalu', 'guru_id' => 999, 'gender' => 'Laki-laki']
+            ['name' => 'Santri Masa Lalu', 'guru_id' => null, 'gender' => 'Laki-laki']
         );
 
         // Record in Semester Ganjil TA 2024/2025 (e.g., Sept 2024)

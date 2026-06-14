@@ -110,6 +110,13 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <a href="{{ route('parent.history.index', ['student_id' => $student->id]) }}" class="flex items-center justify-center gap-2 w-full py-3 bg-gray-50 dark:bg-gray-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 group">
+                                    Lihat riwayat lengkap
+                                    <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                </a>
+                            </div>
                         </x-tahfidz.card>
                     </div>
 

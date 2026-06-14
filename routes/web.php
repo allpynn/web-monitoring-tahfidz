@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/students/{student}/export-pdf', [App\Http\Controllers\Guru\StudentController::class, 'exportPdf'])->name('students.export');
         Route::get('/students/{student}/export-semester-pdf', [HafalanController::class, 'exportSemesterPdf'])->name('students.export_semester');
         Route::post('/messages/{pesan}/reply', [App\Http\Controllers\Guru\DashboardController::class, 'replyMessage'])->name('messages.reply');
+        Route::post('/messages/{student}/read', [App\Http\Controllers\Guru\DashboardController::class, 'markAsRead'])->name('messages.read');
         Route::delete('/messages/{pesan}', [App\Http\Controllers\Guru\DashboardController::class, 'destroyMessage'])->name('messages.destroy');
     });
 

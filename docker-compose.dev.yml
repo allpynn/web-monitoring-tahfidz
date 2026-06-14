@@ -26,3 +26,18 @@ services:
     ports:
       - "8082:8080"
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin_dev
+    restart: always
+    env_file:
+      - .env
+    environment:
+      PMA_HOST: ${DB_HOST}
+      PMA_PORT: ${DB_PORT}
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 300M
+    ports:
+      - "8083:80"
