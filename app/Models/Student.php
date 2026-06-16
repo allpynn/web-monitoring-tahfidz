@@ -252,4 +252,9 @@ class Student extends Model
         
         return 0;
     }
+
+    public function academicAssignments()
+    {
+        return $this->hasMany(StudentAssignment::class);
+    }
 }

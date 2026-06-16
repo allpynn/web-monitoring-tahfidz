@@ -79,4 +79,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(RiwayatHafalan::class, 'guru_id');
     }
+
+    public function academicAssignments()
+    {
+        return $this->hasMany(StudentAssignment::class, 'guru_id');
+    }
 }

@@ -89,6 +89,17 @@ class HafalanController extends Controller
                     return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Ayat sampai tidak boleh lebih kecil dari ayat dari."]);
                 }
             }
+
+            $exists = RiwayatHafalan::where('student_id', $request->student_id)
+                ->where('surah', $request->surah)
+                ->where('ayat', $data['ayat'])
+                ->where('is_present', true)
+                ->whereIn('status', ['Lancar', 'Perlu Perbaikan'])
+                ->exists();
+
+            if ($exists) {
+                return back()->withInput()->withErrors(['surah' => "Santri sudah pernah menyetorkan Surah {$request->surah} ayat {$data['ayat']} dengan status Lancar/Perlu Perbaikan."]);
+            }
         }
 
         if (!$request->is_present) {
@@ -133,6 +144,19 @@ class HafalanController extends Controller
                     return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Ayat sampai tidak boleh lebih kecil dari ayat dari."]);
                 }
             }
+
+            // Duplicate Check (excluding current record)
+            $exists = RiwayatHafalan::where('student_id', $request->student_id)
+                ->where('surah', $request->surah)
+                ->where('ayat', $data['ayat'])
+                ->where('is_present', true)
+                ->whereIn('status', ['Lancar', 'Perlu Perbaikan'])
+                ->where('id', '!=', $hafalan->id)
+                ->exists();
+
+            if ($exists) {
+                return back()->withInput()->withErrors(['surah' => "Santri sudah pernah menyetorkan Surah {$request->surah} ayat {$data['ayat']} dengan status Lancar/Perlu Perbaikan."]);
+            }
         }
 
         if (!$request->is_present) {
@@ -171,14 +195,14 @@ class HafalanController extends Controller
     {
         $this->authorize('view', $student);
         $student->load(['memorizations', 'guru', 'targets']);
-        
+
         $semester = $request->input('semester');
         $year = $request->input('year');
-        
+
         $pdf = $this->memorizationService->generateSemesterRecap($student, $semester, $year);
-        
+
         $filename = 'Rekap_Semester_' . ($semester ? ucfirst($semester) . '_' : '') . ($year ? str_replace('/', '-', $year) . '_' : '') . $student->nis . '.pdf';
-        
+
         return $pdf->download($filename);
     }
 }
