@@ -14,9 +14,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
                         </div>
-                        <template x-if="unreadMessages[{{ $msg->id }}]">
-                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></div>
-                        </template>
                     </div>
                     <div class="flex flex-col">
                         <span class="text-sm font-black text-gray-800 dark:text-gray-100 uppercase tracking-tight">
@@ -28,7 +25,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-[10px] font-bold text-gray-300 dark:text-gray-600 uppercase">{{ $msg->created_at->diffForHumans() }}</span>
+                    <template x-if="unreadMessages[{{ $msg->id }}]">
+                        <div class="w-3 h-3 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/40"></div>
+                    </template>
                     <svg class="w-5 h-5 text-gray-300 dark:text-gray-600 transition-transform duration-300"
                         :class="openChat === {{ $msg->id }} ? 'rotate-180' : ''" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
