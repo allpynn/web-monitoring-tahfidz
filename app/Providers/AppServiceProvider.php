@@ -18,5 +18,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        view()->composer('components.tahfidz.sidebar', function ($view) {
+            if (auth()->check() && auth()->user()->role === 'guru') {
+                $unreadCount = \App\Models\Pesan::where('receiver_id', auth()->id())
+                    ->where('is_read', false)
+                    ->where('is_resolved', false)
+                    ->select('student_id')
+                    ->distinct()
+                    ->get()
+                    ->count(); 
+                $view->with('unreadMessagesCount', $unreadCount);
+            }
+        });
     }
 }

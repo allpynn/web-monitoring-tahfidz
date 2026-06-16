@@ -52,29 +52,6 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $parent_messages = Pesan::with(['sender', 'student'])
-            ->where('receiver_id', $guruId)
-            ->where('is_resolved', false)
-            ->latest()
-            ->get()
-            ->unique('student_id')
-            ->take(5);
-
-        foreach ($parent_messages as $thread) {
-            // Find if there are unread messages for the teacher in this thread
-            $thread->has_unread = Pesan::where('student_id', $thread->student_id)
-                ->where('receiver_id', $guruId)
-                ->where('is_read', false)
-                ->exists();
-
-            $thread->conversation = Pesan::where('student_id', $thread->student_id)
-                ->where(function ($q) use ($guruId, $thread) {
-                    $q->where('sender_id', $guruId)->where('receiver_id', $thread->sender_id)
-                        ->orWhere('sender_id', $thread->sender_id)->where('receiver_id', $guruId);
-                })
-                ->orderBy('created_at', 'asc')
-                ->get();
-        }
 
         $students = Student::where('guru_id', $guruId)
             ->with([
@@ -109,7 +86,6 @@ class DashboardController extends Controller
         return view('guru.dashboard', compact(
             'stats',
             'recent_activities',
-            'parent_messages',
             'early_warnings',
             'top_targets',
             'academicYear',
@@ -159,5 +135,88 @@ class DashboardController extends Controller
             ->update(['is_read' => true]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function messages(Request $request)
+    {
+        $guruId = Auth::id();
+        $search = $request->input('search');
+        $status = $request->input('status'); // all, read, unread
+        $showArchive = $request->boolean('archive', false);
+
+        // Calculate current academic year (matching dashboard logic)
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        // Get student IDs active in current academic year for this teacher
+        $activeInCurrentYear = StudentAssignment::where('academic_year', $currentAcademicYear)
+            ->where('guru_id', $guruId)
+            ->pluck('student_id')
+            ->toArray();
+
+        // Base query for unique student message threads
+        $queryStudentIds = Pesan::where('receiver_id', $guruId)
+            ->where('is_resolved', false);
+
+        // Archive / Academic Year Filter - Logic: show threads for students based on active year assignment
+        if ($showArchive) {
+            $queryStudentIds->whereNotIn('student_id', $activeInCurrentYear);
+        } else {
+            $queryStudentIds->whereIn('student_id', $activeInCurrentYear);
+        }
+
+        if ($search) {
+            $queryStudentIds->where(function ($q) use ($search) {
+                $q->whereHas('sender', function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                })->orWhereHas('student', function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $studentIds = $queryStudentIds->distinct()->pluck('student_id');
+        $parent_messages = collect();
+
+        foreach ($studentIds as $sId) {
+            $hasUnread = Pesan::where('student_id', $sId)
+                ->where('receiver_id', $guruId)
+                ->where('is_read', false)
+                ->exists();
+
+            if ($status === 'read' && $hasUnread) continue;
+            if ($status === 'unread' && !$hasUnread) continue;
+
+            $latestInThread = Pesan::with(['sender', 'student'])
+                ->where('student_id', $sId)
+                ->where(function ($q) use ($guruId) {
+                    $q->where('receiver_id', $guruId)->orWhere('sender_id', $guruId);
+                })
+                ->where('is_resolved', false)
+                ->latest()
+                ->first();
+
+            if ($latestInThread) {
+                $latestInThread->has_unread = $hasUnread;
+                $latestInThread->conversation = Pesan::where('student_id', $sId)
+                    ->where(function ($q) use ($guruId) {
+                        $q->where('sender_id', $guruId)->orWhere('receiver_id', $guruId);
+                    })
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                $parent_messages->push($latestInThread);
+            }
+        }
+
+        $parent_messages = $parent_messages->sortByDesc(fn($msg) => $msg->created_at);
+
+        if ($request->ajax()) {
+            return view('guru.messages.partials.list', compact('parent_messages'))->render();
+        }
+
+        return view('guru.messages.index', compact('parent_messages', 'showArchive'));
     }
 }
