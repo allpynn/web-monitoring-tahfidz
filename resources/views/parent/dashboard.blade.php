@@ -174,20 +174,18 @@
                                 @endif
                             </x-slot>
                             
-                            <div class="h-52 overflow-y-auto mb-4 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-900/50 space-y-4 custom-scrollbar mt-2">
+                            <div id="chat-box-{{ $student->id }}" class="h-52 overflow-y-auto mb-4 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-900/50 space-y-4 custom-scrollbar mt-2">
                                 @forelse($student->messages ?? [] as $msg)
-                                    <div class="flex {{ $msg->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }} items-start animate-fade-in">
+                                    <div class="flex {{ $msg->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }} items-start">
                                         @if($msg->sender_id !== auth()->id())
-                                            {{-- Guru's Message --}}
-                                            <div class="flex flex-col items-start max-w-[85%] group">
-                                                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-none px-4 py-3 text-sm shadow-sm relative leading-relaxed">
+                                            <div class="flex flex-col items-start max-w-[85%]">
+                                                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-none px-4 py-3 text-sm shadow-sm leading-relaxed">
                                                     {{ $msg->message }}
                                                 </div>
                                                 <span class="text-[10px] text-gray-400 mt-1.5 ml-1 font-bold">{{ $msg->created_at->format('H:i') }}</span>
                                             </div>
                                         @else
-                                            {{-- Parent's Message --}}
-                                            <div class="flex flex-col items-end max-w-[85%] group">
+                                            <div class="flex flex-col items-end max-w-[85%]">
                                                 <div class="bg-emerald-600 text-white rounded-2xl rounded-tr-none px-4 py-3 text-sm shadow-lg shadow-emerald-500/20 font-medium leading-relaxed">
                                                     {{ $msg->message }}
                                                 </div>
@@ -196,7 +194,7 @@
                                         @endif
                                     </div>
                                 @empty
-                                    <div class="h-full flex flex-col items-center justify-center py-20 opacity-40">
+                                    <div id="empty-chat-{{ $student->id }}" class="h-full flex flex-col items-center justify-center py-20 opacity-40">
                                         <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                                         </div>
@@ -205,9 +203,14 @@
                                 @endforelse
                             </div>
                             
-                            <form action="{{ route('parent.messages.send', $student) }}" method="POST" class="flex gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-3 rounded-2xl shadow-inner-sm">
+                            <form id="chat-form-{{ $student->id }}"
+                                  data-student-id="{{ $student->id }}"
+                                  data-action="{{ route('parent.messages.send', $student) }}"
+                                  class="flex gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-3 rounded-2xl">
                                 @csrf
-                                <input type="text" name="message" required placeholder="Tulis pesan ke Ustadz..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm dark:text-white placeholder:text-gray-300 font-medium">
+                                <input type="text" name="message" required placeholder="Tulis pesan ke Ustadz..."
+                                       class="flex-1 bg-transparent border-none focus:ring-0 text-sm dark:text-white placeholder:text-gray-300 font-medium"
+                                       id="chat-input-{{ $student->id }}">
                                 <button type="submit" class="w-12 h-12 flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-90 flex-shrink-0">
                                     <svg class="w-6 h-6 rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                                 </button>
@@ -233,7 +236,75 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Helper: create a message bubble HTML
+        function createBubble(message, time, isSelf) {
+            if (isSelf) {
+                return `<div class="flex justify-end items-start">
+                    <div class="flex flex-col items-end max-w-[85%]">
+                        <div class="bg-emerald-600 text-white rounded-2xl rounded-tr-none px-4 py-3 text-sm shadow-lg shadow-emerald-500/20 font-medium leading-relaxed">${message}</div>
+                        <span class="text-[10px] text-gray-400 mt-1.5 mr-1 font-bold">${time}</span>
+                    </div>
+                </div>`;
+            } else {
+                return `<div class="flex justify-start items-start">
+                    <div class="flex flex-col items-start max-w-[85%]">
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-none px-4 py-3 text-sm shadow-sm leading-relaxed">${message}</div>
+                        <span class="text-[10px] text-gray-400 mt-1.5 ml-1 font-bold">${time}</span>
+                    </div>
+                </div>`;
+            }
+        }
+
+        function scrollToBottom(chatBox) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Scroll all chat boxes to bottom on load
+            document.querySelectorAll('[id^="chat-box-"]').forEach(box => scrollToBottom(box));
+
+            // AJAX form submission for each chat form
+            document.querySelectorAll('[id^="chat-form-"]').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const studentId = this.dataset.studentId;
+                    const action = this.dataset.action;
+                    const input = document.getElementById('chat-input-' + studentId);
+                    const message = input.value.trim();
+                    if (!message) return;
+
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const socketId = window.Echo ? window.Echo.socketId() : null;
+
+                    fetch(action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Socket-ID': socketId,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ message: message }),
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const chatBox = document.getElementById('chat-box-' + studentId);
+                            const emptyState = document.getElementById('empty-chat-' + studentId);
+                            if (emptyState) emptyState.remove();
+
+                            const now = new Date();
+                            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                            chatBox.insertAdjacentHTML('beforeend', createBubble(message, time, true));
+                            scrollToBottom(chatBox);
+                            input.value = '';
+                        }
+                    });
+                });
+            });
+
+            // Quality charts
             document.querySelectorAll('.quality-chart').forEach(canvas => {
                 const ctx = canvas.getContext('2d');
                 const lancar = parseInt(canvas.dataset.lancar);
@@ -243,23 +314,25 @@
                     type: 'doughnut',
                     data: {
                         labels: ['Lancar', 'Perlu Perbaikan'],
-                        datasets: [{
-                            data: [lancar, perbaikan],
-                            backgroundColor: ['#10b981', '#fbbf24'],
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
+                        datasets: [{ data: [lancar, perbaikan], backgroundColor: ['#10b981', '#fbbf24'], borderWidth: 0, hoverOffset: 4 }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '75%',
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: true }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
                 });
+            });
+
+            // Real-time: listen for incoming messages from Guru via Reverb
+            window.addEventListener('message-received', (e) => {
+                const pesan = e.detail;
+                const chatBox = document.getElementById('chat-box-' + pesan.student_id);
+                if (!chatBox) return; // message is for a different student not on this page
+
+                const emptyState = document.getElementById('empty-chat-' + pesan.student_id);
+                if (emptyState) emptyState.remove();
+
+                const sentAt = new Date(pesan.created_at);
+                const time = sentAt.getHours().toString().padStart(2, '0') + ':' + sentAt.getMinutes().toString().padStart(2, '0');
+                chatBox.insertAdjacentHTML('beforeend', createBubble(pesan.message, time, false));
+                scrollToBottom(chatBox);
             });
         });
     </script>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use App\Models\Pesan;
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use App\Services\RiwayatHafalanService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -52,12 +53,22 @@ class DashboardController extends Controller
     {
         $request->validate(['message' => 'required|string']);
 
-        Pesan::create([
+        $p = Pesan::create([
             'sender_id' => Auth::id(),
             'receiver_id' => $student->guru_id,
             'student_id' => $student->id,
             'message' => $request->message,
         ]);
+
+        broadcast(new MessageSent($p))->toOthers();
+
+        if ($request->ajax()) {
+            $p->load(['sender', 'student']);
+            return response()->json([
+                'success' => true,
+                'message' => $p,
+            ]);
+        }
 
         return back()->with('success', 'Pesan berhasil dikirim ke Ustadz.');
     }

@@ -27,6 +27,18 @@ services:
       - "8082:8080"
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
 
+  queue:
+    image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
+    container_name: laravel_queue_dev
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DB_DATABASE: tahfidz_db
+    volumes:
+      - .:/var/www
+    command: php artisan queue:work --sleep=3 --tries=3
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: phpmyadmin_dev

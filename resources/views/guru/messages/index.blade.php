@@ -6,12 +6,16 @@
         Kelola dan balas pesan koordinasi dari orang tua santri.
     </x-slot>
 
-    <div class="mt-6" x-data="{ 
+    <div class="mt-6" 
+         x-on:message-received.window="handleMessageReceived($event.detail)"
+         x-on:reply-success.window="handleReplySuccess($event.detail)"
+         x-on:sync-unread.window="unreadMessages = $event.detail; updateSidebarBadge()"
+         x-data="{ 
         openChat: null,
         showArchive: {{ $showArchive ? 'true' : 'false' }},
         unreadMessages: {
             @foreach($parent_messages as $msg)
-                {{ $msg->id }}: {{ $msg->has_unread ? 'true' : 'false' }},
+                {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
             @endforeach
         },
         updateSidebarBadge() {
@@ -26,12 +30,12 @@
                 }
             }
         },
-        markAsRead(msgId, studentId) {
-            if (this.openChat === msgId) {
+        markAsRead(studentId) {
+            if (this.openChat === studentId) {
                 this.openChat = null;
             } else {
-                this.openChat = msgId;
-                if (this.unreadMessages[msgId]) {
+                this.openChat = studentId;
+                if (this.unreadMessages[studentId]) {
                     fetch(`/guru/messages/${studentId}/read`, {
                         method: 'POST',
                         headers: {
@@ -39,11 +43,32 @@
                             'Accept': 'application/json'
                         }
                     }).then(() => {
-                        this.unreadMessages[msgId] = false;
+                        this.unreadMessages[studentId] = false;
                         this.updateSidebarBadge();
                     });
                 }
             }
+        },
+        handleMessageReceived(pesan) {
+            // Update Alpine state for unread indicators
+            if (this.openChat !== pesan.student_id) {
+                this.unreadMessages[pesan.student_id] = true;
+                this.updateSidebarBadge();
+            } else {
+                // If message arrives while chat is OPEN, mark as read on backend immediately
+                fetch(`/guru/messages/${pesan.student_id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+            }
+        },
+        handleReplySuccess(studentId) {
+            // Clear unread status when replying
+            this.unreadMessages[studentId] = false;
+            this.updateSidebarBadge();
         },
         toggleArchive() {
             this.showArchive = !this.showArchive;
@@ -135,6 +160,90 @@
                     updateList(e.target);
                 });
             }
+
+            // AJAX reply form handler - delegated because list can be re-rendered
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (!form.classList.contains('guru-reply-form')) return;
+                e.preventDefault();
+
+                const action = form.dataset.action;
+                const studentId = form.dataset.studentId;
+                const input = form.querySelector('input[name="message"]');
+                const message = input.value.trim();
+                if (!message) return;
+
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const socketId = window.Echo ? window.Echo.socketId() : null;
+
+                fetch(action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Socket-ID': socketId,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const convBox = document.getElementById('conversation-' + studentId);
+                        if (convBox) {
+                            const now = new Date();
+                            const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+                            convBox.insertAdjacentHTML('beforeend', `
+                                <div class="flex justify-end">
+                                    <div class="max-w-[85%] sm:max-w-[70%]">
+                                        <div class="px-4 py-2.5 rounded-[20px] text-sm bg-emerald-600 text-white rounded-tr-none">${message}</div>
+                                        <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-right font-bold">${time}</p>
+                                    </div>
+                                </div>
+                            `);
+                            convBox.scrollTop = convBox.scrollHeight;
+                        }
+                        
+                        // Notify Alpine that reply was successful
+                        window.dispatchEvent(new CustomEvent('reply-success', { detail: studentId }));
+
+                        input.value = '';
+                    }
+                });
+            });
+
+            // Helper: append a bubble from a received real-time message
+            function appendIncomingBubble(studentId, message, time) {
+                const convBox = document.getElementById('conversation-' + studentId);
+                if (!convBox) return false;
+                convBox.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-start">
+                        <div class="max-w-[85%] sm:max-w-[70%]">
+                            <div class="px-4 py-2.5 rounded-[20px] text-sm bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none">${message}</div>
+                            <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-left font-bold">${time}</p>
+                        </div>
+                    </div>
+                `);
+                convBox.scrollTop = convBox.scrollHeight;
+                return true;
+            }
+
+            // Listen for Real-time incoming messages
+            window.addEventListener('message-received', (e) => {
+                const pesan = e.detail;
+                const sentAt = new Date(pesan.created_at);
+                const time = sentAt.getHours().toString().padStart(2,'0') + ':' + sentAt.getMinutes().toString().padStart(2,'0');
+
+                const conversationIsOpen = appendIncomingBubble(pesan.student_id, pesan.message, time);
+
+                if (!conversationIsOpen) {
+                    // Refresh the list to move the new message thread to the top
+                    updateList(document.getElementById('filter-form'));
+                }
+                
+                // Alpine handler (unread dot & sidebar) is still triggered because it listens to the same window event
+            });
         </script>
         <style>
             .custom-scrollbar::-webkit-scrollbar {
