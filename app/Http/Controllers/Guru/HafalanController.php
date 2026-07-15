@@ -8,7 +8,9 @@ use App\Http\Requests\StoreHafalanRequest;
 use App\Http\Requests\UpdateHafalanRequest;
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
+use App\Models\StudentAssignment;
 use App\Models\Surah;
+use Carbon\Carbon;
 
 use App\Services\RiwayatHafalanService;
 use App\Events\HafalanUpdated;
@@ -28,14 +30,46 @@ class HafalanController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 25);
-        $search = $request->input('search');
-        $date = $request->input('date');
-        $status = $request->input('status');
+        $currentMonth = now()->month;
+        $currentYear  = now()->year;
+        $defaultStartYear    = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        // Kumpulkan tahun ajaran dari santri yang pernah diampu guru ini
+        $academicYears = StudentAssignment::where('guru_id', Auth::id())
+            ->distinct()
+            ->pluck('academic_year')
+            ->push($defaultAcademicYear)
+            ->unique()
+            ->sortByDesc(fn($y) => $y)
+            ->values()
+            ->toArray();
+
+        $academicYear = $request->input('academic_year', $defaultAcademicYear);
+        $perPage  = $request->input('per_page', 25);
+        $search   = $request->input('search');
+        $date     = $request->input('date');
+        $status   = $request->input('status');
         $presence = $request->input('presence');
 
         $query = RiwayatHafalan::with('student')
             ->where('guru_id', Auth::id());
+
+        // Filter per tahun ajaran: hanya santri yang diampu tahun ini, di rentang Juli–Juni
+        if ($academicYear !== 'all') {
+            $years    = explode('/', $academicYear);
+            $baseYear = (int) ($years[0] ?? $defaultStartYear);
+            $startDate = Carbon::create($baseYear, 7, 1)->startOfDay();
+            $endDate   = Carbon::create($baseYear + 1, 6, 30)->endOfDay();
+
+            // Hanya santri yang punya assignment di tahun ini
+            $assignedStudentIds = StudentAssignment::where('guru_id', Auth::id())
+                ->where('academic_year', $academicYear)
+                ->pluck('student_id');
+
+            $query->whereIn('student_id', $assignedStudentIds)
+                  ->whereBetween('tanggal', [$startDate, $endDate]);
+        }
 
         if ($search) {
             $query->whereHas('student', function ($q) use ($search) {
@@ -58,7 +92,7 @@ class HafalanController extends Controller
 
         $hafalan = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('guru.hafalan.index', compact('hafalan'));
+        return view('guru.hafalan.index', compact('hafalan', 'academicYears', 'academicYear'));
     }
 
     public function create()

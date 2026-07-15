@@ -24,7 +24,28 @@ class StudentController extends Controller
     }
     public function index(Request $request)
     {
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        $academicYears = \App\Models\StudentAssignment::distinct()
+            ->pluck('academic_year')
+            ->push($defaultAcademicYear)
+            ->unique()
+            ->sortByDesc(fn($year) => $year)
+            ->values()
+            ->toArray();
+
+        $academicYear = $request->input('academic_year', $defaultAcademicYear);
+
         $query = Student::with(['parents', 'guru', 'targets', 'memorizations']);
+
+        if ($academicYear !== 'all') {
+            $query->whereHas('academicAssignments', function($q) use ($academicYear) {
+                $q->where('academic_year', $academicYear);
+            });
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -49,7 +70,7 @@ class StudentController extends Controller
         $perPage = $request->input('per_page', 25);
         $students = $query->paginate($perPage)->withQueryString();
 
-        return view('admin.students.index', compact('students'));
+        return view('admin.students.index', compact('students', 'academicYears', 'academicYear'));
     }
 
     public function create()

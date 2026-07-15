@@ -7,6 +7,7 @@ use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use App\Models\StudentAssignment;
 use App\Models\Pesan;
+use App\Events\MessageSent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -97,17 +98,27 @@ class DashboardController extends Controller
     {
         $request->validate(['message' => 'required|string']);
 
-        Pesan::create([
+        // Find the parent's ID in this conversation. 
+        // We can look for the original sender of the thread or just find an entry that isn't the Guru.
+        $parentId = ($pesan->sender_id == Auth::id()) ? $pesan->receiver_id : $pesan->sender_id;
+
+        $p = Pesan::create([
             'sender_id' => Auth::id(),
-            'receiver_id' => $pesan->sender_id,
+            'receiver_id' => $parentId,
             'student_id' => $pesan->student_id,
             'message' => $request->message,
         ]);
+
+        broadcast(new MessageSent($p))->toOthers();
 
         // Mark incoming messages as read when teacher replies
         Pesan::where('student_id', $pesan->student_id)
             ->where('receiver_id', Auth::id())
             ->update(['is_read' => true]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $p]);
+        }
 
         return back()->with('success', 'Balasan pesan berhasil dikirim.');
     }

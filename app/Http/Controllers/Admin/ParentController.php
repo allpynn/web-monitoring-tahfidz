@@ -12,7 +12,34 @@ class ParentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'orang_tua')->withCount('students');
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        $academicYears = \App\Models\StudentAssignment::distinct()
+            ->pluck('academic_year')
+            ->push($defaultAcademicYear)
+            ->unique()
+            ->sortByDesc(fn($year) => $year)
+            ->values()
+            ->toArray();
+
+        $academicYear = $request->input('academic_year', $defaultAcademicYear);
+
+        $query = User::where('role', 'orang_tua');
+
+        if ($academicYear !== 'all') {
+            $query->whereHas('students.academicAssignments', function($q) use ($academicYear) {
+                $q->where('academic_year', $academicYear);
+            })->withCount(['students' => function($q) use ($academicYear) {
+                $q->whereHas('academicAssignments', function($q2) use ($academicYear) {
+                    $q2->where('academic_year', $academicYear);
+                });
+            }]);
+        } else {
+            $query->withCount('students');
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -38,7 +65,7 @@ class ParentController extends Controller
         $perPage = $request->input('per_page', 25);
         $parents = $query->paginate($perPage)->withQueryString();
 
-        return view('admin.parents.index', compact('parents'));
+        return view('admin.parents.index', compact('parents', 'academicYears', 'academicYear'));
     }
 
     public function create()
