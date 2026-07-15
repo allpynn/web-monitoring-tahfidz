@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\StudentAssignment;
 use App\Models\User;
 use App\Models\RiwayatHafalan;
 use App\Models\StudentTarget;
 use App\Helpers\PdfHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,15 +25,38 @@ class StudentController extends Controller
 
     public function index(Request $request)
     {
+        $currentMonth = now()->month;
+        $currentYear  = now()->year;
+        $defaultStartYear    = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        // Kumpulkan tahun ajaran yang pernah ada untuk Guru ini
+        $academicYears = StudentAssignment::where('guru_id', Auth::id())
+            ->distinct()
+            ->pluck('academic_year')
+            ->push($defaultAcademicYear)
+            ->unique()
+            ->sortByDesc(fn($y) => $y)
+            ->values()
+            ->toArray();
+
+        $academicYear = $request->input('academic_year', $defaultAcademicYear);
         $search = $request->get('search');
         $gender = $request->get('gender');
         $sort   = $request->get('sort', 'latest');
-        
+
         $query = Student::with(['parents', 'targets', 'memorizations'])
-            ->where('guru_id', auth()->id());
+            ->where('guru_id', Auth::id());
+
+        // Filter per tahun ajaran via student_assignments
+        if ($academicYear !== 'all') {
+            $query->whereHas('academicAssignments', function ($q) use ($academicYear) {
+                $q->where('academic_year', $academicYear);
+            });
+        }
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('nis', 'like', "%{$search}%");
             });
@@ -48,21 +74,44 @@ class StudentController extends Controller
             $query->latest();
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage  = $request->input('per_page', 25);
         $students = $query->paginate($perPage)->withQueryString();
 
-        return view('guru.students.index', compact('students'));
+        return view('guru.students.index', compact('students', 'academicYears', 'academicYear'));
     }
 
-    public function show(Student $student)
+    public function show(Request $request, Student $student)
     {
         $this->authorize('view', $student);
         $student->load(['parents', 'targets']);
-        
-        // Ambil riwayat hafalan secara terpisah agar bisa diurutkan dari yang terbaru
-        $memorizations = $student->memorizations()->with('guru')->latest()->get();
-        
-        return view('guru.students.show', compact('student', 'memorizations'));
+
+        $currentMonth = now()->month;
+        $currentYear  = now()->year;
+        $defaultStartYear    = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        // Tahun ajaran yang pernah ada untuk santri ini (berdasarkan guru ybs)
+        $academicYears = StudentAssignment::where('student_id', $student->id)
+            ->where('guru_id', Auth::id())
+            ->distinct()
+            ->pluck('academic_year')
+            ->push($defaultAcademicYear)
+            ->unique()
+            ->sortByDesc(fn($y) => $y)
+            ->values()
+            ->toArray();
+
+        $academicYear = $request->input('academic_year', $defaultAcademicYear);
+
+        // Riwayat hafalan tidak difilter tahun ajaran, melainkan menampilkan seluruhnya
+        $memorizations = $student->memorizations()
+            ->with('guru')
+            ->latest()
+            ->get();
+
+        $academicYears = [];
+
+        return view('guru.students.show', compact('student', 'memorizations', 'academicYears', 'academicYear'));
     }
 
     public function create()

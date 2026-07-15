@@ -36,6 +36,16 @@
                 </div>
 
                 <div class="w-full lg:w-48">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Tahun Ajaran</label>
+                    <select name="academic_year" onchange="updateTable(this.form)" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
+                        <option value="all" {{ $academicYear === 'all' ? 'selected' : '' }}>Semua</option>
+                        @foreach($academicYears as $year)
+                            <option value="{{ $year }}" {{ $academicYear === $year ? 'selected' : '' }}>{{ $year }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="w-full lg:w-48">
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Jenis Kelamin</label>
                     <select name="gender" onchange="updateTable(this.form)" class="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold">
                         <option value="">Semua</option>

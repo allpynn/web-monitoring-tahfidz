@@ -6,8 +6,8 @@
         Informasi lengkap dan riwayat hafalan {{ $student->name }}.
     </x-slot>
 
-    <div class="mb-6">
-        <a href="{{ route('guru.students.index') }}" class="text-sm font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-2">
+    <div class="mb-6 flex items-center justify-between">
+        <a href="{{ route('guru.students.index', ['academic_year' => $academicYear]) }}" class="text-sm font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Kembali ke Daftar Santri
         </a>
@@ -48,13 +48,8 @@
                                     
                                     $statusLabel = $isCompleted ? 'Mumtaz' : ($prog > 0 ? $prog . '%' : 'Belum');
                                 @endphp
-                                <div class="relative group">
-                                    <div class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black {{ $bgClass }} transition-all duration-200 hover:scale-110 cursor-default shadow-sm border border-transparent {{ $isCompleted ? 'shadow-emerald-100/50' : '' }}">
-                                        {{ $j }}
-                                    </div>
-                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[8px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
-                                        Juz {{ $j }}: {{ $statusLabel }}
-                                    </div>
+                                <div class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black {{ $bgClass }} transition-all duration-200 cursor-default shadow-sm border border-transparent {{ $isCompleted ? 'shadow-emerald-100/50' : '' }}">
+                                    {{ $j }}
                                 </div>
                             @endfor
                         </div>
@@ -126,14 +121,14 @@
                                 <div class="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 dark:border-gray-700/50 mb-1 leading-none">Pilih Periode</div>
                                 
                                 @php
-                                    $currentYear = date('Y');
-                                    $academicYears = [
-                                        ($currentYear - 1) . '/' . $currentYear,
-                                        $currentYear . '/' . ($currentYear + 1),
+                                    $currentYearForDropdown = date('Y');
+                                    $semesterAcademicYears = [
+                                        ($currentYearForDropdown - 1) . '/' . $currentYearForDropdown,
+                                        $currentYearForDropdown . '/' . ($currentYearForDropdown + 1),
                                     ];
                                 @endphp
                                 
-                                @foreach($academicYears as $ay)
+                                @foreach($semesterAcademicYears as $ay)
                                     <div class="px-3 py-2 text-[9px] font-bold text-gray-500/60 dark:text-gray-400/60 uppercase tracking-tighter bg-gray-50 dark:bg-gray-900/40 mb-1 rounded-lg">TA {{ $ay }}</div>
                                     <a href="{{ route('guru.students.export_semester', [$student, 'semester' => 'ganjil', 'year' => $ay]) }}" class="group flex items-center px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-xl transition-all mb-1">
                                         Semester Ganjil
@@ -152,9 +147,13 @@
         <!-- Main Content: History -->
         <div class="lg:col-span-2 space-y-6">
             <x-tahfidz.card title="Rekaman Hafalan & Monitoring">
+                <!-- Record Count -->
+                <div class="mb-4">
+                    <span class="text-xs text-gray-400">Total: <span class="font-bold text-emerald-600">{{ $memorizations->count() }}</span> rekaman hafalan</span>
+                </div>
                 <!-- Filters & Search -->
                 <div class="mb-6 bg-gray-50 dark:bg-gray-900/40 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="relative">
                             <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Cari Catatan</label>
                             <input type="text" id="logSearch" class="block w-full px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium" placeholder="Surah/catatan...">
@@ -169,15 +168,6 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Jumlah Data</label>
-                            <select id="limitFilter" class="block w-full px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-bold">
-                                <option value="20">20 Data</option>
-                                <option value="50">50 Data</option>
-                                <option value="100">100 Data</option>
-                                <option value="all">Semua</option>
-                            </select>
-                        </div>
-                        <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Filter Tanggal</label>
                             <input type="date" id="dateFilter" class="block w-full px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium">
                         </div>
@@ -185,7 +175,7 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-2xl bg-white dark:bg-transparent">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full min-w-[650px] text-left border-collapse">
                         <thead>
                             <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                                 <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
@@ -262,18 +252,45 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="py-12 text-center text-gray-400 font-bold italic border-none bg-gray-50/50 dark:bg-transparent rounded-2xl">Belum ada riwayat setoran.</td>
+                                    <td colspan="4" class="py-14 text-center">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            <p class="text-gray-400 font-bold italic text-sm">Belum ada riwayat setoran hafalan santri ini.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforelse
+                            <tr id="emptyFilterRow" style="display: none;">
+                                <td colspan="4" class="py-14 text-center">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <p class="text-gray-400 font-bold italic text-sm">Tidak ada riwayat setoran yang cocok dengan pencarian / filter Anda.</p>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination Stats -->
-                <div class="mt-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-between">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <!-- Pagination Stats & Controls -->
+                <div class="mt-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center sm:text-left">
                         Menampilkan <span id="visibleCount" class="text-emerald-600">0</span> dari <span class="text-emerald-600 font-black">{{ $memorizations->count() }}</span> data
                     </p>
+                    
+                    <div class="flex justify-center">
+                        <nav id="paginationNav" class="inline-flex rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+                            <button id="prevPageBtn" type="button" class="px-4 py-2 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-900 transition-colors flex items-center justify-center font-bold">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <div id="pageNumbersContainer" class="flex border-x border-gray-200 dark:border-gray-700">
+                                <!-- Page numbers created dynamically -->
+                            </div>
+                            <button id="nextPageBtn" type="button" class="px-4 py-2 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-900 transition-colors flex items-center justify-center font-bold">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </nav>
+                    </div>
                 </div>
             </x-tahfidz.card>
         </div>
@@ -284,18 +301,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('logSearch');
             const statusFilter = document.getElementById('statusFilter');
-            const limitFilter = document.getElementById('limitFilter');
             const dateFilter = document.getElementById('dateFilter');
             const rows = document.querySelectorAll('.log-row');
             const visibleCountSpan = document.getElementById('visibleCount');
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+            const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+            const emptyFilterRow = document.getElementById('emptyFilterRow');
+
+            const pageSize = 20;
+            let currentPage = 1;
+            let filteredRows = [];
 
             function filterLogs() {
                 const query = searchInput.value.toLowerCase();
                 const status = statusFilter.value;
-                const limit = limitFilter.value === 'all' ? Infinity : parseInt(limitFilter.value);
                 const date = dateFilter.value;
 
-                let visibleCount = 0;
+                filteredRows = [];
 
                 rows.forEach(row => {
                     const rowText = row.innerText.toLowerCase();
@@ -308,20 +331,101 @@
                     if (status !== 'all' && rowStatus !== status) matchesFilter = false;
                     if (date && rowDate !== date) matchesFilter = false;
 
-                    if (matchesFilter && visibleCount < limit) {
-                        row.style.display = '';
-                        visibleCount++;
+                    if (matchesFilter) {
+                        filteredRows.push(row);
                     } else {
                         row.style.display = 'none';
                     }
                 });
 
-                visibleCountSpan.innerText = visibleCount;
+                if (filteredRows.length === 0 && rows.length > 0) {
+                    if (emptyFilterRow) emptyFilterRow.style.display = '';
+                } else {
+                    if (emptyFilterRow) emptyFilterRow.style.display = 'none';
+                }
+
+                currentPage = 1;
+                renderPagination();
+                showPage(currentPage);
             }
+
+            function renderPagination() {
+                const totalRows = filteredRows.length;
+                const totalPages = Math.ceil(totalRows / pageSize) || 1;
+
+                pageNumbersContainer.innerHTML = '';
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `px-5 py-2 font-bold text-sm transition-all flex items-center justify-center border-r last:border-r-0 border-gray-200 dark:border-gray-700 ${
+                        i === currentPage 
+                            ? 'bg-emerald-50/70 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' 
+                            : 'bg-white dark:bg-gray-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`;
+                    btn.textContent = i;
+                    btn.addEventListener('click', () => {
+                        currentPage = i;
+                        updateActivePageDecorations();
+                        showPage(currentPage);
+                    });
+                    pageNumbersContainer.appendChild(btn);
+                }
+
+                prevPageBtn.disabled = currentPage === 1;
+                nextPageBtn.disabled = currentPage === totalPages;
+            }
+
+            function updateActivePageDecorations() {
+                const totalPages = Math.ceil(filteredRows.length / pageSize) || 1;
+                prevPageBtn.disabled = currentPage === 1;
+                nextPageBtn.disabled = currentPage === totalPages;
+
+                const buttons = pageNumbersContainer.querySelectorAll('button');
+                buttons.forEach((btn, idx) => {
+                    const pageNum = idx + 1;
+                    if (pageNum === currentPage) {
+                        btn.className = 'px-5 py-2 font-bold text-sm bg-emerald-50/70 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 transition-all flex items-center justify-center border-r last:border-r-0 border-gray-200 dark:border-gray-700';
+                    } else {
+                        btn.className = 'px-5 py-2 font-bold text-sm bg-white dark:bg-gray-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all flex items-center justify-center border-r last:border-r-0 border-gray-200 dark:border-gray-700';
+                    }
+                });
+            }
+
+            function showPage(page) {
+                const startIdx = (page - 1) * pageSize;
+                const endIdx = startIdx + pageSize;
+
+                // Hide all rows first, then show only the ones on the current page
+                rows.forEach(r => r.style.display = 'none');
+
+                const pageRows = filteredRows.slice(startIdx, endIdx);
+                pageRows.forEach(row => {
+                    row.style.display = '';
+                });
+
+                visibleCountSpan.innerText = pageRows.length;
+            }
+
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateActivePageDecorations();
+                    showPage(currentPage);
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredRows.length / pageSize) || 1;
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateActivePageDecorations();
+                    showPage(currentPage);
+                }
+            });
 
             searchInput.addEventListener('input', filterLogs);
             statusFilter.addEventListener('change', filterLogs);
-            limitFilter.addEventListener('change', filterLogs);
             dateFilter.addEventListener('change', filterLogs);
 
             // Initial Filter
