@@ -205,7 +205,8 @@
                             
                             <form id="chat-form-{{ $student->id }}"
                                   data-student-id="{{ $student->id }}"
-                                  data-action="{{ route('parent.messages.send', $student) }}"
+                                  {{-- UBAH KE RELATIVE  --}}
+                                  data-action="{{ route('parent.messages.send', $student, false) }}"
                                   class="flex gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-3 rounded-2xl">
                                 @csrf
                                 <input type="text" name="message" required placeholder="Tulis pesan ke Ustadz..."
