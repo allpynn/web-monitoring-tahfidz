@@ -66,7 +66,7 @@
 
                     <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/60 p-2 rounded-2xl border border-gray-100/50 dark:border-gray-800">
                         <form class="guru-reply-form flex-1 flex gap-2"
-                              data-action="{{ route('guru.messages.reply', $msg) }}"
+                              data-action="{{ route('guru.messages.reply', $msg, false) }}"
                               data-student-id="{{ $msg->student_id }}"
                               data-msg-id="{{ $msg->id }}">
                             @csrf
