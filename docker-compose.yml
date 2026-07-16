@@ -1,55 +1,36 @@
 services:
   app:
     image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
-    container_name: laravel_app_dev
+    container_name: laravel_app
     restart: always
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: "0.75"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file:
       - .env
-    environment:
-      DB_DATABASE: tahfidz_db
-    volumes:
-      - .:/var/www
     ports:
       - "8081:8000"
-    command: php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000 --watch
+    command: php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000
 
   reverb:
     image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
-    container_name: laravel_reverb_dev
+    container_name: laravel_reverb
     restart: always
+    mem_limit: 256m
+    memswap_limit: 256m
+    cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
     env_file:
       - .env
-    environment:
-      DB_DATABASE: tahfidz_db
-    volumes:
-      - .:/var/www
     ports:
       - "8082:8080"
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
-
-  queue:
-    image: ghcr.io/allpynn/web-monitoring-tahfidz:latest
-    container_name: laravel_queue_dev
-    restart: always
-    env_file:
-      - .env
-    environment:
-      DB_DATABASE: tahfidz_db
-    volumes:
-      - .:/var/www
-    command: php artisan queue:work --sleep=3 --tries=3
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: phpmyadmin_dev
-    restart: always
-    env_file:
-      - .env
-    environment:
-      PMA_HOST: ${DB_HOST}
-      PMA_PORT: ${DB_PORT}
-      PMA_USER: ${DB_USERNAME}
-      PMA_PASSWORD: ${DB_PASSWORD}
-      UPLOAD_LIMIT: 300M
-    ports:
-      - "8083:80"
