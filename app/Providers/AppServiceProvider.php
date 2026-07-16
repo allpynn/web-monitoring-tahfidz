@@ -18,6 +18,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         view()->composer('components.tahfidz.sidebar', function ($view) {
             if (auth()->check() && auth()->user()->role === 'guru') {
                 $unreadCount = \App\Models\Pesan::where('receiver_id', auth()->id())
