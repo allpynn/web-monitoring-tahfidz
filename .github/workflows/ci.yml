@@ -36,7 +36,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha,format=short
-      # Build and push Docker images
+      # Build and push Docker images with arg var
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
