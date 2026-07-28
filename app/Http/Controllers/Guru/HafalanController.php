@@ -161,8 +161,6 @@ class HafalanController extends Controller
         $hafalan = RiwayatHafalan::create($data);
         $hafalan->student->refreshCache();
 
-        broadcast(new HafalanUpdated("Siswa " . Auth::user()->name . " telah melakukan setoran baru!"))->toOthers();
-
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil disimpan.');
     }
 

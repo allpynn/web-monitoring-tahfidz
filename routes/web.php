@@ -25,7 +25,7 @@ Route::get('/dashboard', function () {
         'admin' => redirect()->route('admin.dashboard'),
         'guru' => redirect()->route('guru.dashboard'),
         'orang_tua' => redirect()->route('parent.dashboard'),
-        default => view('dashboard'),
+        default => redirect()->route('home'),
     };
 })->middleware(['auth', 'verified'])->name('dashboard');
 

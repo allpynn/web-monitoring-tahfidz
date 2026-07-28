@@ -304,7 +304,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof Echo !== 'undefined') {
                 window.Echo.channel('hafalan-updates')
-                    .listen('HafalanUpdated', (e) => {
+                    .listen('.hafalan.updated', (e) => {
                         console.log('Update Hafalan:', e.message);
                     });
             }
