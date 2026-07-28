@@ -67,23 +67,6 @@
                         </div>
                     </div>
 
-                    {{-- Detail Progres Aktif --}}
-                    @php
-                        $currentJuz = $student->current_juz ?: 30;
-                        $juzProgress = $student->getJuzProgress($currentJuz);
-                    @endphp
-                    <div class="p-3 bg-emerald-50/30 dark:bg-emerald-900/10 rounded-xl border border-emerald-100/50 dark:border-emerald-900/20">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase">Fokus: Juz {{ $currentJuz }}</span>
-                            <span class="text-[9px] font-black {{ $juzProgress == 100 ? 'text-emerald-600' : 'text-amber-600' }}">
-                                {{ $juzProgress == 100 ? 'Mumtaz' : $juzProgress . '%' }}
-                            </span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                            <div class="h-1.5 rounded-full transition-all duration-1000 {{ $juzProgress == 100 ? 'bg-emerald-500' : 'bg-amber-400' }}" 
-                                 style="width: {{ $juzProgress }}%"></div>
-                        </div>
-                    </div>
 
                     <div class="mt-6">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Selesai</span>
@@ -181,7 +164,6 @@
                                 <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider">Tanggal</th>
                                 <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider">Materi Hafalan</th>
                                 <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
-                                <th class="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700" id="logTableBody">
@@ -229,25 +211,6 @@
                                                 {{ $m->status }}
                                             </span>
                                         @endif
-                                    </td>
-                                    <td class="px-4 py-2.5 text-right">
-                                        <div class="flex justify-end items-center gap-3">
-                                            @can('update', $m)
-                                                <a href="{{ route('guru.hafalan.edit', $m) }}" class="flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-90" title="Ubah">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                </a>
-                                            @endcan
-
-                                            @can('delete', $m)
-                                                <form action="{{ route('guru.hafalan.destroy', $m) }}" method="POST" class="inline" onsubmit="return confirm('Hapus rekaman ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="flex items-center justify-center w-9 h-9 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-90" title="Hapus">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    </button>
-                                                </form>
-                                            @endcan
-                                        </div>
                                     </td>
                                 </tr>
                             @empty

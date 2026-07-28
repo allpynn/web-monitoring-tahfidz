@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
+use App\Models\StudentAssignment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -150,12 +151,30 @@ class DashboardController extends Controller
                         ]);
                     }
 
-                    Student::create([
+                    $newStudent = Student::create([
                         'nis' => $nis,
                         'name' => $namaS,
                         'gender' => $genderS,
                         'target_juz' => 30
-                    ])->parents()->syncWithoutDetaching([$parent->id]);
+                    ]);
+                    $newStudent->parents()->syncWithoutDetaching([$parent->id]);
+
+                    $currentMonth = now()->month;
+                    $currentYear = now()->year;
+                    $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+                    $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+                    if ($newStudent->guru_id) {
+                        StudentAssignment::updateOrCreate(
+                            [
+                                'student_id' => $newStudent->id,
+                                'academic_year' => $currentAcademicYear,
+                            ],
+                            [
+                                'guru_id' => $newStudent->guru_id,
+                            ]
+                        );
+                    }
                     $successCount++;
                 }
             }

@@ -43,7 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['role:guru'])->prefix('guru')->name('guru.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
-        Route::resource('hafalan', HafalanController::class);
+        Route::resource('hafalan', HafalanController::class)->only(['index', 'create', 'store']);
         Route::get('/hafalan/export/{student}', [HafalanController::class, 'exportPdf'])->name('hafalan.export');
         Route::resource('students', App\Http\Controllers\Guru\StudentController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
         Route::get('/students/{student}/export-pdf', [App\Http\Controllers\Guru\StudentController::class, 'exportPdf'])->name('students.export');

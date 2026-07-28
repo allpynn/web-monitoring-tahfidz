@@ -39,20 +39,12 @@ class RiwayatHafalanPolicy
             return true;
         }
 
-        // Jika status Lancar, tidak boleh diedit kecuali oleh admin
-        if ($riwayatHafalan->status === 'Lancar') {
-            return false;
-        }
-
-        if ($user->id === $riwayatHafalan->guru_id) {
-            return true;
-        }
-
-        // Parent can only update comment
+        // Parent can update comment
         if ($user->role === 'orang_tua') {
             return $user->students->contains('id', $riwayatHafalan->student_id);
         }
 
+        // Guru tidak diperbolehkan mengedit riwayat hafalan
         return false;
     }
 
@@ -65,11 +57,7 @@ class RiwayatHafalanPolicy
             return true;
         }
 
-        // Jika status Lancar, tidak boleh dihapus kecuali oleh admin
-        if ($riwayatHafalan->status === 'Lancar') {
-            return false;
-        }
-
-        return $user->id === $riwayatHafalan->guru_id;
+        // Guru/Orang Tua tidak diperbolehkan menghapus riwayat hafalan
+        return false;
     }
 }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreHafalanRequest;
-use App\Http\Requests\UpdateHafalanRequest;
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
 use App\Models\StudentAssignment;
@@ -31,8 +30,8 @@ class HafalanController extends Controller
     public function index(Request $request)
     {
         $currentMonth = now()->month;
-        $currentYear  = now()->year;
-        $defaultStartYear    = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
         $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
 
         // Kumpulkan tahun ajaran dari santri yang pernah diampu guru ini
@@ -46,10 +45,10 @@ class HafalanController extends Controller
             ->toArray();
 
         $academicYear = $request->input('academic_year', $defaultAcademicYear);
-        $perPage  = $request->input('per_page', 25);
-        $search   = $request->input('search');
-        $date     = $request->input('date');
-        $status   = $request->input('status');
+        $perPage = $request->input('per_page', 25);
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $status = $request->input('status');
         $presence = $request->input('presence');
 
         $query = RiwayatHafalan::with('student')
@@ -57,10 +56,10 @@ class HafalanController extends Controller
 
         // Filter per tahun ajaran: hanya santri yang diampu tahun ini, di rentang Juli–Juni
         if ($academicYear !== 'all') {
-            $years    = explode('/', $academicYear);
+            $years = explode('/', $academicYear);
             $baseYear = (int) ($years[0] ?? $defaultStartYear);
             $startDate = Carbon::create($baseYear, 7, 1)->startOfDay();
-            $endDate   = Carbon::create($baseYear + 1, 6, 30)->endOfDay();
+            $endDate = Carbon::create($baseYear + 1, 6, 30)->endOfDay();
 
             // Hanya santri yang punya assignment di tahun ini
             $assignedStudentIds = StudentAssignment::where('guru_id', Auth::id())
@@ -68,7 +67,7 @@ class HafalanController extends Controller
                 ->pluck('student_id');
 
             $query->whereIn('student_id', $assignedStudentIds)
-                  ->whereBetween('tanggal', [$startDate, $endDate]);
+                ->whereBetween('tanggal', [$startDate, $endDate]);
         }
 
         if ($search) {
@@ -97,10 +96,26 @@ class HafalanController extends Controller
 
     public function create()
     {
-        $students = Student::where('guru_id', Auth::id())->get();
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        // Ambil ID santri yang diampu guru ini pada tahun ajaran sekarang
+        $assignedStudentIds = StudentAssignment::where('guru_id', Auth::id())
+            ->where('academic_year', $currentAcademicYear)
+            ->pluck('student_id');
+
+        $students = Student::whereIn('id', $assignedStudentIds)->get();
+
+        // Fallback jika belum ada record StudentAssignment spesifik
+        if ($students->isEmpty()) {
+            $students = Student::where('guru_id', Auth::id())->get();
+        }
+
         $surahsList = Surah::orderBy('nomor');
 
-        return view('guru.hafalan.create', compact('students', 'surahsList'));
+        return view('guru.hafalan.create', compact('students', 'surahsList', 'currentAcademicYear'));
     }
 
     public function store(StoreHafalanRequest $request)
@@ -120,19 +135,19 @@ class HafalanController extends Controller
                     return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Surah {$surahInfo->nama_latin} hanya memiliki {$maxAyat} ayat."]);
                 }
                 if ($sampai < $dari) {
-                    return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Ayat sampai tidak boleh lebih kecil dari ayat dari."]);
+                    return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Ayat yang Anda Inputkan tidak Valid."]);
                 }
             }
 
-            $exists = RiwayatHafalan::where('student_id', $request->student_id)
+            $alreadyLancar = RiwayatHafalan::where('student_id', $request->student_id)
                 ->where('surah', $request->surah)
                 ->where('ayat', $data['ayat'])
                 ->where('is_present', true)
-                ->whereIn('status', ['Lancar', 'Perlu Perbaikan'])
+                ->where('status', 'Lancar')
                 ->exists();
 
-            if ($exists) {
-                return back()->withInput()->withErrors(['surah' => "Santri sudah pernah menyetorkan Surah {$request->surah} ayat {$data['ayat']} dengan status Lancar/Perlu Perbaikan."]);
+            if ($alreadyLancar) {
+                return back()->withInput()->withErrors(['surah' => "Santri sudah menyetorkan Surah {$request->surah} ayat {$data['ayat']} dengan status Lancar."]);
             }
         }
 
@@ -149,73 +164,6 @@ class HafalanController extends Controller
         broadcast(new HafalanUpdated("Siswa " . Auth::user()->name . " telah melakukan setoran baru!"))->toOthers();
 
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil disimpan.');
-    }
-
-    public function edit(RiwayatHafalan $hafalan)
-    {
-        $this->authorize('update', $hafalan);
-        $students = Student::where('guru_id', Auth::id())->get();
-        $surahsList = Surah::orderBy('nomor');
-        return view('guru.hafalan.edit', compact('hafalan', 'students', 'surahsList'));
-    }
-
-    public function update(UpdateHafalanRequest $request, RiwayatHafalan $hafalan)
-    {
-        $data = $request->validated();
-
-        if ($request->is_present) {
-            $surahInfo = Surah::all()->firstWhere('nama_latin', $request->surah);
-            $dari = (int) $request->ayat_dari;
-            $sampai = (int) $request->ayat_sampai;
-            $data['ayat'] = ($dari === $sampai) ? (string) $dari : "{$dari}-{$sampai}";
-
-            if ($surahInfo) {
-                $maxAyat = (int) $surahInfo->jumlah_ayat;
-                if ($sampai > $maxAyat || $dari > $maxAyat) {
-                    return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Surah {$surahInfo->nama_latin} hanya memiliki {$maxAyat} ayat."]);
-                }
-                if ($sampai < $dari) {
-                    return back()->withInput()->withErrors(['ayat_sampai' => "Gagal: Ayat sampai tidak boleh lebih kecil dari ayat dari."]);
-                }
-            }
-
-            // Duplicate Check (excluding current record)
-            $exists = RiwayatHafalan::where('student_id', $request->student_id)
-                ->where('surah', $request->surah)
-                ->where('ayat', $data['ayat'])
-                ->where('is_present', true)
-                ->whereIn('status', ['Lancar', 'Perlu Perbaikan'])
-                ->where('id', '!=', $hafalan->id)
-                ->exists();
-
-            if ($exists) {
-                return back()->withInput()->withErrors(['surah' => "Santri sudah pernah menyetorkan Surah {$request->surah} ayat {$data['ayat']} dengan status Lancar/Perlu Perbaikan."]);
-            }
-        }
-
-        if (!$request->is_present) {
-            $data['juz'] = null;
-            $data['surah'] = null;
-            $data['ayat'] = null;
-            $data['status'] = null;
-        }
-
-        $hafalan->update($data);
-        $hafalan->student->refreshCache();
-
-        broadcast(new HafalanUpdated("Update hafalan oleh " . Auth::user()->name))->toOthers();
-
-        return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil diperbarui.');
-    }
-
-    public function destroy(RiwayatHafalan $hafalan)
-    {
-        $this->authorize('delete', $hafalan);
-        $student = $hafalan->student;
-        $hafalan->delete();
-        $student->refreshCache();
-
-        return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil dihapus.');
     }
 
     public function exportPdf(Student $student)

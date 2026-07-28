@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\PdfHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\StudentAssignment;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\RiwayatHafalanService;
@@ -109,6 +110,24 @@ class StudentController extends Controller
         return DB::transaction(function () use ($request) {
             $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id']));
 
+            // Otomatis tempatkan santri baru di Tahun Ajaran aktif sekarang
+            $currentMonth = now()->month;
+            $currentYear = now()->year;
+            $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+            $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+            if ($student->guru_id) {
+                StudentAssignment::updateOrCreate(
+                    [
+                        'student_id' => $student->id,
+                        'academic_year' => $currentAcademicYear,
+                    ],
+                    [
+                        'guru_id' => $student->guru_id,
+                    ]
+                );
+            }
+
             if ($request->has('target_juz')) {
                 foreach ($request->target_juz as $idx => $juz) {
                     if ($juz) {
@@ -204,6 +223,24 @@ class StudentController extends Controller
         ]);
 
         $student->update($request->only(['name', 'gender', 'nis', 'guru_id']));
+
+        // Otomatis sinkronkan penugasan di Tahun Ajaran aktif sekarang
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        if ($student->guru_id) {
+            StudentAssignment::updateOrCreate(
+                [
+                    'student_id' => $student->id,
+                    'academic_year' => $currentAcademicYear,
+                ],
+                [
+                    'guru_id' => $student->guru_id,
+                ]
+            );
+        }
 
         $student->targets()->delete();
         if ($request->has('target_juz')) {

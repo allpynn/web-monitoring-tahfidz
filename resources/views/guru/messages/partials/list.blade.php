@@ -101,10 +101,13 @@
 
 <script>
     // Sync Alpine state with the data from the server-rendered partial
-        const unreadStates = {
-            @foreach($parent_messages as $msg)
-                {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
-            @endforeach
-        };
-        window.dispatchEvent(new CustomEvent('sync-unread', { detail: unreadStates }));
+    const unreadStates = {
+        @foreach($parent_messages as $msg)
+            {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
+        @endforeach
+    };
+    // Dispatch separate events so the parent Alpine component can update independently
+    window.dispatchEvent(new CustomEvent('sync-unread', { detail: { unread: unreadStates } }));
+    window.dispatchEvent(new CustomEvent('sync-archive-unread', { detail: {{ $archiveUnreadCount ?? 0 }} }));
+    window.dispatchEvent(new CustomEvent('sync-active-students', { detail: [{{ implode(',', $activeInCurrentYear ?? []) }}] }));
 </script>
