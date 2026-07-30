@@ -9,10 +9,14 @@
     <div class="mt-6" 
          x-on:message-received.window="handleMessageReceived($event.detail)"
          x-on:reply-success.window="handleReplySuccess($event.detail)"
-         x-on:sync-unread.window="unreadMessages = $event.detail; updateSidebarBadge()"
+         x-on:sync-unread.window="unreadMessages = $event.detail.unread; updateSidebarBadge()"
+         x-on:sync-archive-unread.window="archiveUnreadCount = $event.detail"
+         x-on:sync-active-students.window="activeStudentIds = $event.detail"
          x-data="{ 
         openChat: null,
         showArchive: {{ $showArchive ? 'true' : 'false' }},
+        archiveUnreadCount: {{ $archiveUnreadCount }},
+        activeStudentIds: [{{ implode(',', $activeInCurrentYear ?? []) }}],
         unreadMessages: {
             @foreach($parent_messages as $msg)
                 {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
@@ -45,6 +49,10 @@
                     }).then(() => {
                         this.unreadMessages[studentId] = false;
                         this.updateSidebarBadge();
+                        // Decrement archive badge when reading an archived student's message
+                        if (this.showArchive && this.archiveUnreadCount > 0) {
+                            this.archiveUnreadCount--;
+                        }
                     });
                 }
             }
@@ -54,8 +62,12 @@
             if (this.openChat !== pesan.student_id) {
                 this.unreadMessages[pesan.student_id] = true;
                 this.updateSidebarBadge();
+                // If sender's student is archived (not in active year), increment archive badge
+                if (!this.activeStudentIds.includes(pesan.student_id) && !this.showArchive) {
+                    this.archiveUnreadCount++;
+                }
             } else {
-                // If message arrives while chat is OPEN, mark as read on backend immediately
+                // If message arrives while chat is open, mark as read on backend immediately
                 fetch(`/guru/messages/${pesan.student_id}/read`, {
                     method: 'POST',
                     headers: {
@@ -67,13 +79,23 @@
         },
         handleReplySuccess(studentId) {
             // Clear unread status when replying
-            this.unreadMessages[studentId] = false;
-            this.updateSidebarBadge();
+            if (this.unreadMessages[studentId]) {
+                this.unreadMessages[studentId] = false;
+                this.updateSidebarBadge();
+                // If replying in archive tab, decrement archive badge too
+                if (this.showArchive && this.archiveUnreadCount > 0) {
+                    this.archiveUnreadCount--;
+                }
+            }
         },
         toggleArchive() {
             this.showArchive = !this.showArchive;
+            // Optimistically clear archive badge when entering archive tab
+            if (this.showArchive) {
+                this.archiveUnreadCount = 0;
+            }
             document.getElementById('archive-input').value = this.showArchive ? '1' : '0';
-            updateList(document.getElementById('filter-form')); // Need updateList global
+            updateList(document.getElementById('filter-form'));
         }
     }">
         <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[32px] overflow-hidden shadow-sm">
@@ -105,14 +127,22 @@
 
                     <div class="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-1"></div>
 
-                    <button type="button" @click="toggleArchive()"
-                            :class="showArchive ? 'bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 hover:bg-gray-200'"
-                            class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                        </svg>
-                        <span x-text="showArchive ? 'Pesan Aktif' : 'Arsip Pesan'"></span>
-                    </button>
+                    <div class="relative">
+                        <button type="button" @click="toggleArchive()"
+                                :class="showArchive ? 'bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 hover:bg-gray-200'"
+                                class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span x-text="showArchive ? 'Pesan Aktif' : 'Arsip Pesan'"></span>
+                        </button>
+                        {{-- Archive unread badge: appears when there are unread messages from past academic year students --}}
+                        <span x-show="!showArchive && archiveUnreadCount > 0"
+                              x-text="archiveUnreadCount > 9 ? '9+' : archiveUnreadCount"
+                              class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 ring-2 ring-white dark:ring-gray-800 animate-pulse"
+                              style="display: none;">
+                        </span>
+                    </div>
                 </form>
             </div>
 

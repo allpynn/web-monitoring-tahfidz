@@ -8,38 +8,30 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class HafalanUpdated implements ShouldBroadcastNow
+class StudentUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $message;
     public $action;
     public $studentName;
+    public $nis;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct($message = "Update Hafalan Baru!", string $action = 'created', ?string $studentName = null)
+    public function __construct(string $action, string $studentName, ?string $nis = null)
     {
-        $this->message = $message;
-        $this->action = $action;
+        $this->action = $action; // 'created', 'updated', 'deleted'
         $this->studentName = $studentName;
+        $this->nis = $nis;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, Channel>
-     */
     public function broadcastOn(): array
     {
         return [
-            new Channel('hafalan-updates'),
+            new Channel('student-updates'),
         ];
     }
 
     public function broadcastAs(): string
     {
-        return 'hafalan.updated';
+        return 'student.updated';
     }
 }

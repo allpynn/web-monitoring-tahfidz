@@ -18,6 +18,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register Model Observers for Real-Time Event Broadcasting
+        \App\Models\Student::observe(\App\Observers\StudentObserver::class);
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
+        \App\Models\RiwayatHafalan::observe(\App\Observers\RiwayatHafalanObserver::class);
+
         // Force HTTPS in production
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');

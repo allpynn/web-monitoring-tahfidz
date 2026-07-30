@@ -65,7 +65,8 @@ class RiwayatHafalanService
     public function getAnalytics(Student $student)
     {
         $analyticsData = $student->memorizations()
-            ->where('created_at', '>=', now()->subDays(90))
+            ->where('is_present', true)
+            ->orderBy('created_at', 'asc')
             ->get();
 
         $trends = [];
@@ -86,14 +87,14 @@ class RiwayatHafalanService
             $attendance[$date] = $status ? ($status->is_present ? 'present' : 'absent') : 'none';
         }
 
-        $last30Days = $analyticsData->filter(fn ($m) => $m->created_at >= now()->subDays(30) && $m->is_present);
-        
+        $qualityData = $analyticsData->filter(fn ($m) => $m->is_present);
+
         return [
             'trends' => $trends,
             'attendance' => $attendance,
             'quality' => [
-                'lancar' => $last30Days->where('status', 'Lancar')->count(),
-                'perbaikan' => $last30Days->where('status', 'Perlu Perbaikan')->count(),
+                'lancar' => $qualityData->where('status', 'Lancar')->count(),
+                'perbaikan' => $qualityData->where('status', 'Perlu Perbaikan')->count(),
             ],
             'latest_notes' => $student->memorizations()
                 ->whereNotNull('notes')

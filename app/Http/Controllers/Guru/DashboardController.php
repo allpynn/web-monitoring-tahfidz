@@ -161,21 +161,42 @@ class DashboardController extends Controller
         $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
         $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
 
-        // Get student IDs active in current academic year for this teacher
+        // Get student IDs active in current academic year for this teacher.
+        // If no assignments exist for the current year yet (e.g., new semester not set up),
+        // fall back to the most recent academic year that has assignments.
         $activeInCurrentYear = StudentAssignment::where('academic_year', $currentAcademicYear)
             ->where('guru_id', $guruId)
             ->pluck('student_id')
             ->toArray();
 
+        if (empty($activeInCurrentYear)) {
+            $latestYear = StudentAssignment::where('guru_id', $guruId)
+                ->orderByDesc('academic_year')
+                ->value('academic_year');
+
+            if ($latestYear) {
+                $activeInCurrentYear = StudentAssignment::where('academic_year', $latestYear)
+                    ->where('guru_id', $guruId)
+                    ->pluck('student_id')
+                    ->toArray();
+                $currentAcademicYear = $latestYear;
+            }
+        }
+
         // Base query for unique student message threads
         $queryStudentIds = Pesan::where('receiver_id', $guruId)
             ->where('is_resolved', false);
 
-        // Archive / Academic Year Filter - Logic: show threads for students based on active year assignment
+        // Archive / Academic Year Filter
         if ($showArchive) {
             $queryStudentIds->whereNotIn('student_id', $activeInCurrentYear);
         } else {
-            $queryStudentIds->whereIn('student_id', $activeInCurrentYear);
+            if (!empty($activeInCurrentYear)) {
+                $queryStudentIds->whereIn('student_id', $activeInCurrentYear);
+            } else {
+                // No active assignments at all — show nothing in active tab
+                $queryStudentIds->whereRaw('0 = 1');
+            }
         }
 
         if ($search) {
@@ -224,10 +245,28 @@ class DashboardController extends Controller
 
         $parent_messages = $parent_messages->sortByDesc(fn($msg) => $msg->created_at);
 
-        if ($request->ajax()) {
-            return view('guru.messages.partials.list', compact('parent_messages'))->render();
+        // Count unread threads from archived (past academic year) students.
+        // Used to show a notification badge on the "Arsip Pesan" button.
+        $archiveUnreadCount = 0;
+        if (!empty($activeInCurrentYear)) {
+            $archiveStudentIds = Pesan::where('receiver_id', $guruId)
+                ->where('is_resolved', false)
+                ->whereNotIn('student_id', $activeInCurrentYear)
+                ->distinct()
+                ->pluck('student_id');
+
+            $archiveUnreadCount = $archiveStudentIds->filter(function ($sId) use ($guruId) {
+                return Pesan::where('student_id', $sId)
+                    ->where('receiver_id', $guruId)
+                    ->where('is_read', false)
+                    ->exists();
+            })->count();
         }
 
-        return view('guru.messages.index', compact('parent_messages', 'showArchive'));
+        if ($request->ajax()) {
+            return view('guru.messages.partials.list', compact('parent_messages', 'archiveUnreadCount', 'activeInCurrentYear'))->render();
+        }
+
+        return view('guru.messages.index', compact('parent_messages', 'showArchive', 'archiveUnreadCount', 'activeInCurrentYear'));
     }
 }

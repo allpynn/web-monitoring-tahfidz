@@ -74,38 +74,54 @@
                     <div class="lg:col-span-2">
                         <x-tahfidz.card title="Riwayat Terakhir" class="h-full flex flex-col">
                             <div class="overflow-x-auto flex-1">
-                                <table class="w-full text-left">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-gray-100 dark:border-gray-700 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                                            <th class="pb-2 px-3">Tanggal</th>
+                                            <th class="pb-2 px-4">Materi Hafalan</th>
+                                            <th class="pb-2 px-4">Status</th>
+                                            <th class="pb-2 px-4">Catatan Guru</th>
+                                            <th class="pb-2 pr-3 text-right">Pembimbing</th>
+                                        </tr>
+                                    </thead>
                                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                         @forelse($student->memorizations->take(10) as $m)
                                             <tr>
-                                                <td class="py-2 text-[10px] text-gray-500 font-black bg-gray-50/30 dark:bg-gray-900/10 px-3 rounded-l-xl uppercase">
+                                                <td class="py-2.5 text-[10px] text-gray-500 font-black bg-gray-50/30 dark:bg-gray-900/10 px-3 rounded-l-xl uppercase whitespace-nowrap">
                                                     {{ $m->tanggal ? \Carbon\Carbon::parse($m->tanggal)->format('d M') : $m->created_at->format('d M') }}
                                                 </td>
-                                                <td class="py-2 px-4 font-bold text-gray-900 dark:text-white text-sm">
+                                                <td class="py-2.5 px-4 font-bold text-gray-900 dark:text-white text-sm">
                                                     @if($m->is_present)
                                                         <div class="flex flex-col lg:flex-row lg:items-center gap-1">
                                                             <span class="text-emerald-700 dark:text-emerald-400">Jz.{{ $m->juz }} {{ $m->surah }}</span>
                                                             <span class="text-[10px] text-gray-400 font-medium">({{ $m->ayat }})</span>
                                                         </div>
                                                     @else
-                                                        <span class="text-red-500 uppercase text-[10px] font-black italic">Izin / Sakit</span>
+                                                        <span class="text-red-500 uppercase text-[10px] font-black italic">Tidak Setor Hafalan</span>
                                                     @endif
                                                 </td>
-                                                <td class="py-2 px-4">
+                                                <td class="py-2.5 px-4">
                                                     @if($m->is_present)
-                                                        <span class="px-2 py-0.5 {{ $m->status === 'Lancar' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700' }} text-[9px] font-black rounded-lg uppercase tracking-tighter">
+                                                        <span class="px-2 py-0.5 {{ $m->status === 'Lancar' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' }} text-[9px] font-black rounded-lg uppercase tracking-tighter">
                                                             {{ $m->status }}
                                                         </span>
                                                     @endif
                                                 </td>
-                                                <td class="py-2 text-right pr-3 rounded-r-xl">
+                                                <td class="py-2.5 px-4 text-xs text-gray-600 dark:text-gray-300 font-medium">
+                                                    @if($m->notes)
+                                                        <span class="italic">"{{ $m->notes }}"</span>
+                                                    @else
+                                                        <span class="text-gray-300 dark:text-gray-600">-</span>
+                                                    @endif
+                                                </td>
+                                                <td class="py-2.5 text-right pr-3 rounded-r-xl whitespace-nowrap">
                                                     @if($m->is_present)
-                                                        <span class="text-[10px] text-gray-400 italic">Disimak: {{ $m->guru->name ?? 'Guru' }}</span>
+                                                        <span class="text-[10px] text-gray-400 italic">{{ $m->guru->name ?? 'Guru' }}</span>
                                                     @endif
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="4" class="py-12 text-center text-gray-400 italic">Belum ada riwayat hafalan.</td></tr>
+                                            <tr><td colspan="5" class="py-12 text-center text-gray-400 italic">Belum ada riwayat hafalan.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -121,15 +137,6 @@
                     </div>
 
                     <div class="lg:col-span-1 flex flex-col gap-6">
-                        @if($student->latest_notes)
-                            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 rounded-r-xl shadow-sm">
-                                <h4 class="text-[10px] font-black text-emerald-800 dark:text-emerald-400 mb-1 flex items-center gap-2 uppercase tracking-widest">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
-                                    Feedback Guru
-                                </h4>
-                                <p class="text-sm text-emerald-700 dark:text-emerald-300 italic font-medium">"{{ $student->latest_notes }}"</p>
-                            </div>
-                        @endif
 
                         <x-tahfidz.card title="Kualitas Hafalan">
                             <div class="relative w-full aspect-square max-h-48 mx-auto flex items-center justify-center">
@@ -144,7 +151,7 @@
                                         <span class="text-[10px] text-gray-500 font-bold uppercase">Lancar</span>
                                     </div>
                                 @else
-                                    <p class="text-xs text-gray-400 italic">Belum ada data bulan ini.</p>
+                                    <p class="text-xs text-gray-400 italic">Belum ada data kualitas hafalan.</p>
                                 @endif
                             </div>
                             <div class="flex justify-center gap-4 mt-4">
@@ -205,7 +212,7 @@
                             
                             <form id="chat-form-{{ $student->id }}"
                                   data-student-id="{{ $student->id }}"
-                                  {{-- UBAH KE RELATIVE  --}}
+                                  
                                   data-action="{{ route('parent.messages.send', $student, false) }}"
                                   class="flex gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-3 rounded-2xl">
                                 @csrf
@@ -237,7 +244,7 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Helper: create a message bubble HTML
+        
         function createBubble(message, time, isSelf) {
             if (isSelf) {
                 return `<div class="flex justify-end items-start">
@@ -261,10 +268,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Scroll all chat boxes to bottom on load
+            
             document.querySelectorAll('[id^="chat-box-"]').forEach(box => scrollToBottom(box));
 
-            // AJAX form submission for each chat form
             document.querySelectorAll('[id^="chat-form-"]').forEach(form => {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -305,7 +311,6 @@
                 });
             });
 
-            // Quality charts
             document.querySelectorAll('.quality-chart').forEach(canvas => {
                 const ctx = canvas.getContext('2d');
                 const lancar = parseInt(canvas.dataset.lancar);
@@ -321,11 +326,10 @@
                 });
             });
 
-            // Real-time: listen for incoming messages from Guru via Reverb
             window.addEventListener('message-received', (e) => {
                 const pesan = e.detail;
                 const chatBox = document.getElementById('chat-box-' + pesan.student_id);
-                if (!chatBox) return; // message is for a different student not on this page
+                if (!chatBox) return; 
 
                 const emptyState = document.getElementById('empty-chat-' + pesan.student_id);
                 if (emptyState) emptyState.remove();

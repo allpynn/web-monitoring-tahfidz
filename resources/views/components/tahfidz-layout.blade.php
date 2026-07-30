@@ -43,7 +43,7 @@
         <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-900/50 z-30 hidden sm:hidden backdrop-blur-sm transition-opacity"></div>
 
         <div class="p-4 sm:ml-64 pt-20">
-            <div class="p-4 rounded-lg dark:border-gray-700">
+            <div id="main-content-container" class="p-4 rounded-lg dark:border-gray-700">
                 <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex-1 min-w-0">
                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white truncate">{{ $header ?? '' }}</h1>
