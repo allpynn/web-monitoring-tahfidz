@@ -12,34 +12,7 @@ class ParentController extends Controller
 {
     public function index(Request $request)
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
-        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
-
-        $academicYears = \App\Models\StudentAssignment::distinct()
-            ->pluck('academic_year')
-            ->push($defaultAcademicYear)
-            ->unique()
-            ->sortByDesc(fn($year) => $year)
-            ->values()
-            ->toArray();
-
-        $academicYear = $request->input('academic_year', $defaultAcademicYear);
-
-        $query = User::where('role', 'orang_tua');
-
-        if ($academicYear !== 'all') {
-            $query->whereHas('students.academicAssignments', function($q) use ($academicYear) {
-                $q->where('academic_year', $academicYear);
-            })->withCount(['students' => function($q) use ($academicYear) {
-                $q->whereHas('academicAssignments', function($q2) use ($academicYear) {
-                    $q2->where('academic_year', $academicYear);
-                });
-            }]);
-        } else {
-            $query->withCount('students');
-        }
+        $query = User::where('role', 'orang_tua')->withCount('students');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -65,7 +38,7 @@ class ParentController extends Controller
         $perPage = $request->input('per_page', 25);
         $parents = $query->paginate($perPage)->withQueryString();
 
-        return view('admin.parents.index', compact('parents', 'academicYears', 'academicYear'));
+        return view('admin.parents.index', compact('parents'));
     }
 
     public function create()
@@ -79,11 +52,12 @@ class ParentController extends Controller
             'name' => 'required|string|max:255',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:20|unique:users',
+            'phone' => ['required', 'string', 'regex:/^[0-9]{10,15}$/', 'unique:users'],
             'password' => 'nullable|string|min:8|confirmed',
         ], [
             'email.unique' => 'Gagal: Email ini sudah terdaftar di sistem!',
             'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar di sistem (digunakan oleh akun lain)!',
+            'phone.regex' => 'Gagal: Nomor HP harus berupa angka (10 hingga 15 digit)!',
         ]);
 
         $phone = $request->phone;
@@ -121,11 +95,12 @@ class ParentController extends Controller
             'name' => 'required|string|max:255',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($parent->id)],
-            'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($parent->id)],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{10,15}$/', Rule::unique('users')->ignore($parent->id)],
             'password' => 'nullable|string|min:8|confirmed',
         ], [
             'email.unique' => 'Gagal: Email ini sudah terdaftar untuk pengguna lain!',
             'phone.unique' => 'Gagal: Nomor HP ini sudah terdaftar untuk pengguna lain!',
+            'phone.regex' => 'Gagal: Nomor HP harus berupa angka (10 hingga 15 digit)!',
         ]);
 
         $data = [

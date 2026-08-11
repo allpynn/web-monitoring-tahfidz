@@ -60,7 +60,7 @@
 
                     <x-tahfidz.form-input type="email" name="email" label="Email" placeholder="orangtua@example.com"
                         required />
-                    <x-tahfidz.form-input type="text" name="phone" label="Nomor Handphone"
+                    <x-tahfidz.form-input type="tel" name="phone" label="Nomor Handphone"
                         placeholder="Contoh: 08123456789" required />
                 </div>
             </x-tahfidz.card>

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\RiwayatHafalan;
 use App\Models\Student;
-use App\Models\Surah;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -72,66 +71,59 @@ class DatabaseSeeder extends Seeder
             'name' => 'Muhammad Fulan',
             'gender' => 'Laki-laki',
             'guru_id' => $guru1->id,
-            'target_juz' => 30,
-            'target_date' => now()->addYear(),
         ]);
         $santri1->parents()->syncWithoutDetaching([$ortu1->id]);
+        DB::table('student_targets')->updateOrInsert(['student_id' => $santri1->id], ['target_juz' => 30, 'target_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]);
 
         $santri2 = Student::updateOrCreate(['nis' => '2024000002'], [
             'name' => 'Aisyah Fitriani',
             'gender' => 'Perempuan',
             'guru_id' => $guru1->id,
-            'target_juz' => 30,
-            'target_date' => now()->addYear(),
         ]);
         $santri2->parents()->syncWithoutDetaching([$ortu1->id]);
+        DB::table('student_targets')->updateOrInsert(['student_id' => $santri2->id], ['target_juz' => 30, 'target_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]);
 
         $santri3 = Student::updateOrCreate(['nis' => '2024000003'], [
             'name' => 'Zaid Al-Hakim',
             'gender' => 'Laki-laki',
             'guru_id' => $guru2->id,
-            'target_juz' => 30,
-            'target_date' => now()->addMonths(18),
         ]);
         $santri3->parents()->syncWithoutDetaching([$ortu2->id]);
+        DB::table('student_targets')->updateOrInsert(['student_id' => $santri3->id], ['target_juz' => 30, 'target_date' => now()->addMonths(18), 'created_at' => now(), 'updated_at' => now()]);
 
         $santri4 = Student::updateOrCreate(['nis' => '2024000004'], [
             'name' => 'Fatimah Az-Zahra',
             'gender' => 'Perempuan',
             'guru_id' => $guru2->id,
-            'target_juz' => 30,
-            'target_date' => now()->addMonths(12),
         ]);
         $santri4->parents()->syncWithoutDetaching([$ortu2->id]);
+        DB::table('student_targets')->updateOrInsert(['student_id' => $santri4->id], ['target_juz' => 30, 'target_date' => now()->addMonths(12), 'created_at' => now(), 'updated_at' => now()]);
 
         $santri5 = Student::updateOrCreate(['nis' => '2024000005'], [
             'name' => 'Umar Patah',
             'gender' => 'Laki-laki',
             'guru_id' => $guru2->id,
-            'target_juz' => 30,
-            'target_date' => now()->addMonths(20),
         ]);
         $santri5->parents()->syncWithoutDetaching([$ortu3->id]);
+        DB::table('student_targets')->updateOrInsert(['student_id' => $santri5->id], ['target_juz' => 30, 'target_date' => now()->addMonths(20), 'created_at' => now(), 'updated_at' => now()]);
 
         // 5. Sepuluh (10) Hafalan Keseluruhan
-        $surahs = Surah::all();
-        // Berikan rata-rata 2 hafalan untuk setiap siswa untuk mencapai total 10
         $students = [$santri1, $santri2, $santri3, $santri4, $santri5];
         $statuses = ['Lancar', 'Perlu Perbaikan'];
+        $surahNames = ['Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Maidah'];
         
         // Hapus hafalan lama untuk memastikan tidak bertumpuk jika dijalankan berulang
         DB::table('riwayat_hafalan')->truncate();
 
         foreach ($students as $santri) {
             for ($i = 0; $i < 2; $i++) {
-                $randomSurah = $surahs->random();
                 $randomDate = now()->subDays(rand(0, 30));
                 
                 RiwayatHafalan::create([
                     'student_id' => $santri->id,
                     'guru_id' => $santri->guru_id,
-                    'juz' => $randomSurah->juz_awal,
-                    'surah' => $randomSurah->nama_latin,
+                    'juz' => rand(1, 30),
+                    'surah' => $surahNames[array_rand($surahNames)],
                     'ayat' => rand(1, 10).'-'.rand(11, 20),
                     'status' => $statuses[array_rand($statuses)],
                     'is_present' => true,
@@ -144,5 +136,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(SantriDummySeeder::class);
+        $this->call(Juz30LancarSeeder::class);
     }
 }
