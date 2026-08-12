@@ -25,7 +25,7 @@ class StoreStudentRequest extends FormRequest
             'parent_names' => 'required|array|min:1',
             'parent_names.*' => 'required|string|max:255',
             'parent_phones' => 'required|array|min:1',
-            'parent_phones.*' => 'required|string|max:20',
+            'parent_phones.*' => 'required|string|regex:/^[0-9]{10,15}$/',
             'target_juz' => 'required|integer|min:1|max:30',
             'target_date' => 'nullable|date',
         ];

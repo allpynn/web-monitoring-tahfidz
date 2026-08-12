@@ -61,7 +61,7 @@
                     <x-tahfidz.form-input name="nip" label="NIP" placeholder="Nomor Induk Pegawai" required />
                     <x-tahfidz.form-input type="email" name="email" label="Email" placeholder="guru@example.com"
                         required />
-                    <x-tahfidz.form-input type="text" name="phone" label="Nomor Handphone"
+                    <x-tahfidz.form-input type="tel" name="phone" label="Nomor Handphone"
                         placeholder="Contoh: 08123456789" required />
                 </div>
             </x-tahfidz.card>

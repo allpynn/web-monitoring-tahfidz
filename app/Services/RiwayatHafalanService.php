@@ -28,40 +28,6 @@ class RiwayatHafalanService
         ]);
     }
 
-    public function generateSemesterRecap(Student $student, $semester = null, $year = null)
-    {
-        $query = $student->memorizations()->orderBy('created_at', 'asc');
-
-        if ($semester && $year) {
-            // academic_year format: "2025/2026"
-            list($startYear, $endYear) = explode('/', $year);
-
-            if ($semester === 'ganjil') {
-                $startDate = \Carbon\Carbon::create($startYear, 7, 1)->startOfDay();
-                $endDate = \Carbon\Carbon::create($startYear, 12, 31)->endOfDay();
-            } else {
-                $startDate = \Carbon\Carbon::create($endYear, 1, 1)->startOfDay();
-                $endDate = \Carbon\Carbon::create($endYear, 6, 30)->endOfDay();
-            }
-
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        } else {
-            // Default to last 6 months if no params
-            $query->where('created_at', '>=', now()->subMonths(6));
-        }
-
-        $memorizations = $query->get();
-        $logoBase64 = PdfHelper::getLogoBase64();
-
-        return Pdf::loadView('pdf.semester_recap', [
-            'student' => $student,
-            'memorizations' => $memorizations,
-            'logoBase64' => $logoBase64,
-            'semester' => $semester,
-            'academic_year' => $year
-        ]);
-    }
-
     public function getAnalytics(Student $student)
     {
         $analyticsData = $student->memorizations()

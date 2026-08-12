@@ -76,53 +76,13 @@
                     </div>
                 </div>
 
-                <div class="mt-8 space-y-3 pb-12">
+                <div class="mt-8 pb-12">
                     <a href="{{ route('guru.students.export', $student) }}" class="w-full py-3 bg-emerald-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="m9 13.5 3 3m0 0 3-3m-3 3v-6m1.06-4.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                         </svg>
-                        Download Raport (PDF)
+                        Download Rekap Hafalan
                     </a>
-                    {{-- Rekap Semester Dropdown --}}
-                    <div class="relative w-full" x-data="{ open: false }">
-                        <button @click="open = !open" type="button" class="w-full py-3 bg-amber-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 dark:shadow-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="m9 13.5 3 3m0 0 3-3m-3 3v-6m1.06-4.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-                            </svg>
-                            Rekap Semester (PDF)
-                            <svg class="ml-1 h-4 w-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-
-                        <div x-show="open" 
-                             x-collapse
-                             @click.away="open = false" 
-                             class="mt-2 w-full rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50 overflow-hidden" 
-                             style="display: none;">
-                            <div class="py-2 px-1">
-                                <div class="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 dark:border-gray-700/50 mb-1 leading-none">Pilih Periode</div>
-                                
-                                @php
-                                    $currentYearForDropdown = date('Y');
-                                    $semesterAcademicYears = [
-                                        ($currentYearForDropdown - 1) . '/' . $currentYearForDropdown,
-                                        $currentYearForDropdown . '/' . ($currentYearForDropdown + 1),
-                                    ];
-                                @endphp
-                                
-                                @foreach($semesterAcademicYears as $ay)
-                                    <div class="px-3 py-2 text-[9px] font-bold text-gray-500/60 dark:text-gray-400/60 uppercase tracking-tighter bg-gray-50 dark:bg-gray-900/40 mb-1 rounded-lg">TA {{ $ay }}</div>
-                                    <a href="{{ route('guru.students.export_semester', [$student, 'semester' => 'ganjil', 'year' => $ay]) }}" class="group flex items-center px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-xl transition-all mb-1">
-                                        Semester Ganjil
-                                    </a>
-                                    <a href="{{ route('guru.students.export_semester', [$student, 'semester' => 'genap', 'year' => $ay]) }}" class="group flex items-center px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-xl transition-all mb-2">
-                                        Semester Genap
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </x-tahfidz.card>
         </div>

@@ -18,19 +18,44 @@ class DashboardController extends Controller
         $guruCount = User::where('role', 'guru')->count();
         $studentCount = Student::count();
         $parentCount = User::where('role', 'orang_tua')->count();
+        $gurus = User::where('role', 'guru')->orderBy('name')->get();
+
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $defaultAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+
+        $academicYears = StudentAssignment::distinct()
+            ->pluck('academic_year')
+            ->push($defaultAcademicYear)
+            ->unique()
+            ->sortByDesc(fn($year) => $year)
+            ->values()
+            ->toArray();
 
         return view('admin.dashboard', compact(
             'guruCount',
             'studentCount',
-            'parentCount'
+            'parentCount',
+            'gurus',
+            'academicYears',
+            'defaultAcademicYear'
         ));
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required'
+            'file' => 'required',
+            'academic_year' => 'nullable|string',
+            'guru_id' => 'nullable|exists:users,id',
         ], ['file.required' => 'Silakan pilih file CSV terlebih dahulu.']);
+
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
+        $fallbackAcademicYear = $request->input('academic_year') ?: ($defaultStartYear . '/' . ($defaultStartYear + 1));
+        $fallbackGuruId = $request->input('guru_id') ?: null;
 
         $upload = $request->file('file');
         $successCount = 0;
@@ -86,13 +111,15 @@ class DashboardController extends Controller
                     $gender = $this->normalizeGender($data[4]);
 
                     $phone = preg_replace('/[^0-9]/', '', $phoneRaw);
-                    // Jika diawali 62..., ubah jadi 0...
                     if (str_starts_with($phone, '62')) {
                         $phone = '0' . substr($phone, 2);
-                    }
-                    // Jika diawali 8..., tambah 0 di depannya
-                    elseif (str_starts_with($phone, '8')) {
+                    } elseif (str_starts_with($phone, '8')) {
                         $phone = '0' . $phone;
+                    }
+
+                    if (strlen($phone) < 10 || strlen($phone) > 15) {
+                        $errorMessages[] = "Baris $rowNum ($nama): Nomor HP '$phoneRaw' tidak valid (harus 10-15 digit angka).";
+                        continue;
                     }
 
                     if (User::where('email', $email)->orWhere('nip', $nip)->exists()) {
@@ -126,20 +153,28 @@ class DashboardController extends Controller
                     $phoneORaw = $data[5];
                     $genderO = $this->normalizeGender($data[6]);
 
+                    $phoneO = preg_replace('/[^0-9]/', '', $phoneORaw);
+                    if (str_starts_with($phoneO, '62'))
+                        $phoneO = '0' . substr($phoneO, 2);
+                    elseif (str_starts_with($phoneO, '8'))
+                        $phoneO = '0' . $phoneO;
+
+                    if (strlen($phoneO) < 10 || strlen($phoneO) > 15) {
+                        $errorMessages[] = "Baris $rowNum (Santri $namaS): Nomor HP orang tua '$phoneORaw' tidak valid (harus 10-15 digit angka).";
+                        continue;
+                    }
+
                     if (Student::where('nis', $nis)->exists()) {
                         $errorMessages[] = "Baris $rowNum (Santri $namaS): NISN $nis sudah ada.";
                         continue;
                     }
 
+                    // Gunakan Guru Pendamping & Tahun Ajaran dari pilihan di Form Modal
+                    $rowGuruId = $fallbackGuruId;
+                    $rowAcademicYear = $fallbackAcademicYear;
+
                     $parent = User::where('email', $emailO)->first();
                     if (!$parent) {
-                        $phoneO = preg_replace('/[^0-9]/', '', $phoneORaw);
-                        // Normalisasi format 08...
-                        if (str_starts_with($phoneO, '62'))
-                            $phoneO = '0' . substr($phoneO, 2);
-                        elseif (str_starts_with($phoneO, '8'))
-                            $phoneO = '0' . $phoneO;
-
                         $parent = User::create([
                             'email' => $emailO,
                             'name' => $namaO,
@@ -155,26 +190,22 @@ class DashboardController extends Controller
                         'nis' => $nis,
                         'name' => $namaS,
                         'gender' => $genderS,
+                        'guru_id' => $rowGuruId,
                         'target_juz' => 30
                     ]);
                     $newStudent->parents()->syncWithoutDetaching([$parent->id]);
 
-                    $currentMonth = now()->month;
-                    $currentYear = now()->year;
-                    $defaultStartYear = ($currentMonth >= 7) ? $currentYear : $currentYear - 1;
-                    $currentAcademicYear = $defaultStartYear . '/' . ($defaultStartYear + 1);
+                    // Selalu catat penugasan di StudentAssignment berdasarkan Tahun Ajaran & Guru yang dipilih pada form modal
+                    StudentAssignment::updateOrCreate(
+                        [
+                            'student_id' => $newStudent->id,
+                            'academic_year' => $rowAcademicYear,
+                        ],
+                        [
+                            'guru_id' => $rowGuruId,
+                        ]
+                    );
 
-                    if ($newStudent->guru_id) {
-                        StudentAssignment::updateOrCreate(
-                            [
-                                'student_id' => $newStudent->id,
-                                'academic_year' => $currentAcademicYear,
-                            ],
-                            [
-                                'guru_id' => $newStudent->guru_id,
-                            ]
-                        );
-                    }
                     $successCount++;
                 }
             }

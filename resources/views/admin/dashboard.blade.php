@@ -73,9 +73,48 @@
             </div>
             <form action="{{ route('admin.import') ?? '#' }}" method="POST" enctype="multipart/form-data" class="p-6">
                 @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload File (.csv)</label>
-                    <input type="file" name="file" accept=".csv" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-900/30 dark:file:text-emerald-400">
+                <div class="mb-4 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Tipe Data yang Diimport</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label id="labelImportSantri" class="flex items-center justify-center p-2.5 border rounded-xl cursor-pointer text-sm font-bold transition-all border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                <input type="radio" name="import_type" value="santri" checked class="sr-only" onchange="toggleImportType('santri')">
+                                Data Santri
+                            </label>
+                            <label id="labelImportGuru" class="flex items-center justify-center p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer text-sm font-bold transition-all text-gray-600 dark:text-gray-400">
+                                <input type="radio" name="import_type" value="guru" class="sr-only" onchange="toggleImportType('guru')">
+                                Data Guru
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="santriOptions" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tahun Ajaran</label>
+                            <select name="academic_year" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white">
+                                @foreach($academicYears ?? [] as $ay)
+                                    <option value="{{ $ay }}" {{ ($defaultAcademicYear ?? '') == $ay ? 'selected' : '' }}>{{ $ay }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guru Pendamping Default (Opsional)</label>
+                            <select name="guru_id" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white">
+                                <option value="">Pilih Guru Pendamping (Opsional)</option>
+                                @foreach($gurus ?? [] as $g)
+                                    @if(is_object($g))
+                                        <option value="{{ $g->id }}">{{ $g->name }} (NIP: {{ $g->nip ?? '-' }})</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload File (.csv)</label>
+                        <input type="file" name="file" accept=".csv" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-900/30 dark:file:text-emerald-400">
+                    </div>
                     
                     @error('file')
                         <p class="mt-2 text-sm text-red-600 font-bold bg-red-50 p-2 rounded-lg">{{ $message }} (Ingat, simpan file Excel Anda sebagai CSV)</p>
@@ -86,17 +125,18 @@
                     @endif
 
                     <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg space-y-2">
-                        <p class="text-xs text-blue-700 dark:text-blue-300 font-bold">Instruksi Import Cerdas (Guru/Santri):</p>
-                        <p class="text-[11px] text-blue-600 dark:text-blue-400">Sistem akan membedakan data secara otomatis berdasarkan nama kolom Anda di Excel (Baris ke-1).</p>
-                        <div class="space-y-3 mt-2">
-                            <div class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
-                                <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Guru:</p>
-                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama | NIP | No telp | Email | Jenis Kelamin</strong></p>
-                            </div>
-                            <div class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
-                                <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Santri:</p>
-                                <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama Santri | NISN | JenKel Santri | Nama Ortu | Email Ortu | No HP Ortu | JenKel Ortu</strong></p>
-                            </div>
+                        <p class="text-xs text-blue-700 dark:text-blue-300 font-bold">Instruksi Format Kolom CSV:</p>
+                        
+                        <div id="infoSantri" class="p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
+                            <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Santri (7 Kolom):</p>
+                            <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama Santri | NISN | JenKel Santri | Nama Ortu | Email Ortu | No HP Ortu | JenKel Ortu</strong></p>
+                            <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-1 italic">* Tahun Ajaran dan Guru Pendamping diambil otomatis dari pilihan form di atas.</p>
+                        </div>
+
+                        <div id="infoGuru" class="hidden p-2 bg-white/50 dark:bg-black/20 rounded border border-blue-100 dark:border-blue-800">
+                            <p class="text-xs text-blue-800 dark:text-blue-300 font-bold mb-1">▶ Untuk Import Guru:</p>
+                            <p class="text-[11px] text-blue-700 dark:text-blue-400">Urutan: <strong>Nama | NIP | No telp | Email | Jenis Kelamin</strong></p>
+                            <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-1 italic">* Akun Guru tidak memerlukan Tahun Ajaran.</p>
                         </div>
                     </div>
                 </div>
@@ -107,4 +147,30 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function toggleImportType(type) {
+            const santriOptions = document.getElementById('santriOptions');
+            const labelSantri = document.getElementById('labelImportSantri');
+            const labelGuru = document.getElementById('labelImportGuru');
+            const infoSantri = document.getElementById('infoSantri');
+            const infoGuru = document.getElementById('infoGuru');
+
+            if (type === 'santri') {
+                santriOptions.classList.remove('hidden');
+                labelSantri.className = 'flex items-center justify-center p-2.5 border rounded-xl cursor-pointer text-sm font-bold transition-all border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+                labelGuru.className = 'flex items-center justify-center p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer text-sm font-bold transition-all text-gray-600 dark:text-gray-400';
+                infoSantri.classList.remove('hidden');
+                infoGuru.classList.add('hidden');
+            } else {
+                santriOptions.classList.add('hidden');
+                labelGuru.className = 'flex items-center justify-center p-2.5 border rounded-xl cursor-pointer text-sm font-bold transition-all border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+                labelSantri.className = 'flex items-center justify-center p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer text-sm font-bold transition-all text-gray-600 dark:text-gray-400';
+                infoGuru.classList.remove('hidden');
+                infoSantri.classList.add('hidden');
+            }
+        }
+    </script>
+    @endpush
 </x-tahfidz-layout>

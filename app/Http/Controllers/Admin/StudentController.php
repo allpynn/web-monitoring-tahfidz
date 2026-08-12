@@ -90,7 +90,7 @@ class StudentController extends Controller
             'nis' => 'required|string|digits:10|unique:students,nis',
             'guru_id' => 'required|exists:users,id',
             'parent_names.*' => 'nullable|string|max:255',
-            'parent_phones.*' => 'nullable|string|max:20',
+            'parent_phones.*' => 'nullable|string|regex:/^[0-9]{10,15}$/',
             'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
             'parent_emails.*' => 'nullable|email|max:255',
             'existing_parent_ids.*' => 'nullable|exists:users,id',
@@ -105,7 +105,31 @@ class StudentController extends Controller
             'guru_id.required' => 'Guru pendamping wajib dipilih.',
             'guru_id.exists' => 'Guru yang dipilih tidak valid.',
             'parent_emails.*.email' => 'Format email orang tua tidak valid.',
+            'parent_phones.*.regex' => 'Nomor HP orang tua harus berupa angka (10 hingga 15 digit).',
         ]);
+
+        $hasExistingParents = $request->filled('existing_parent_ids') && count(array_filter($request->existing_parent_ids)) > 0;
+        $hasNewParents = false;
+
+        if ($request->filled('parent_names')) {
+            foreach ($request->parent_names as $pIndex => $pName) {
+                if (!empty(trim($pName))) {
+                    $hasNewParents = true;
+                    $pPhone = $request->parent_phones[$pIndex] ?? '';
+                    if (empty(trim($pPhone))) {
+                        throw ValidationException::withMessages([
+                            "parent_phones.$pIndex" => "Nomor HP wajib diisi untuk data orang tua baru."
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if (!$hasExistingParents && !$hasNewParents) {
+            throw ValidationException::withMessages([
+                'parent_names' => 'Orang tua wajib diisi. Silakan pilih orang tua yang sudah ada atau tambahkan data orang tua baru.'
+            ]);
+        }
 
         return DB::transaction(function () use ($request) {
             $student = Student::create($request->only(['name', 'gender', 'nis', 'guru_id']));
@@ -210,7 +234,7 @@ class StudentController extends Controller
             'nis' => 'required|string|digits:10|unique:students,nis,' . $student->id,
             'guru_id' => 'required|exists:users,id',
             'parent_names.*' => 'nullable|string|max:255',
-            'parent_phones.*' => 'nullable|string|max:20',
+            'parent_phones.*' => 'nullable|string|regex:/^[0-9]{10,15}$/',
             'parent_genders.*' => 'nullable|in:Laki-laki,Perempuan',
             'parent_emails.*' => 'nullable|email|max:255',
             'existing_parent_ids.*' => 'nullable|exists:users,id',
@@ -220,6 +244,7 @@ class StudentController extends Controller
             'name.required' => 'Nama santri wajib diisi.',
             'nis.required' => 'NISN wajib diisi.',
             'nis.unique' => 'NISN sudah terdaftar di sistem.',
+            'parent_phones.*.regex' => 'Nomor HP orang tua harus berupa angka (10 hingga 15 digit).',
         ]);
 
         $student->update($request->only(['name', 'gender', 'nis', 'guru_id']));

@@ -46,18 +46,26 @@ class DashboardController extends Controller
             'total_santri_diampu'  => StudentAssignment::where('guru_id', $guruId)->where('academic_year', $academicYear)->count(),
         ];
 
+        // Recent activities filtered by selected semester date range
         $recent_activities = RiwayatHafalan::with('student')
             ->where('guru_id', $guruId)
+            ->whereBetween('tanggal', [$startDate, $endDate])
             ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
+        // Students scoped to selected academic_year
+        $studentIds = StudentAssignment::where('guru_id', $guruId)
+            ->where('academic_year', $academicYear)
+            ->pluck('student_id');
 
-        $students = Student::where('guru_id', $guruId)
+        $students = Student::whereIn('id', $studentIds)
             ->with([
                 'targets',
-                'memorizations' => fn($q) => $q->select('id', 'student_id', 'surah', 'ayat', 'juz', 'status', 'is_present', 'tanggal')
+                'memorizations' => fn($q) => $q
+                    ->select('id', 'student_id', 'surah', 'ayat', 'juz', 'status', 'is_present', 'tanggal')
+                    ->whereBetween('tanggal', [$startDate, $endDate])
             ])
             ->get();
 
@@ -73,15 +81,21 @@ class DashboardController extends Controller
             ) {
                 $student->warning_reason = !$latestMem ? 'Belum Ada Setoran' : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor (≥ 3 Hari)');
                 $student->last_mem_date = $latestMem ? Carbon::parse($latestMem->tanggal) : null;
+                $student->days_since_last_mem = $latestMem ? Carbon::parse($latestMem->tanggal)->diffInDays(now()) : 999999;
                 $early_warnings->push($student);
             }
 
-            $activeTarget = $student->activeTarget();
             $student->progress_percent = $student->target_progress;
             $top_targets->push($student);
         }
 
-        $early_warnings = $early_warnings->take(5);
+        $early_warnings = $early_warnings
+            ->sortBy([
+                ['days_since_last_mem', 'desc'],
+                ['name', 'asc'],
+            ])
+            ->values()
+            ->take(5);
         $top_targets = $top_targets->sortByDesc('progress_percent')->take(5);
 
         return view('guru.dashboard', compact(

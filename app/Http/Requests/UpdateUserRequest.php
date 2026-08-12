@@ -18,7 +18,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'phone' => ['required', 'string', 'max:20', 'unique:users,phone,'.$user->id],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{10,15}$/', 'unique:users,phone,'.$user->id],
             'role' => ['required', 'in:guru,orang_tua'],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
         ];

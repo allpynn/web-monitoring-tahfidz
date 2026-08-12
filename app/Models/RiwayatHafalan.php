@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class RiwayatHafalan extends Model
 {
+    use HasFactory;
+
     protected $table = 'riwayat_hafalan';
 
     protected $fillable = [
