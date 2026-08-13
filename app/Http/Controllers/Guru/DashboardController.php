@@ -137,22 +137,6 @@ class DashboardController extends Controller
         return back()->with('success', 'Balasan pesan berhasil dikirim.');
     }
 
-    public function destroyMessage(Pesan $pesan)
-    {
-        if ($pesan->receiver_id !== Auth::id()) {
-            abort(403);
-        }
-
-        Pesan::where('student_id', $pesan->student_id)
-            ->where(function ($q) use ($pesan) {
-                $q->where('sender_id', $pesan->sender_id)->where('receiver_id', Auth::id())
-                    ->orWhere('sender_id', Auth::id())->where('receiver_id', $pesan->sender_id);
-            })
-            ->update(['is_resolved' => true]);
-
-        return back()->with('success', 'Percakapan telah diselesaikan dan dipindahkan dari antrean.');
-    }
-
     public function markAsRead(Student $student)
     {
         Pesan::where('student_id', $student->id)

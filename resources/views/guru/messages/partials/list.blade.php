@@ -1,6 +1,8 @@
-<div class="space-y-3 mt-4" id="message-list-content">
+<div class="flex flex-col gap-3 mt-4" id="message-list-content">
     @forelse($parent_messages as $msg)
-        <div class="border border-gray-100 dark:border-gray-700/50 rounded-3xl overflow-hidden transition-all duration-300"
+        <div class="thread-card border border-gray-100 dark:border-gray-700/50 rounded-3xl overflow-hidden transition-all duration-300"
+            data-student-id="{{ $msg->student_id }}"
+            style="order: {{ $loop->index }}"
             :class="openChat === {{ $msg->student_id }} ? 'bg-emerald-50/50 dark:bg-emerald-900/10 ring-1 ring-emerald-100 dark:ring-emerald-800/30' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/60 bg-gray-50 dark:bg-gray-800/50'">
 
             <div class="p-4 cursor-pointer flex items-center justify-between"
@@ -66,6 +68,7 @@
 
                     <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/60 p-2 rounded-2xl border border-gray-100/50 dark:border-gray-800">
                         <form class="guru-reply-form flex-1 flex gap-2"
+                              action="#"
                               data-action="{{ route('guru.messages.reply', $msg, false) }}"
                               data-student-id="{{ $msg->student_id }}"
                               data-msg-id="{{ $msg->id }}">

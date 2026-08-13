@@ -51,14 +51,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/messages', [GuruDashboardController::class, 'messages'])->name('messages');
         Route::post('/messages/{pesan}/reply', [GuruDashboardController::class, 'replyMessage'])->name('messages.reply');
         Route::post('/messages/{student}/read', [GuruDashboardController::class, 'markAsRead'])->name('messages.read');
-        Route::delete('/messages/{pesan}', [GuruDashboardController::class, 'destroyMessage'])->name('messages.destroy');
     });
 
     Route::middleware(['role:orang_tua'])->prefix('parent')->name('parent.')->group(function () {
         Route::get('/dashboard', [ParentDashboardController::class, 'index'])->name('dashboard');
         Route::post('/messages/{student}', [ParentDashboardController::class, 'sendMessage'])->name('messages.send');
-        Route::delete('/messages/{pesan}', [ParentDashboardController::class, 'destroyMessage'])->name('messages.destroy');
-        Route::delete('/messages/clear/{student}', [ParentDashboardController::class, 'clearChat'])->name('messages.clear');
         Route::get('/history', [ParentHistoryController::class, 'index'])->name('history.index');
         Route::get('/history/{student}/export-pdf', [ParentHistoryController::class, 'exportPdf'])->name('history.export');
     });

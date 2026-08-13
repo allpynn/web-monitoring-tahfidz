@@ -166,20 +166,7 @@
                             </div>
                         </x-tahfidz.card>
 
-                        <x-tahfidz.card class="flex flex-col">
-                            <x-slot name="title_slot">
-                                <h5 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ruang Komunikasi</h5>
-                                @if(($student->messages ?? collect())->count() > 0)
-                                    <form action="{{ route('parent.messages.clear', $student) }}" method="POST" onsubmit="return confirm('Bersihkan seluruh riwayat chat? Tindakan ini tidak bisa dibatalkan.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 text-red-400 hover:text-white border border-red-100 hover:border-red-500 rounded-xl transition-all duration-200 shadow-sm text-[10px] font-black uppercase tracking-tight">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            Bersihkan
-                                        </button>
-                                    </form>
-                                @endif
-                            </x-slot>
+                        <x-tahfidz.card title="Ruang Komunikasi" class="flex flex-col">
                             
                             <div id="chat-box-{{ $student->id }}" class="h-52 overflow-y-auto mb-4 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-900/50 space-y-4 custom-scrollbar mt-2">
                                 @forelse($student->messages ?? [] as $msg)
