@@ -116,17 +116,6 @@
                                oninput="debounceSubmit(this.form)">
                     </div>
 
-                    <div class="w-48">
-                        <select name="status" onchange="updateList(this.form)"
-                                class="w-full bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm cursor-pointer font-bold text-gray-700 dark:text-gray-200 py-3">
-                            <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Semua Pesan</option>
-                            <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>Belum Dibaca</option>
-                            <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>Sudah Dibaca</option>
-                        </select>
-                    </div>
-
-                    <div class="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-1"></div>
-
                     <div class="relative">
                         <button type="button" @click="toggleArchive()"
                                 :class="showArchive ? 'bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 hover:bg-gray-200'"
@@ -192,19 +181,52 @@
             }
 
             // AJAX reply form handler - delegated because list can be re-rendered
-            document.addEventListener('submit', function(e) {
-                const form = e.target;
-                if (!form.classList.contains('guru-reply-form')) return;
-                e.preventDefault();
 
+            // Move a thread to the top by CSS order (no DOM manipulation = Alpine.js safe)
+            function bringThreadToTop(studentId) {
+                const list = document.getElementById('message-list-content');
+                if (!list) return;
+                const card = list.querySelector(`.thread-card[data-student-id="${studentId}"]`);
+                if (!card) return;
+
+                // Find the current minimum order value in the list
+                let minOrder = Infinity;
+                list.querySelectorAll('.thread-card').forEach(c => {
+                    const o = parseInt(c.style.order ?? '0');
+                    if (o < minOrder) minOrder = o;
+                });
+
+                const cardOrder = parseInt(card.style.order ?? '0');
+
+                // Already at top (or only card), nothing to do
+                if (cardOrder <= minOrder) return;
+
+                // Set order below current minimum → visually moves to top
+                card.style.order = (minOrder - 1).toString();
+
+                // Subtle highlight flash to indicate movement
+                card.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.35)';
+                card.style.transition = 'box-shadow 0.4s ease';
+                setTimeout(() => {
+                    card.style.boxShadow = '';
+                    setTimeout(() => { card.style.transition = ''; }, 400);
+                }, 700);
+            }
+
+            function sendGuruReply(form) {
                 const action = form.dataset.action;
-                const studentId = form.dataset.studentId;
+                const studentId = parseInt(form.dataset.studentId);
                 const input = form.querySelector('input[name="message"]');
                 const message = input.value.trim();
                 if (!message) return;
 
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 const socketId = window.Echo ? window.Echo.socketId() : null;
+
+                input.value = '';
 
                 fetch(action, {
                     method: 'POST',
@@ -234,13 +256,37 @@
                             `);
                             convBox.scrollTop = convBox.scrollHeight;
                         }
-                        
+
                         // Notify Alpine that reply was successful
                         window.dispatchEvent(new CustomEvent('reply-success', { detail: studentId }));
 
-                        input.value = '';
+                        // Move this thread to the top of the list
+                        bringThreadToTop(studentId);
+                    } else {
+                        // Restore message if failed
+                        input.value = message;
                     }
-                });
+                })
+                .catch(() => { input.value = message; })
+                .finally(() => { if (submitBtn) submitBtn.disabled = false; });
+            }
+
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (!form.classList.contains('guru-reply-form')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                sendGuruReply(form);
+            });
+
+            // Handle Enter key on reply inputs
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'Enter') return;
+                const input = e.target;
+                if (!input.matches('.guru-reply-form input[name="message"]')) return;
+                e.preventDefault();
+                const form = input.closest('.guru-reply-form');
+                if (form) sendGuruReply(form);
             });
 
             // Helper: append a bubble from a received real-time message
@@ -268,10 +314,20 @@
                 const conversationIsOpen = appendIncomingBubble(pesan.student_id, pesan.message, time);
 
                 if (!conversationIsOpen) {
-                    // Refresh the list to move the new message thread to the top
-                    updateList(document.getElementById('filter-form'));
+                    // Thread not open — refresh list so thread appears (may be a new parent)
+                    const cardExists = document.querySelector(`#message-list-content .thread-card[data-student-id="${pesan.student_id}"]`);
+                    if (cardExists) {
+                        // Thread already in list, just move it to top
+                        bringThreadToTop(pesan.student_id);
+                    } else {
+                        // Brand new thread — refresh list to add it
+                        updateList(document.getElementById('filter-form'));
+                    }
+                } else {
+                    // Chat was open — still bring thread to top
+                    bringThreadToTop(pesan.student_id);
                 }
-                
+
                 // Alpine handler (unread dot & sidebar) is still triggered because it listens to the same window event
             });
         </script>
