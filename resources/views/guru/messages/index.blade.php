@@ -6,13 +6,11 @@
         Kelola dan balas pesan koordinasi dari orang tua santri.
     </x-slot>
 
-    <div class="mt-6" 
-         x-on:message-received.window="handleMessageReceived($event.detail)"
-         x-on:reply-success.window="handleReplySuccess($event.detail)"
-         x-on:sync-unread.window="unreadMessages = $event.detail.unread; updateSidebarBadge()"
-         x-on:sync-archive-unread.window="archiveUnreadCount = $event.detail"
-         x-on:sync-active-students.window="activeStudentIds = $event.detail"
-         x-data="{ 
+    <div class="mt-6" x-on:message-received.window="handleMessageReceived($event.detail)"
+        x-on:reply-success.window="handleReplySuccess($event.detail)"
+        x-on:sync-unread.window="unreadMessages = $event.detail.unread; updateSidebarBadge()"
+        x-on:sync-archive-unread.window="archiveUnreadCount = $event.detail"
+        x-on:sync-active-students.window="activeStudentIds = $event.detail" x-data="{ 
         openChat: null,
         showArchive: {{ $showArchive ? 'true' : 'false' }},
         archiveUnreadCount: {{ $archiveUnreadCount }},
@@ -98,38 +96,45 @@
             updateList(document.getElementById('filter-form'));
         }
     }">
-        <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[32px] overflow-hidden shadow-sm">
+        <div
+            class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[32px] overflow-hidden shadow-sm">
             <!-- Unified Header Content -->
             <div class="px-6 py-5 bg-gray-50/30 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700">
-                <form action="{{ route('guru.messages') }}" method="GET" id="filter-form" class="flex items-center gap-4">
+                <form action="{{ route('guru.messages') }}" method="GET" id="filter-form"
+                    class="flex items-center gap-4">
                     <input type="hidden" name="archive" id="archive-input" :value="showArchive ? '1' : '0'">
-                    
+
                     <div class="flex-1 relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            <svg class="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
                         <input type="text" name="search" value="{{ request('search') }}"
-                               placeholder="Cari pengirim atau nama santri..."
-                               class="w-full bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-11 py-3 font-medium text-gray-700 dark:text-gray-200"
-                               oninput="debounceSubmit(this.form)">
+                            placeholder="Cari pengirim atau nama santri..."
+                            class="w-full bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 rounded-2xl text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm pl-11 py-3 font-medium text-gray-700 dark:text-gray-200"
+                            oninput="debounceSubmit(this.form)">
                     </div>
 
                     <div class="relative">
                         <button type="button" @click="toggleArchive()"
-                                :class="showArchive ? 'bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 hover:bg-gray-200'"
-                                class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2">
+                            :class="showArchive ? 'bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 hover:bg-gray-200'"
+                            class="px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4">
+                                </path>
                             </svg>
                             <span x-text="showArchive ? 'Pesan Aktif' : 'Arsip Pesan'"></span>
                         </button>
-                        {{-- Archive unread badge: appears when there are unread messages from past academic year students --}}
+                        {{-- Archive unread badge: appears when there are unread messages from past academic year
+                        students --}}
                         <span x-show="!showArchive && archiveUnreadCount > 0"
-                              x-text="archiveUnreadCount > 9 ? '9+' : archiveUnreadCount"
-                              class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 ring-2 ring-white dark:ring-gray-800 animate-pulse"
-                              style="display: none;">
+                            x-text="archiveUnreadCount > 9 ? '9+' : archiveUnreadCount"
+                            class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 ring-2 ring-white dark:ring-gray-800 animate-pulse"
+                            style="display: none;">
                         </span>
                     </div>
                 </form>
@@ -137,7 +142,8 @@
 
             <!-- List Content -->
             <div class="p-6">
-                <h5 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-1">Daftar Percakapan</h5>
+                <h5 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-1">
+                    Daftar Percakapan</h5>
                 <div id="message-list-container">
                     @include('guru.messages.partials.list')
                 </div>
@@ -165,7 +171,13 @@
                 try {
                     const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                     const html = await response.text();
-                    document.getElementById('message-list-container').innerHTML = html;
+                    const container = document.getElementById('message-list-container');
+                    if (container) {
+                        container.innerHTML = '';
+                        const range = document.createRange();
+                        const fragment = range.createContextualFragment(html);
+                        container.appendChild(fragment);
+                    }
                 } catch (error) {
                     console.error('Failed to update list:', error);
                     form.submit();
@@ -180,9 +192,6 @@
                 });
             }
 
-            // AJAX reply form handler - delegated because list can be re-rendered
-
-            // Move a thread to the top by CSS order (no DOM manipulation = Alpine.js safe)
             function bringThreadToTop(studentId) {
                 const list = document.getElementById('message-list-content');
                 if (!list) return;
@@ -239,39 +248,39 @@
                     },
                     body: JSON.stringify({ message: message }),
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const convBox = document.getElementById('conversation-' + studentId);
-                        if (convBox) {
-                            const now = new Date();
-                            const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-                            convBox.insertAdjacentHTML('beforeend', `
-                                <div class="flex justify-end">
-                                    <div class="max-w-[85%] sm:max-w-[70%]">
-                                        <div class="px-4 py-2.5 rounded-[20px] text-sm bg-emerald-600 text-white rounded-tr-none">${message}</div>
-                                        <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-right font-bold">${time}</p>
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const convBox = document.getElementById('conversation-' + studentId);
+                            if (convBox) {
+                                const now = new Date();
+                                const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                                convBox.insertAdjacentHTML('beforeend', `
+                                    <div class="flex justify-end">
+                                        <div class="max-w-[85%] sm:max-w-[70%]">
+                                            <div class="px-4 py-2.5 rounded-[20px] text-sm bg-emerald-600 text-white rounded-tr-none">${message}</div>
+                                            <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-right font-bold">${time}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            `);
-                            convBox.scrollTop = convBox.scrollHeight;
+                                `);
+                                convBox.scrollTop = convBox.scrollHeight;
+                            }
+
+                            // Notify Alpine that reply was successful
+                            window.dispatchEvent(new CustomEvent('reply-success', { detail: studentId }));
+
+                            // Move this thread to the top of the list
+                            bringThreadToTop(studentId);
+                        } else {
+                            // Restore message if failed
+                            input.value = message;
                         }
-
-                        // Notify Alpine that reply was successful
-                        window.dispatchEvent(new CustomEvent('reply-success', { detail: studentId }));
-
-                        // Move this thread to the top of the list
-                        bringThreadToTop(studentId);
-                    } else {
-                        // Restore message if failed
-                        input.value = message;
-                    }
-                })
-                .catch(() => { input.value = message; })
-                .finally(() => { if (submitBtn) submitBtn.disabled = false; });
+                    })
+                    .catch(() => { input.value = message; })
+                    .finally(() => { if (submitBtn) submitBtn.disabled = false; });
             }
 
-            document.addEventListener('submit', function(e) {
+            document.addEventListener('submit', function (e) {
                 const form = e.target;
                 if (!form.classList.contains('guru-reply-form')) return;
                 e.preventDefault();
@@ -280,7 +289,7 @@
             });
 
             // Handle Enter key on reply inputs
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (e.key !== 'Enter') return;
                 const input = e.target;
                 if (!input.matches('.guru-reply-form input[name="message"]')) return;
@@ -294,13 +303,13 @@
                 const convBox = document.getElementById('conversation-' + studentId);
                 if (!convBox) return false;
                 convBox.insertAdjacentHTML('beforeend', `
-                    <div class="flex justify-start">
-                        <div class="max-w-[85%] sm:max-w-[70%]">
-                            <div class="px-4 py-2.5 rounded-[20px] text-sm bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none">${message}</div>
-                            <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-left font-bold">${time}</p>
+                        <div class="flex justify-start">
+                            <div class="max-w-[85%] sm:max-w-[70%]">
+                                <div class="px-4 py-2.5 rounded-[20px] text-sm bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none">${message}</div>
+                                <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-left font-bold">${time}</p>
+                            </div>
                         </div>
-                    </div>
-                `);
+                    `);
                 convBox.scrollTop = convBox.scrollHeight;
                 return true;
             }
@@ -309,7 +318,7 @@
             window.addEventListener('message-received', (e) => {
                 const pesan = e.detail;
                 const sentAt = new Date(pesan.created_at);
-                const time = sentAt.getHours().toString().padStart(2,'0') + ':' + sentAt.getMinutes().toString().padStart(2,'0');
+                const time = sentAt.getHours().toString().padStart(2, '0') + ':' + sentAt.getMinutes().toString().padStart(2, '0');
 
                 const conversationIsOpen = appendIncomingBubble(pesan.student_id, pesan.message, time);
 
