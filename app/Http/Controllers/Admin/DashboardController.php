@@ -98,7 +98,6 @@ class DashboardController extends Controller
                 $rowNum++;
 
                 if ($isGuruCsv) {
-                    // Logika Guru: Nama | NIP | No telp | Email | Jenis Kelamin
                     if (count($data) < 5) {
                         $errorMessages[] = "Baris $rowNum: Format kolom guru tidak sesuai (Butuh 5 kolom).";
                         continue;
@@ -139,7 +138,6 @@ class DashboardController extends Controller
                     ]);
                     $successCount++;
                 } else {
-                    // Logika Santri: Nama Santri | NISN | JenKel Santri | Nama Ortu | Email Ortu | No HP Ortu | JenKel Ortu
                     if (count($data) < 7) {
                         $errorMessages[] = "Baris $rowNum: Kolom santri tidak lengkap (Butuh 7 kolom).";
                         continue;
@@ -169,7 +167,6 @@ class DashboardController extends Controller
                         continue;
                     }
 
-                    // Gunakan Guru Pendamping & Tahun Ajaran dari pilihan di Form Modal
                     $rowGuruId = $fallbackGuruId;
                     $rowAcademicYear = $fallbackAcademicYear;
 
@@ -195,7 +192,6 @@ class DashboardController extends Controller
                     ]);
                     $newStudent->parents()->syncWithoutDetaching([$parent->id]);
 
-                    // Selalu catat penugasan di StudentAssignment berdasarkan Tahun Ajaran & Guru yang dipilih pada form modal
                     StudentAssignment::updateOrCreate(
                         [
                             'student_id' => $newStudent->id,
@@ -212,12 +208,10 @@ class DashboardController extends Controller
 
             DB::commit();
 
-            // --- PILAR ALERT ---
-            // 1. HIJAU: Sukses Total
+
             if ($successCount > 0 && count($errorMessages) === 0) {
                 return redirect()->back()->with('success', "Berhasil Menambahkan ($successCount) data $targetName.");
             }
-            // 2. KUNING: Berhasil Sebagian
             if ($successCount > 0 && count($errorMessages) > 0) {
                 return redirect()->back()->with('import_warning', [
                     'success' => $successCount,
@@ -225,7 +219,6 @@ class DashboardController extends Controller
                     'tipe' => $targetName
                 ]);
             }
-            // 3. MERAH: Gagal Total
             return redirect()->back()->with('error', "Gagal: Tidak ada data baru yang masuk. (" . count($errorMessages) . " baris bermasalah/duplikat).");
 
         } catch (\Exception $e) {
@@ -238,17 +231,15 @@ class DashboardController extends Controller
     {
         $value = strtolower(trim($value ?? ''));
 
-        // Pola Laki-laki
         if ($value === 'l' || str_contains($value, 'laki') || str_contains($value, 'pria') || str_contains($value, 'male')) {
             return 'Laki-laki';
         }
 
-        // Pola Perempuan
         if ($value === 'p' || str_contains($value, 'perempuan') || str_contains($value, 'wanita') || str_contains($value, 'female')) {
             return 'Perempuan';
         }
 
-        return 'Laki-laki'; // Default
+        return 'Laki-laki';
     }
 }
 
