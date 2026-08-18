@@ -147,7 +147,7 @@
                                     <div class="flex justify-end gap-2">
                                         <a href="{{ route('guru.students.show', $student) }}"
                                             class="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all"
-                                            title="Detail">
+                                            title="Detail Santri">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

@@ -61,32 +61,42 @@ class DashboardController extends Controller
             ->pluck('student_id');
 
         $students = Student::whereIn('id', $studentIds)
-            ->with([
-                'targets',
-                'memorizations' => fn($q) => $q
-                    ->select('id', 'student_id', 'surah', 'ayat', 'juz', 'status', 'is_present', 'tanggal')
-                    ->whereBetween('tanggal', [$startDate, $endDate])
-            ])
+            ->with(['targets', 'memorizations'])
             ->get();
 
         $early_warnings = collect();
         $top_targets = collect();
 
         foreach ($students as $student) {
-            $latestMem = $student->memorizations->sortByDesc('tanggal')->first();
-            if (
-                !$latestMem ||
-                Carbon::parse($latestMem->tanggal)->diffInDays(now()) >= 3 ||
-                $latestMem->status === 'Perlu Perbaikan'
-            ) {
-                $student->warning_reason = !$latestMem ? 'Belum Ada Setoran' : ($latestMem->status === 'Perlu Perbaikan' ? 'Perlu Perbaikan' : 'Lama Tidak Setor (≥ 3 Hari)');
-                $student->last_mem_date = $latestMem ? Carbon::parse($latestMem->tanggal) : null;
-                $student->days_since_last_mem = $latestMem ? Carbon::parse($latestMem->tanggal)->diffInDays(now()) : 999999;
-                $early_warnings->push($student);
-            }
-
             $student->progress_percent = $student->target_progress;
             $top_targets->push($student);
+
+            // Ambil setoran terakhir santri secara akurat (keseluruhan)
+            $latestMem = $student->memorizations()
+                ->where('is_present', true)
+                ->orderByDesc('tanggal')
+                ->orderByDesc('id')
+                ->first();
+
+            if (!$latestMem) {
+                $student->warning_reason = 'Belum Ada Setoran';
+                $student->last_mem_date = null;
+                $student->days_since_last_mem = 999999;
+                $early_warnings->push($student);
+            } else {
+                $lastDate = Carbon::parse($latestMem->tanggal)->startOfDay();
+                $today = now()->startOfDay();
+                $daysSince = (int) $lastDate->diffInDays($today);
+
+                if ($latestMem->status === 'Perlu Perbaikan' || $daysSince >= 3) {
+                    $student->warning_reason = ($latestMem->status === 'Perlu Perbaikan') 
+                        ? 'Perlu Perbaikan' 
+                        : 'Lama Tidak Setor (≥ 3 Hari)';
+                    $student->last_mem_date = $lastDate;
+                    $student->days_since_last_mem = $daysSince;
+                    $early_warnings->push($student);
+                }
+            }
         }
 
         $early_warnings = $early_warnings
