@@ -41,9 +41,9 @@ class StudentController extends Controller
             ->toArray();
 
         $academicYear = $request->input('academic_year', $defaultAcademicYear);
-        $search = $request->get('search');
-        $gender = $request->get('gender');
-        $sort   = $request->get('sort', 'latest');
+        $search = $request->input('search');
+        $gender = $request->input('gender');
+        $sort   = $request->input('sort', 'latest');
 
         $query = Student::with(['parents', 'targets', 'memorizations'])
             ->where('guru_id', Auth::id());
@@ -239,52 +239,40 @@ class StudentController extends Controller
         });
     }
 
-    public function edit(Student $student)
+    public function updateTarget(Request $request, Student $student)
     {
-        $this->authorize('update', $student);
-        return view('guru.students.edit', compact('student'));
-    }
-
-    public function update(Request $request, Student $student)
-    {
-        $this->authorize('update', $student);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'nis' => 'required|string|unique:students,nis,' . $student->id,
-            'gender' => 'required|in:Laki-laki,Perempuan',
-            'target_juz.*' => 'nullable|integer|min:1|max:30',
-            'target_date.*' => 'nullable|date',
-        ]);
-
-        $student->update([
-            'name' => $request->name,
-            'nis' => $request->nis,
-            'gender' => $request->gender,
-        ]);
-
-        // Update Targets
-        if ($request->has('target_juz')) {
-            $student->targets()->delete();
-            foreach ($request->target_juz as $idx => $juz) {
-                if ($juz) {
-                    $student->targets()->create([
-                        'target_juz' => $juz,
-                        'target_date' => $request->target_date[$idx] ?? null,
-                    ]);
-                }
-            }
+        if ($student->guru_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah target santri ini.');
         }
 
-        $student->refreshCache();
-        return redirect()->route('guru.students.index')->with('success', 'Profil santri berhasil diperbarui.');
-    }
+        $request->validate([
+            'target_juz' => 'nullable|array',
+            'target_juz.*' => 'nullable|integer|min:1|max:30',
+            'target_date' => 'nullable|array',
+            'target_date.*' => 'nullable|date',
+        ], [
+            'target_juz.*.integer' => 'Target juz harus berupa angka 1-30.',
+            'target_juz.*.min' => 'Target juz minimal 1.',
+            'target_juz.*.max' => 'Target juz maksimal 30.',
+            'target_date.*.date' => 'Format tanggal target tidak valid.',
+        ]);
 
-    public function destroy(Student $student)
-    {
-        $this->authorize('delete', $student);
-        $student->delete();
-        return redirect()->route('guru.students.index')->with('success', 'Data santri berhasil dihapus.');
+        DB::transaction(function () use ($request, $student) {
+            $student->targets()->delete();
+            if ($request->has('target_juz')) {
+                foreach ($request->target_juz as $idx => $juz) {
+                    if ($juz !== null && $juz !== '') {
+                        $student->targets()->create([
+                            'target_juz' => (int) $juz,
+                            'target_date' => $request->target_date[$idx] ?? null,
+                        ]);
+                    }
+                }
+            }
+            $student->refreshCache();
+        });
+
+        return redirect()->back()->with('success', 'Target hafalan ' . $student->name . ' berhasil diperbarui.');
     }
 
     public function exportPdf(Student $student)

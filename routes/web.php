@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('hafalan', GuruHafalanController::class)->only(['index', 'create', 'store']);
         Route::get('/hafalan/export/{student}', [GuruHafalanController::class, 'exportPdf'])->name('hafalan.export');
         Route::resource('students', GuruStudentController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
+        Route::patch('/students/{student}/target', [GuruStudentController::class, 'updateTarget'])->name('students.update-target');
         Route::get('/students/{student}/export-pdf', [GuruStudentController::class, 'exportPdf'])->name('students.export');
         Route::get('/messages', [GuruDashboardController::class, 'messages'])->name('messages');
         Route::post('/messages/{pesan}/reply', [GuruDashboardController::class, 'replyMessage'])->name('messages.reply');

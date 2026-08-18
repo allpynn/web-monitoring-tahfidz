@@ -13,6 +13,15 @@
         </a>
     </div>
 
+    @if(session('success'))
+        <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-800 font-bold flex items-center gap-3 animate-fadeIn">
+            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Sidebar Detail -->
         <div class="lg:col-span-1 space-y-6">
@@ -67,7 +76,6 @@
                         </div>
                     </div>
 
-
                     <div class="mt-6">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Selesai</span>
                         <p class="text-sm font-bold mt-1 {{ $student->activeTarget() && $student->activeTarget()->target_date ? 'text-emerald-600' : 'text-gray-400 italic' }}">
@@ -76,13 +84,20 @@
                     </div>
                 </div>
 
-                <div class="mt-8 pb-12">
+                <div class="mt-8 pb-6 space-y-3">
                     <a href="{{ route('guru.students.export', $student) }}" class="w-full py-3 bg-emerald-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="m9 13.5 3 3m0 0 3-3m-3 3v-6m1.06-4.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                         </svg>
                         Download Rekap Hafalan
                     </a>
+
+                    <button type="button" onclick="openTargetModal()" class="w-full py-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                        Edit Target Hafalan
+                    </button>
                 </div>
             </x-tahfidz.card>
         </div>
@@ -219,8 +234,132 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT TARGET HAFALAN -->
+    <div id="targetModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-fadeIn">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+                <div>
+                    <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Edit Target Hafalan</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Kelola target juz & tanggal untuk {{ $student->name }}</p>
+                </div>
+                <button type="button" onclick="closeTargetModal()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <form action="{{ route('guru.students.update-target', $student) }}" method="POST" class="p-6 space-y-5">
+                @csrf
+                @method('PATCH')
+
+                <div id="modal-target-container" class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                    @forelse($student->targets as $index => $target)
+                        <div class="modal-target-row p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-3 relative">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Target #{{ $index + 1 }}</span>
+                                <button type="button" onclick="this.closest('.modal-target-row').remove(); renumberModalTargets();" class="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Hapus Target">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Target Juz (1-30)</label>
+                                    <input type="number" name="target_juz[]" value="{{ $target->target_juz }}" min="1" max="30" placeholder="Juz (1-30)" required
+                                        class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Target Selesai</label>
+                                    <input type="date" name="target_date[]" value="{{ $target->target_date }}"
+                                        class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-sm font-medium text-gray-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="modal-target-row p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-3 relative">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Target #1</span>
+                                <button type="button" onclick="this.closest('.modal-target-row').remove(); renumberModalTargets();" class="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Hapus Target">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Target Juz (1-30)</label>
+                                    <input type="number" name="target_juz[]" min="1" max="30" placeholder="Contoh: 30"
+                                        class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Target Selesai</label>
+                                    <input type="date" name="target_date[]"
+                                        class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-sm font-medium text-gray-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+
+                <button type="button" onclick="addModalTargetRow()" class="w-full py-3 border-2 border-dashed border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-xs flex items-center justify-center gap-2 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Tambah Target Juz Baru
+                </button>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <button type="button" onclick="closeTargetModal()" class="px-5 py-2.5 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 transition-all shadow-md shadow-emerald-200 dark:shadow-none">
+                        Simpan Target
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
+        function openTargetModal() {
+            document.getElementById('targetModal').classList.remove('hidden');
+        }
+
+        function closeTargetModal() {
+            document.getElementById('targetModal').classList.add('hidden');
+        }
+
+        function renumberModalTargets() {
+            const rows = document.querySelectorAll('.modal-target-row');
+            rows.forEach((row, index) => {
+                const title = row.querySelector('span');
+                if (title) title.textContent = `Target #${index + 1}`;
+            });
+        }
+
+        function addModalTargetRow() {
+            const container = document.getElementById('modal-target-container');
+            const rowCount = document.querySelectorAll('.modal-target-row').length + 1;
+            const div = document.createElement('div');
+            div.className = 'modal-target-row p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-3 relative animate-fadeIn';
+            div.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Target #${rowCount}</span>
+                    <button type="button" onclick="this.closest('.modal-target-row').remove(); renumberModalTargets();" class="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Hapus Target">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Target Juz (1-30)</label>
+                        <input type="number" name="target_juz[]" min="1" max="30" placeholder="Contoh: 30"
+                            class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Target Selesai</label>
+                        <input type="date" name="target_date[]"
+                            class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-sm font-medium text-gray-900 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('logSearch');
             const statusFilter = document.getElementById('statusFilter');
@@ -339,7 +478,6 @@
             });
 
             nextPageBtn.addEventListener('click', () => {
-                const totalPages = Math.ceil(filteredRows.length / pageSize) || 1;
                 if (currentPage < totalPages) {
                     currentPage++;
                     updateActivePageDecorations();
@@ -356,5 +494,4 @@
         });
     </script>
     @endpush
-    </div>
 </x-tahfidz-layout>
