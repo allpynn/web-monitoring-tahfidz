@@ -411,9 +411,12 @@
                 showPage(currentPage);
             }
 
+            function getTotalPages() {
+                return Math.ceil(filteredRows.length / pageSize) || 1;
+            }
+
             function renderPagination() {
-                const totalRows = filteredRows.length;
-                const totalPages = Math.ceil(totalRows / pageSize) || 1;
+                const totalPages = getTotalPages();
 
                 pageNumbersContainer.innerHTML = '';
 
@@ -439,7 +442,7 @@
             }
 
             function updateActivePageDecorations() {
-                const totalPages = Math.ceil(filteredRows.length / pageSize) || 1;
+                const totalPages = getTotalPages();
                 prevPageBtn.disabled = currentPage === 1;
                 nextPageBtn.disabled = currentPage === totalPages;
 
@@ -478,6 +481,7 @@
             });
 
             nextPageBtn.addEventListener('click', () => {
+                const totalPages = getTotalPages();
                 if (currentPage < totalPages) {
                     currentPage++;
                     updateActivePageDecorations();
