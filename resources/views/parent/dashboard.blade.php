@@ -115,9 +115,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="py-2.5 text-right pr-3 rounded-r-xl whitespace-nowrap">
-                                                    @if($m->is_present)
-                                                        <span class="text-[10px] text-gray-400 italic">{{ $m->guru->name ?? 'Guru' }}</span>
-                                                    @endif
+                                                    <span class="text-[10px] text-gray-400 italic">{{ $m->guru->name ?? 'Guru' }}</span>
                                                 </td>
                                             </tr>
                                         @empty
