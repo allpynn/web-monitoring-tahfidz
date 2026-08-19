@@ -157,19 +157,19 @@
                                                 <span class="text-gray-600 dark:text-gray-300">{{ $m->surah }}</span>
                                                 <span class="text-gray-400 text-[10px] font-medium">({{ $m->ayat }})</span>
                                             </div>
-                                            
-                                            @if($m->notes)
-                                                <div class="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-xl border border-gray-100 dark:border-gray-700/50 font-medium italic">
-                                                    "{{ $m->notes }}"
-                                                </div>
-                                            @endif
-                                            @if($m->parent_comment)
-                                                <div class="mt-1.5 text-[10px] text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl border border-blue-100 dark:border-blue-800/50 line-clamp-1">
-                                                    <span class="uppercase text-[8px] opacity-70">💬 Wali:</span> {{ $m->parent_comment }}
-                                                </div>
-                                            @endif
                                         @else
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-tighter text-center">Absensi / Tanpa Setoran</span>
+                                        @endif
+
+                                        @if($m->notes)
+                                            <div class="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-xl border border-gray-100 dark:border-gray-700/50 font-medium italic">
+                                                "{{ $m->notes }}"
+                                            </div>
+                                        @endif
+                                        @if($m->parent_comment)
+                                            <div class="mt-1.5 text-[10px] text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl border border-blue-100 dark:border-blue-800/50 line-clamp-1">
+                                                <span class="uppercase text-[8px] opacity-70">💬 Wali:</span> {{ $m->parent_comment }}
+                                            </div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-2.5 text-center">

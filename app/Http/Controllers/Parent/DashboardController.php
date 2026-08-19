@@ -28,7 +28,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         $students = $user->students()
-            ->with(['memorizations' => fn ($q) => $q->latest()])
+            ->with(['memorizations' => fn ($q) => $q->with('guru')->latest()])
             ->paginate(2);
 
         foreach ($students as $student) {
