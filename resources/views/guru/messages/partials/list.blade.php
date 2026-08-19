@@ -1,12 +1,10 @@
 <div class="flex flex-col gap-3 mt-4" id="message-list-content">
     @forelse($parent_messages as $msg)
         <div class="thread-card border border-gray-100 dark:border-gray-700/50 rounded-3xl overflow-hidden transition-all duration-300"
-            data-student-id="{{ $msg->student_id }}"
-            style="order: {{ $loop->index }}"
+            data-student-id="{{ $msg->student_id }}" style="order: {{ $loop->index }}"
             :class="openChat === {{ $msg->student_id }} ? 'bg-emerald-50/50 dark:bg-emerald-900/10 ring-1 ring-emerald-100 dark:ring-emerald-800/30' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/60 bg-gray-50 dark:bg-gray-800/50'">
 
-            <div class="p-4 cursor-pointer flex items-center justify-between"
-                @click="markAsRead({{ $msg->student_id }})">
+            <div class="p-4 cursor-pointer flex items-center justify-between" @click="markAsRead({{ $msg->student_id }})">
                 <div class="flex items-center gap-4">
                     <div class="relative">
                         <div
@@ -19,8 +17,11 @@
                         </div>
                     </div>
                     <div class="flex flex-col">
+                        @php
+                            $parentUser = ($msg->sender_id === auth()->id()) ? $msg->receiver : $msg->sender;
+                        @endphp
                         <span class="text-sm font-black text-gray-800 dark:text-gray-100 uppercase tracking-tight">
-                            {{ $msg->sender->name ?? 'Orang Tua' }}
+                            {{ $parentUser->name ?? 'Orang Tua' }}
                         </span>
                         <span
                             class="text-[11px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-1.5 mt-0.5 uppercase tracking-wider">
@@ -29,7 +30,8 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div x-show="unreadMessages[{{ $msg->student_id }}]" class="w-3 h-3 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/40"></div>
+                    <div x-show="unreadMessages[{{ $msg->student_id }}]"
+                        class="w-3 h-3 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/40"></div>
                     <svg class="w-5 h-5 text-gray-300 dark:text-gray-600 transition-transform duration-300"
                         :class="openChat === {{ $msg->student_id }} ? 'rotate-180' : ''" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -41,13 +43,14 @@
             <div x-show="openChat === {{ $msg->student_id }}" x-collapse x-cloak>
                 <div class="p-4 bg-white/50 dark:bg-gray-900/40 border-t border-gray-100 dark:border-gray-800">
                     <div id="conversation-{{ $msg->student_id }}"
-                         class="space-y-4 mb-6 max-h-[500px] overflow-y-auto px-2 custom-scrollbar">
+                        class="space-y-4 mb-6 max-h-[500px] overflow-y-auto px-2 custom-scrollbar">
                         @php $lastDate = null; @endphp
                         @foreach($msg->conversation as $c)
                             @php $msgDate = $c->created_at->format('d M Y'); @endphp
                             @if($lastDate !== $msgDate)
                                 <div class="flex justify-center my-6">
-                                    <span class="bg-gray-50 dark:bg-gray-950/40 text-gray-400 dark:text-gray-500 text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-gray-100 dark:border-gray-800">
+                                    <span
+                                        class="bg-gray-50 dark:bg-gray-950/40 text-gray-400 dark:text-gray-500 text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-gray-100 dark:border-gray-800">
                                         {{ $c->created_at->isToday() ? 'Hari Ini' : ($c->created_at->isYesterday() ? 'Kemarin' : $msgDate) }}
                                     </span>
                                 </div>
@@ -55,10 +58,12 @@
                             @endif
                             <div class="flex {{ $c->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
                                 <div class="max-w-[85%] sm:max-w-[70%]">
-                                    <div class="px-4 py-2.5 rounded-[20px] text-sm {{ $c->sender_id === auth()->id() ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none' }}">
+                                    <div
+                                        class="px-4 py-2.5 rounded-[20px] text-sm {{ $c->sender_id === auth()->id() ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none' }}">
                                         {{ $c->message }}
                                     </div>
-                                    <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 {{ $c->sender_id === auth()->id() ? 'text-right' : 'text-left' }} font-bold">
+                                    <p
+                                        class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 {{ $c->sender_id === auth()->id() ? 'text-right' : 'text-left' }} font-bold">
                                         {{ $c->created_at->format('H:i') }}
                                     </p>
                                 </div>
@@ -66,21 +71,20 @@
                         @endforeach
                     </div>
 
-                    <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/60 p-2 rounded-2xl border border-gray-100/50 dark:border-gray-800">
-                        <form class="guru-reply-form flex-1 flex gap-2"
-                              action="#"
-                              data-action="{{ route('guru.messages.reply', $msg, false) }}"
-                              data-student-id="{{ $msg->student_id }}"
-                              data-msg-id="{{ $msg->id }}">
+                    <div
+                        class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/60 p-2 rounded-2xl border border-gray-100/50 dark:border-gray-800">
+                        <form class="guru-reply-form flex-1 flex gap-2" action="#"
+                            data-action="{{ route('guru.messages.reply', $msg, false) }}"
+                            data-student-id="{{ $msg->student_id }}" data-msg-id="{{ $msg->id }}">
                             @csrf
                             <input type="text" name="message" required placeholder="Tulis balasan..."
-                                   class="flex-1 border-none bg-transparent text-sm focus:ring-0 placeholder-gray-400 dark:placeholder-gray-600 text-gray-700 dark:text-gray-200">
+                                class="flex-1 border-none bg-transparent text-sm focus:ring-0 placeholder-gray-400 dark:placeholder-gray-600 text-gray-700 dark:text-gray-200">
                             <button type="submit"
-                                    class="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-md active:scale-95 group">
+                                class="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-md active:scale-95 group">
                                 <svg class="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                 </svg>
                             </button>
                         </form>
@@ -103,14 +107,35 @@
 </div>
 
 <script>
-    // Sync Alpine state with the data from the server-rendered partial
-    const unreadStates = {
-        @foreach($parent_messages as $msg)
-            {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
-        @endforeach
-    };
-    // Dispatch separate events so the parent Alpine component can update independently
-    window.dispatchEvent(new CustomEvent('sync-unread', { detail: { unread: unreadStates } }));
-    window.dispatchEvent(new CustomEvent('sync-archive-unread', { detail: {{ $archiveUnreadCount ?? 0 }} }));
-    window.dispatchEvent(new CustomEvent('sync-active-students', { detail: [{{ implode(',', $activeInCurrentYear ?? []) }}] }));
+    (function () {
+        const unreadStates = {
+            @foreach($parent_messages as $msg)
+                {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
+            @endforeach
+        };
+
+    const countsDetail = {
+        unreadStates: unreadStates,
+        archiveUnreadCount: {{ $archiveUnreadCount ?? 0 }},
+        activeUnreadCount: {{ $activeUnreadCount ?? 0 }},
+        totalUnreadCount: {{ $totalUnreadCount ?? 0 }}
+        };
+
+    const activeStudentsDetail = [{{ implode(',', $activeInCurrentYear ?? []) }}];
+
+    function dispatch() {
+        window.dispatchEvent(new CustomEvent('sync-counts', { detail: countsDetail }));
+        window.dispatchEvent(new CustomEvent('sync-active-students', { detail: activeStudentsDetail }));
+    }
+
+    if (window._alpineInitialized) {
+        dispatch();
+    } else {
+        document.addEventListener('alpine:initialized', function () {
+            window._alpineInitialized = true;
+            dispatch();
+        }, { once: true });
+        setTimeout(dispatch, 0);
+    }
+    }) ();
 </script>

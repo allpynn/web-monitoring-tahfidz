@@ -229,7 +229,6 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        
         function createBubble(message, time, isSelf) {
             if (isSelf) {
                 return `<div class="flex justify-end items-start">
@@ -253,46 +252,58 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            
             document.querySelectorAll('[id^="chat-box-"]').forEach(box => scrollToBottom(box));
 
-            document.querySelectorAll('[id^="chat-form-"]').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const studentId = this.dataset.studentId;
-                    const action = this.dataset.action;
-                    const input = document.getElementById('chat-input-' + studentId);
-                    const message = input.value.trim();
-                    if (!message) return;
+            // Use document-level event delegation so form submission works even after dynamic DOM swaps
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('[id^="chat-form-"]');
+                if (!form) return;
+                e.preventDefault();
+                e.stopPropagation();
 
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    const socketId = window.Echo ? window.Echo.socketId() : null;
+                const studentId = form.dataset.studentId;
+                const action = form.dataset.action;
+                const input = document.getElementById('chat-input-' + studentId);
+                if (!input) return;
+                const message = input.value.trim();
+                if (!message) return;
 
-                    fetch(action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'X-Socket-ID': socketId,
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                        body: JSON.stringify({ message: message }),
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            const chatBox = document.getElementById('chat-box-' + studentId);
-                            const emptyState = document.getElementById('empty-chat-' + studentId);
-                            if (emptyState) emptyState.remove();
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
 
-                            const now = new Date();
-                            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const socketId = window.Echo ? window.Echo.socketId() : null;
+
+                fetch(action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Socket-ID': socketId,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const chatBox = document.getElementById('chat-box-' + studentId);
+                        const emptyState = document.getElementById('empty-chat-' + studentId);
+                        if (emptyState) emptyState.remove();
+
+                        const now = new Date();
+                        const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                        if (chatBox) {
                             chatBox.insertAdjacentHTML('beforeend', createBubble(message, time, true));
                             scrollToBottom(chatBox);
-                            input.value = '';
                         }
-                    });
+                        input.value = '';
+                    }
+                })
+                .catch(err => console.error('Error sending message:', err))
+                .finally(() => {
+                    if (submitBtn) submitBtn.disabled = false;
                 });
             });
 
@@ -319,8 +330,18 @@
                 const emptyState = document.getElementById('empty-chat-' + pesan.student_id);
                 if (emptyState) emptyState.remove();
 
-                const sentAt = new Date(pesan.created_at);
-                const time = sentAt.getHours().toString().padStart(2, '0') + ':' + sentAt.getMinutes().toString().padStart(2, '0');
+                let time = '';
+                if (pesan.created_at) {
+                    const sentAt = new Date(pesan.created_at);
+                    if (!isNaN(sentAt.getTime())) {
+                        time = sentAt.getHours().toString().padStart(2, '0') + ':' + sentAt.getMinutes().toString().padStart(2, '0');
+                    }
+                }
+                if (!time) {
+                    const now = new Date();
+                    time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                }
+
                 chatBox.insertAdjacentHTML('beforeend', createBubble(pesan.message, time, false));
                 scrollToBottom(chatBox);
             });

@@ -139,15 +139,52 @@ class HafalanController extends Controller
                 }
             }
 
-            $alreadyLancar = RiwayatHafalan::where('student_id', $request->student_id)
-                ->where('surah', $request->surah)
-                ->where('ayat', $data['ayat'])
+            // Cek apakah ada ayat dalam rentang yang diminta yang sudah pernah disetorkan dengan status 'Lancar'
+            $existingLancarRecords = RiwayatHafalan::where('student_id', $request->student_id)
                 ->where('is_present', true)
                 ->where('status', 'Lancar')
-                ->exists();
+                ->get();
 
-            if ($alreadyLancar) {
-                return back()->withInput()->withErrors(['surah' => "Santri sudah menyetorkan Surah {$request->surah} ayat {$data['ayat']} dengan status Lancar."]);
+            $normalizedInputSurah = str_replace(["'", "-", " ", "‘", "’", "`", "´"], "", strtolower($request->surah ?? ''));
+
+            $alreadyLancarVerses = [];
+            foreach ($existingLancarRecords as $mem) {
+                $normalizedMemSurah = str_replace(["'", "-", " ", "‘", "’", "`", "´"], "", strtolower($mem->surah ?? ''));
+                if ($normalizedMemSurah !== $normalizedInputSurah) {
+                    continue;
+                }
+
+                $range = trim($mem->ayat ?? '');
+                if (str_contains($range, '-') || str_contains($range, '–')) {
+                    $parts = preg_split('/[-–]/', $range);
+                    $start = (int) ($parts[0] ?? 0);
+                    $end = (int) ($parts[1] ?? 0);
+                    if ($start > 0 && $end >= $start) {
+                        for ($v = $start; $v <= $end; $v++) {
+                            $alreadyLancarVerses[$v] = true;
+                        }
+                    }
+                } else {
+                    $v = (int) $range;
+                    if ($v > 0) {
+                        $alreadyLancarVerses[$v] = true;
+                    }
+                }
+            }
+
+            $requestedVerses = range($dari, $sampai);
+            $overlappedVerses = [];
+            foreach ($requestedVerses as $v) {
+                if (isset($alreadyLancarVerses[$v])) {
+                    $overlappedVerses[] = $v;
+                }
+            }
+
+            if (!empty($overlappedVerses)) {
+                $overlappedStr = $this->formatVerseRanges($overlappedVerses);
+                return back()->withInput()->withErrors([
+                    'surah' => "Santri sudah menyetorkan Surah {$request->surah} ayat {$overlappedStr} dengan status Lancar."
+                ]);
             }
         }
 
@@ -162,6 +199,32 @@ class HafalanController extends Controller
         $hafalan->student->refreshCache();
 
         return redirect()->route('guru.hafalan.index')->with('success', 'Data berhasil disimpan.');
+    }
+
+    private function formatVerseRanges(array $verses): string
+    {
+        sort($verses);
+        $ranges = [];
+        $count = count($verses);
+        if ($count === 0) {
+            return '';
+        }
+
+        $start = $verses[0];
+        $end = $verses[0];
+
+        for ($i = 1; $i < $count; $i++) {
+            if ($verses[$i] === $end + 1) {
+                $end = $verses[$i];
+            } else {
+                $ranges[] = ($start === $end) ? (string) $start : "{$start}–{$end}";
+                $start = $verses[$i];
+                $end = $verses[$i];
+            }
+        }
+        $ranges[] = ($start === $end) ? (string) $start : "{$start}–{$end}";
+
+        return implode(', ', $ranges);
     }
 
     public function exportPdf(Student $student)

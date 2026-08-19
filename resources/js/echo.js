@@ -122,12 +122,17 @@ if (userId) {
     window.Echo.private('user.' + userId)
         .listen('.message.sent', (e) => {
             if (e.pesan.sender_id == userId) return;
-            const badge = document.getElementById('sidebar-unread-badge');
-            if (badge) {
-                let count = parseInt(badge.innerText) || 0;
-                badge.innerText = count + 1;
-                badge.classList.remove('hidden');
+
+            // Only increment directly if not on guru messages page (where handleMessageReceived updates it with full precision)
+            if (!document.getElementById('message-list-container')) {
+                const badge = document.getElementById('sidebar-unread-badge');
+                if (badge) {
+                    let count = parseInt(badge.innerText) || 0;
+                    badge.innerText = count + 1;
+                    badge.classList.remove('hidden');
+                }
             }
+
             window.dispatchEvent(new CustomEvent('message-received', { detail: e.pesan }));
         });
 }
