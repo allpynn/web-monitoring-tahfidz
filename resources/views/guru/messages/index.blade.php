@@ -8,22 +8,24 @@
 
     <div class="mt-6" x-on:message-received.window="handleMessageReceived($event.detail)"
         x-on:reply-success.window="handleReplySuccess($event.detail)"
-        x-on:sync-unread.window="unreadMessages = $event.detail.unread; updateSidebarBadge()"
-        x-on:sync-archive-unread.window="archiveUnreadCount = $event.detail"
+        x-on:sync-counts.window="handleSyncCounts($event.detail)"
         x-on:sync-active-students.window="activeStudentIds = $event.detail" x-data="{ 
         openChat: null,
         showArchive: {{ $showArchive ? 'true' : 'false' }},
         archiveUnreadCount: {{ $archiveUnreadCount }},
+        activeUnreadCount: {{ $activeUnreadCount }},
+        totalUnreadCount: {{ $totalUnreadCount }},
         activeStudentIds: [{{ implode(',', $activeInCurrentYear ?? []) }}],
         unreadMessages: {
             @foreach($parent_messages as $msg)
                 {{ $msg->student_id }}: {{ $msg->has_unread ? 'true' : 'false' }},
             @endforeach
         },
-        updateSidebarBadge() {
+        updateSidebarBadge(customCount = null) {
+            const count = (customCount !== null) ? customCount : this.totalUnreadCount;
+            this.totalUnreadCount = count;
             const badge = document.getElementById('sidebar-unread-badge');
             if (badge) {
-                let count = Object.values(this.unreadMessages).filter(v => v === true).length;
                 badge.innerText = count;
                 if (count > 0) {
                     badge.classList.remove('hidden');
@@ -38,60 +40,79 @@
             } else {
                 this.openChat = studentId;
                 if (this.unreadMessages[studentId]) {
+                    this.unreadMessages[studentId] = false;
                     fetch(`/guru/messages/${studentId}/read`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json'
                         }
-                    }).then(() => {
-                        this.unreadMessages[studentId] = false;
-                        this.updateSidebarBadge();
-                        // Decrement archive badge when reading an archived student's message
-                        if (this.showArchive && this.archiveUnreadCount > 0) {
-                            this.archiveUnreadCount--;
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.archiveUnreadCount = data.archive_unread_count;
+                            this.activeUnreadCount = data.active_unread_count;
+                            this.updateSidebarBadge(data.total_unread_count);
                         }
                     });
                 }
             }
         },
         handleMessageReceived(pesan) {
-            // Update Alpine state for unread indicators
             if (this.openChat !== pesan.student_id) {
-                this.unreadMessages[pesan.student_id] = true;
-                this.updateSidebarBadge();
-                // If sender's student is archived (not in active year), increment archive badge
-                if (!this.activeStudentIds.includes(pesan.student_id) && !this.showArchive) {
-                    this.archiveUnreadCount++;
+                if (!this.unreadMessages[pesan.student_id]) {
+                    this.unreadMessages[pesan.student_id] = true;
+                    this.totalUnreadCount++;
+                    this.updateSidebarBadge(this.totalUnreadCount);
+
+                    if (!this.activeStudentIds.includes(pesan.student_id)) {
+                        this.archiveUnreadCount++;
+                    } else {
+                        this.activeUnreadCount++;
+                    }
                 }
             } else {
-                // If message arrives while chat is open, mark as read on backend immediately
                 fetch(`/guru/messages/${pesan.student_id}/read`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.archiveUnreadCount = data.archive_unread_count;
+                        this.activeUnreadCount = data.active_unread_count;
+                        this.updateSidebarBadge(data.total_unread_count);
+                    }
                 });
             }
         },
-        handleReplySuccess(studentId) {
-            // Clear unread status when replying
-            if (this.unreadMessages[studentId]) {
-                this.unreadMessages[studentId] = false;
-                this.updateSidebarBadge();
-                // If replying in archive tab, decrement archive badge too
-                if (this.showArchive && this.archiveUnreadCount > 0) {
-                    this.archiveUnreadCount--;
+        handleReplySuccess(detail) {
+            if (typeof detail === 'object' && detail.total_unread_count !== undefined) {
+                this.archiveUnreadCount = detail.archive_unread_count;
+                this.activeUnreadCount = detail.active_unread_count;
+                this.updateSidebarBadge(detail.total_unread_count);
+            } else {
+                const studentId = detail.studentId || detail;
+                if (this.unreadMessages[studentId]) {
+                    this.unreadMessages[studentId] = false;
+                    if (this.totalUnreadCount > 0) this.totalUnreadCount--;
+                    this.updateSidebarBadge(this.totalUnreadCount);
                 }
             }
         },
+        handleSyncCounts(detail) {
+            // Replace entirely (not merge) so stale keys from the previous tab are removed
+            this.unreadMessages = Object.assign({}, detail.unreadStates);
+            this.archiveUnreadCount = detail.archiveUnreadCount;
+            this.activeUnreadCount = detail.activeUnreadCount;
+            this.updateSidebarBadge(detail.totalUnreadCount);
+        },
         toggleArchive() {
             this.showArchive = !this.showArchive;
-            // Optimistically clear archive badge when entering archive tab
-            if (this.showArchive) {
-                this.archiveUnreadCount = 0;
-            }
             document.getElementById('archive-input').value = this.showArchive ? '1' : '0';
             updateList(document.getElementById('filter-form'));
         }
@@ -129,8 +150,7 @@
                             </svg>
                             <span x-text="showArchive ? 'Pesan Aktif' : 'Arsip Pesan'"></span>
                         </button>
-                        {{-- Archive unread badge: appears when there are unread messages from past academic year
-                        students --}}
+
                         <span x-show="!showArchive && archiveUnreadCount > 0"
                             x-text="archiveUnreadCount > 9 ? '9+' : archiveUnreadCount"
                             class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 ring-2 ring-white dark:ring-gray-800 animate-pulse"
@@ -256,18 +276,18 @@
                                 const now = new Date();
                                 const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                                 convBox.insertAdjacentHTML('beforeend', `
-                                    <div class="flex justify-end">
-                                        <div class="max-w-[85%] sm:max-w-[70%]">
-                                            <div class="px-4 py-2.5 rounded-[20px] text-sm bg-emerald-600 text-white rounded-tr-none">${message}</div>
-                                            <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-right font-bold">${time}</p>
+                                        <div class="flex justify-end">
+                                            <div class="max-w-[85%] sm:max-w-[70%]">
+                                                <div class="px-4 py-2.5 rounded-[20px] text-sm bg-emerald-600 text-white rounded-tr-none">${message}</div>
+                                                <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-right font-bold">${time}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                `);
+                                    `);
                                 convBox.scrollTop = convBox.scrollHeight;
                             }
 
-                            // Notify Alpine that reply was successful
-                            window.dispatchEvent(new CustomEvent('reply-success', { detail: studentId }));
+                            // Notify Alpine that reply was successful with full count details
+                            window.dispatchEvent(new CustomEvent('reply-success', { detail: Object.assign({ studentId: studentId }, data) }));
 
                             // Move this thread to the top of the list
                             bringThreadToTop(studentId);
@@ -303,13 +323,13 @@
                 const convBox = document.getElementById('conversation-' + studentId);
                 if (!convBox) return false;
                 convBox.insertAdjacentHTML('beforeend', `
-                        <div class="flex justify-start">
-                            <div class="max-w-[85%] sm:max-w-[70%]">
-                                <div class="px-4 py-2.5 rounded-[20px] text-sm bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none">${message}</div>
-                                <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-left font-bold">${time}</p>
+                            <div class="flex justify-start">
+                                <div class="max-w-[85%] sm:max-w-[70%]">
+                                    <div class="px-4 py-2.5 rounded-[20px] text-sm bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-tl-none">${message}</div>
+                                    <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 text-left font-bold">${time}</p>
+                                </div>
                             </div>
-                        </div>
-                    `);
+                        `);
                 convBox.scrollTop = convBox.scrollHeight;
                 return true;
             }
