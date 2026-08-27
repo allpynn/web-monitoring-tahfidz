@@ -94,7 +94,7 @@ class HafalanController extends Controller
         return view('guru.hafalan.index', compact('hafalan', 'academicYears', 'academicYear'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $currentMonth = now()->month;
         $currentYear = now()->year;
@@ -113,9 +113,17 @@ class HafalanController extends Controller
             $students = Student::where('guru_id', Auth::id())->get();
         }
 
+        $students->load(['memorizations' => function ($q) {
+            $q->where('is_present', true)
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('id', 'desc');
+        }]);
+
+        $selectedStudentId = $request->input('student_id', old('student_id'));
+
         $surahsList = Surah::orderBy('nomor');
 
-        return view('guru.hafalan.create', compact('students', 'surahsList', 'currentAcademicYear'));
+        return view('guru.hafalan.create', compact('students', 'surahsList', 'currentAcademicYear', 'selectedStudentId'));
     }
 
     public function store(StoreHafalanRequest $request)

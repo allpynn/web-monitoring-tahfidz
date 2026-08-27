@@ -39,41 +39,90 @@
                         <span class="text-xs font-bold text-gray-400 uppercase">Orang Tua</span>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $student->parents->pluck('name')->join(', ') ?: '-' }}</p>
                     </div>
-                    {{-- Overview 30 Juz --}}
-                    <div class="mb-5">
-                        <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-3 block">Monitoring 30 Juz</span>
-                        <div class="flex flex-wrap gap-1.5">
-                            @php
-                                $completedList = $student->completed_juz;
-                            @endphp
+                    {{-- Overview 30 Juz (Grid 5x6 & Comprehensive Detail) --}}
+                    @php
+                        $completedList = $student->completed_juz ?? [];
+                        $completedCount = count($completedList);
+                        $inProgressCount = 0;
+                        $notStartedCount = 0;
+                        $juzStats = [];
+
+                        for($j = 1; $j <= 30; $j++) {
+                            $isCompleted = in_array($j, $completedList);
+                            $prog = $isCompleted ? 100 : $student->getJuzProgress($j);
+                            
+                            if ($isCompleted) {
+                                $statusText = "Juz $j: Selesai (Mumtaz - 100%)";
+                            } elseif ($prog > 0) {
+                                $inProgressCount++;
+                                $statusText = "Juz $j: Dalam Progres ($prog%)";
+                            } else {
+                                $notStartedCount++;
+                                $statusText = "Juz $j: Belum Dimulai";
+                            }
+
+                            $juzStats[$j] = [
+                                'isCompleted' => $isCompleted,
+                                'prog' => $prog,
+                                'statusText' => $statusText,
+                            ];
+                        }
+
+                        $overallPercent = round(($completedCount / 30) * 100);
+                    @endphp
+
+                    <div class="mb-6 p-4 rounded-2xl bg-gray-50/80 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-gray-700 dark:text-gray-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Monitoring 30 Juz
+                            </span>
+                            <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                {{ $completedCount }}/30 Juz ({{ $overallPercent }}%)
+                            </span>
+                        </div>
+
+                        {{-- Total Progress Bar --}}
+                        <div class="w-full bg-gray-200 dark:bg-gray-700/60 h-2 rounded-full overflow-hidden">
+                            <div class="bg-emerald-500 h-2 rounded-full transition-all duration-700 shadow-sm" style="width: {{ $overallPercent }}%"></div>
+                        </div>
+
+                        {{-- 5x6 Grid Layout (5 Columns x 6 Rows = 30 Juz) --}}
+                        <div class="grid grid-cols-5 gap-1.5 sm:gap-2" style="display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 6px !important;">
                             @for($j = 1; $j <= 30; $j++)
                                 @php
-                                    $isCompleted = in_array($j, $completedList);
-                                    $prog = $isCompleted ? 100 : $student->getJuzProgress($j);
-                                    
-                                    $bgClass = $isCompleted 
-                                        ? 'bg-emerald-500 text-white' 
-                                        : ($prog > 0 ? 'bg-amber-400 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400/60');
-                                    
-                                    $statusLabel = $isCompleted ? 'Mumtaz' : ($prog > 0 ? $prog . '%' : 'Belum');
+                                    $item = $juzStats[$j];
+                                    $isCompleted = $item['isCompleted'];
+                                    $prog = $item['prog'];
                                 @endphp
-                                <div class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black {{ $bgClass }} transition-all duration-200 cursor-default shadow-sm border border-transparent {{ $isCompleted ? 'shadow-emerald-100/50' : '' }}">
-                                    {{ $j }}
+
+                                <div title="{{ $item['statusText'] }}"
+                                    style="min-height: 42px;"
+                                    class="relative group rounded-xl flex flex-col items-center justify-center text-xs font-black transition-all duration-200 cursor-pointer border shadow-sm select-none p-1
+                                        {{ $isCompleted 
+                                            ? 'bg-emerald-500 text-white border-emerald-400/40 shadow-emerald-500/20 hover:scale-105 hover:bg-emerald-600' 
+                                            : ($prog > 0 
+                                                ? 'bg-amber-400 text-white border-amber-300/40 shadow-amber-400/20 hover:scale-105 hover:bg-amber-500' 
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200/80 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300') }}">
+                                    
+                                    <span>{{ $j }}</span>
+                                    
+                                    @if($isCompleted)
+                                        <span class="text-[8px] leading-none font-bold opacity-95 flex items-center justify-center">
+                                            ✓
+                                        </span>
+                                    @elseif($prog > 0)
+                                        <span class="text-[7.5px] leading-none font-extrabold opacity-95">
+                                            {{ $prog }}%
+                                        </span>
+                                    @endif
                                 </div>
                             @endfor
                         </div>
 
-                        <div class="flex items-center justify-between mt-4 px-3 py-2 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-800">
-                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tight">Capaian: <span class="text-emerald-600 font-extrabold">{{ count($completedList) }}/30 Juz</span></span>
-                            <div class="flex gap-2.5">
-                                <div class="flex items-center gap-1 text-[8px] font-bold text-gray-400 uppercase">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Selesai
-                                </div>
-                                <div class="flex items-center gap-1 text-[8px] font-bold text-gray-400 uppercase">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Progres
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
 
                     <div class="mt-6">
@@ -85,6 +134,13 @@
                 </div>
 
                 <div class="mt-8 pb-6 space-y-3">
+                    <a href="{{ route('guru.hafalan.create', ['student_id' => $student->id]) }}" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-200 dark:shadow-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Input Hafalan Santri Ini
+                    </a>
+
                     <a href="{{ route('guru.students.export', $student) }}" class="w-full py-3 bg-emerald-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="m9 13.5 3 3m0 0 3-3m-3 3v-6m1.06-4.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
@@ -371,7 +427,7 @@
             const pageNumbersContainer = document.getElementById('pageNumbersContainer');
             const emptyFilterRow = document.getElementById('emptyFilterRow');
 
-            const pageSize = 20;
+            const pageSize = 10;
             let currentPage = 1;
             let filteredRows = [];
 

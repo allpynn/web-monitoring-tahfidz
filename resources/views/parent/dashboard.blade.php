@@ -45,15 +45,40 @@
                     </x-tahfidz.card>
 
                     <x-tahfidz.card title="Progres Target">
-                        @php $progress = $student->target_progress; @endphp
-                        <div class="flex flex-col gap-2">
-                            <div class="flex justify-between items-end">
+                        @php
+                            $progress = $student->target_progress;
+                            $targets = $student->targets;
+                        @endphp
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-end pb-2 border-b border-gray-100 dark:border-gray-700/60">
                                 <span class="text-2xl font-black text-gray-900 dark:text-white">{{ $progress }}%</span>
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ count($student->completed_juz) }}/{{ $student->target_juz }} Juz</span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                    {{ count($student->completed_juz) }}/{{ $student->target_juz }} Juz
+                                </span>
                             </div>
-                            <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
-                                <div class="h-2 rounded-full transition-all duration-1000 {{ $progress == 100 ? 'bg-emerald-500' : 'bg-blue-500' }}" style="width: {{ $progress }}%"></div>
-                            </div>
+
+                            @if($targets && $targets->count() > 0)
+                                <div class="space-y-2.5 max-h-36 overflow-y-auto pr-1 pl-2 border-l-2 border-emerald-500/30 dark:border-emerald-500/20 custom-scrollbar">
+                                    @foreach($targets as $t)
+                                        @php
+                                            $p = $student->getJuzProgress($t->target_juz);
+                                        @endphp
+                                        <div>
+                                            <div class="flex justify-between text-[10px] mb-1 font-semibold uppercase tracking-tight">
+                                                <span class="text-gray-700 dark:text-gray-300 font-bold">Juz {{ $t->target_juz }}</span>
+                                                <span class="{{ $p == 100 ? 'text-emerald-500 font-extrabold' : 'text-gray-500' }}">{{ $p }}%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+                                                <div class="h-1.5 rounded-full transition-all duration-700 {{ $p == 100 ? 'bg-emerald-500' : ($p >= 50 ? 'bg-blue-400' : 'bg-amber-400') }}"
+                                                    style="width: {{ $p }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-xs text-gray-400 italic py-2">Belum ada target juz yang ditentukan.</p>
+                            @endif
                         </div>
                     </x-tahfidz.card>
 
